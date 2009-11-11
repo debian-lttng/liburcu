@@ -1,0 +1,32 @@
+Source: liburcu
+Priority: extra
+Maintainer: Jon Bernard <jbernard@debian.org>
+Build-Depends: debhelper (>= 7.0.50~), autotools-dev
+Standards-Version: 3.8.3
+Section: libs
+Homepage: http://lttng.org/urcu
+
+Package: liburcu-dev
+Section: libdevel
+Architecture: any
+Depends: ${misc:Depends}, liburcu0 (= ${binary:Version})
+Description: a userspace RCU (read-copy-update) library - development files
+ This data synchronization library provides read-side access which scales
+ linearly with the number of cores. It does so by allowing multiples copies of
+ a given data structure to live at the same time, and by monitoring the data
+ structure accesses to detect grace periods after which memory reclamation is
+ possible.
+ .
+ Install this package if you wish to develop your own programs using the
+ userspace RCU library.
+
+Package: liburcu0
+Section: libs
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Description: a userspace RCU (read-copy-update) library
+ This data synchronization library provides read-side access which scales
+ linearly with the number of cores. It does so by allowing multiples copies of
+ a given data structure to live at the same time, and by monitoring the data
+ structure accesses to detect grace periods after which memory reclamation is
+ possible.

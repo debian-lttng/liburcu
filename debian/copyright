@@ -1,0 +1,123 @@
+This package was debianized by Jon Bernard <jbernard@debian.org> on
+Wed, 11 Nov 2009 13:46:29 -0500.
+
+It was downloaded from http://lttng.org/urcu
+
+Upstream Author:
+
+    Mathieu Desnoyers <mathieu.desnoyers@polymtl.ca>
+
+Copyright:
+
+    Copyright (C) 2009 Mathieu Desnoyers
+    Copyright (C) 2006, 2008, 2009 Paul E. McKenney
+    Copyright (C) 1991-1994 Xerox Corporation
+    Copyright (C) 1996-1999 Silicon Graphics
+    Copyright (C) 1999-2003 Hewlett-Packard Company
+    Copyright (C) 2002 Free Software Foundation, Inc.
+    Copyright (C) 2009 Pierre-Marc Fournier
+    Copyright (C) 2009 Novell, Inc.
+
+License:
+
+    This library is free software; you can redistribute it and/or modify it
+    under the terms of the GNU Lesser General Public License as published by
+    the Free Software Foundation; either version 2.1 of the License, or (at
+    your option) any later version.
+
+    This library is distributed in the hope that it will be useful, but WITHOUT
+    ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+    FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public
+    License for more details.
+
+    You should have received a copy of the GNU Lesser General Public License
+    along with this library; if not, write to the Free Software Foundation,
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+
+This license applies to:
+
+urcu.h
+urcu.c
+urcu-static.h
+arch_x86.h
+arch_ppc.h
+
+LGPL-compatible source code can statically use the library header using:
+
+#define _LGPL_SOURCE
+#include <urcu.h>
+
+Dynamic-only linking with the LGPL library is used if _LGPL_SOURCE is not
+defined. It permits relinking with newer versions of the library, which is
+required by the LGPL license.
+
+See lgpl-relicensing.txt for details.
+
+On Debian systems, the complete text of the GNU Lesser General Public License
+version 2.1 can be found in `/usr/share/common-licenses/LGPL-2.1'.
+
+    Permission is hereby granted, free of charge, to any person obtaining a
+    copy of this software and associated documentation files (the "Software"),
+    to deal in the Software without restriction, including without limitation
+    the rights to use, copy, modify, merge, publish, distribute, sublicense,
+    and/or sell copies of the Software, and to permit persons to whom the
+    Software is furnished to do so, subject to the following conditions:
+
+    The above copyright notice and this permission notice shall be included in
+    all copies or substantial portions of the Software.
+
+    THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+    IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+    FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+    AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+    LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+    FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+    DEALINGS IN THE SOFTWARE.
+
+This license applies to:
+
+arch_atomic_x86.h
+arch_atomic_ppc.h
+arch_atomic_s390.h
+arch_s390.h
+compiler.h
+
+xchg() primitive has been rewritten from scratch starting from atomic_ops 1.2
+which has a MIT-style license that is intended to allow use in both free and
+proprietary software:
+
+http://www.hpl.hp.com/research/linux/atomic_ops/LICENSING.txt
+http://www.hpl.hp.com/personal/Hans_Boehm/gc/gc_source/
+
+    This program is free software; you can redistribute it and/or modify it
+    under the terms of the GNU General Public License as published by the Free
+    Software Foundation; either version 2 of the License, or (at your option)
+    any later version.
+
+    This program is distributed in the hope that it will be useful, but WITHOUT
+    ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+    FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
+    more details.
+
+    You should have received a copy of the GNU General Public License along
+    with this program; if not, write to the Free Software Foundation, Inc., 51
+    Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+
+This license applies to:
+
+urcutorture.h
+urcutorture.c
+api_x86.h
+api_ppc.h
+api_gcc.h
+test_urcu.c
+test_urcu_yield.c
+test_rwlock_timing.c
+urcu-asm.c
+
+The Debian packaging is:
+
+    Copyright (C) 2009 Jon Bernard <jbernard@debian.org>
+
+and is licensed under the GPL version 3, see
+`/usr/share/common-licenses/GPL-3'.
