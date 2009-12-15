@@ -21,9 +21,9 @@ BUILDING
 ARCHITECTURES SUPPORTED
 -----------------------
 
-Currently, x86 (i386, i486, i586, i686), x86 64-bit, PowerPC 32/64, S390 and
-S390x are supported. Only tested on Linux so far, but should theoretically work
-on other operating systems.
+Currently, x86 (i386, i486, i586, i686), x86 64-bit, PowerPC 32/64, S390, S390x
+and Sparc64 are supported. Only tested on Linux so far, but should
+theoretically work on other operating systems.
 
 QUICK START GUIDE
 -----------------
@@ -100,10 +100,18 @@ Usage of liburcu-defer
 
 	* #include <urcu-defer.h>
 	* Link with "-lurcu-defer"
-	* Provides call_rcu() primitive to enqueue delayed callbacks. Queued
+	* Provides defer_rcu() primitive to enqueue delayed callbacks. Queued
 	  callbacks are executed in batch periodically after a grace period.
-	  Do _not_ use call_rcu() within a read-side critical section, because
+	  Do _not_ use defer_rcu() within a read-side critical section, because
 	  it may call synchronize_rcu() if the thread queue is full.
+	* Provides defer_rcu_ratelimit() primitive, which acts just like
+	  defer_rcu(), but takes an additional rate limiter callback forcing
+	  synchronized callback execution of the limiter returns non-zero.
+	* Requires that rcu_defer_barrier() must be called in library destructor
+	  if a library queues callbacks and is expected to be unloaded with
+	  dlclose().
+	* Its API is currently experimental. It may change in future library
+	  releases.
 
 Being careful with signals
 

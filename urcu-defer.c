@@ -230,9 +230,9 @@ end:
 }
 
 /*
- * _rcu_defer_queue - Queue a RCU callback.
+ * _defer_rcu - Queue a RCU callback.
  */
-void _rcu_defer_queue(void (*fct)(void *p), void *p)
+void _defer_rcu(void (*fct)(void *p), void *p)
 {
 	unsigned long head, tail;
 
@@ -244,10 +244,10 @@ void _rcu_defer_queue(void (*fct)(void *p), void *p)
 	tail = LOAD_SHARED(defer_queue.tail);
 
 	/*
-	 * If queue is full, empty it ourself.
+	 * If queue is full, or reached threshold. Empty queue ourself.
 	 * Worse-case: must allow 2 supplementary entries for fct pointer.
 	 */
-	if (unlikely(head - tail >= DEFER_QUEUE_SIZE - 2)) {
+	if (unlikely(sync || (head - tail >= DEFER_QUEUE_SIZE - 2))) {
 		assert(head - tail <= DEFER_QUEUE_SIZE);
 		rcu_defer_barrier_thread();
 		assert(head - LOAD_SHARED(defer_queue.tail) == 0);
@@ -315,9 +315,9 @@ void *thr_defer(void *args)
  * library wrappers to be used by non-LGPL compatible source code.
  */
 
-void rcu_defer_queue(void (*fct)(void *p), void *p)
+void defer_rcu(void (*fct)(void *p), void *p)
 {
-	_rcu_defer_queue(fct, p);
+	_defer_rcu(fct, p);
 }
 
 static void start_defer_thread(void)

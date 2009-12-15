@@ -2,7 +2,7 @@
 # Process this file with autoconf to produce a configure script.
 
 
-AC_INIT([userspace-rcu], [0.2.4], [mathieu dot desnoyers at polymtl dot ca])
+AC_INIT([userspace-rcu], [0.3.0], [mathieu dot desnoyers at polymtl dot ca])
 AC_CONFIG_AUX_DIR([config])
 AC_CANONICAL_TARGET
 AC_CANONICAL_HOST
@@ -47,6 +47,7 @@ case $target_cpu in
 	ppc) ARCHTYPE="ppc" ;;
 	s390) ARCHTYPE="s390" ;;
 	s390x) ARCHTYPE="s390" ;;
+	sparc64) ARCHTYPE="sparc64" ;;
 	*) ARCHTYPE="unknown";;
 esac
 
