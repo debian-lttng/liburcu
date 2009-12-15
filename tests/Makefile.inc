@@ -11,11 +11,11 @@ LIBDIR=..
 
 CFLAGS+=-I${LIBDIR}
 
-URCU_SIGNAL=${LIBDIR}/urcu.o ${LIBDIR}/urcu.h
-URCU_SIGNAL_YIELD=${LIBDIR}/urcu-yield.o ${LIBDIR}/urcu.h
-URCU_MB=${LIBDIR}/urcu-mb.o ${LIBDIR}/urcu.h
-URCU_QSBR=${LIBDIR}/urcu-qsbr.o ${LIBDIR}/urcu-qsbr.h
-URCU_MB_DEFER=${LIBDIR}/urcu-mb.o ${LIBDIR}/urcu-defer.o ${LIBDIR}/urcu.h
+URCU_SIGNAL=${LIBDIR}/urcu.o ${LIBDIR}/urcu-pointer.o ${LIBDIR}/urcu.h
+URCU_SIGNAL_YIELD=${LIBDIR}/urcu-yield.o ${LIBDIR}/urcu-pointer.o ${LIBDIR}/urcu.h
+URCU_MB=${LIBDIR}/urcu-mb.o ${LIBDIR}/urcu-pointer.o ${LIBDIR}/urcu.h
+URCU_QSBR=${LIBDIR}/urcu-qsbr.o ${LIBDIR}/urcu-pointer.o ${LIBDIR}/urcu-qsbr.h
+URCU_MB_DEFER=${LIBDIR}/urcu-mb.o ${LIBDIR}/urcu-defer.o ${LIBDIR}/urcu-pointer.o ${LIBDIR}/urcu.h
 
 all: test_urcu test_urcu_dynamic_link test_urcu_timing \
 	test_rwlock_timing test_rwlock test_perthreadlock_timing \
@@ -24,7 +24,7 @@ all: test_urcu test_urcu_dynamic_link test_urcu_timing \
 	urcutorture-yield test_mutex test_looplen test_urcu_gc \
 	test_urcu_gc_mb test_qsbr_gc test_qsbr_lgc test_urcu_lgc \
 	test_urcu_lgc_mb test_qsbr_dynamic_link test_urcu_mb_defer \
-	test_uatomic
+	test_uatomic test_urcu_assign test_urcu_assign_dynamic_link
 
 api.h: ${APIHEADER}
 	cp -f ${APIHEADER} api.h
@@ -41,6 +41,12 @@ test_urcu_gc: test_urcu_gc.c ${URCU_SIGNAL}
 
 test_urcu_lgc: test_urcu_gc.c ${URCU_SIGNAL}
 	$(CC) -DTEST_LOCAL_GC ${CFLAGS} $(LDFLAGS) -o $@ $(SRC_DEP)
+
+test_urcu_assign: test_urcu_assign.c ${URCU_SIGNAL}
+	$(CC) ${CFLAGS} $(LDFLAGS) -o $@ $(SRC_DEP)
+
+test_urcu_assign_dynamic_link: test_urcu.c ${URCU_SIGNAL}
+	$(CC) ${CFLAGS} -DDYNAMIC_LINK_TEST $(LDFLAGS) -o $@ $(SRC_DEP)
 
 
 test_urcu_mb: test_urcu.c ${URCU_MB}
