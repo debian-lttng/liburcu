@@ -30,7 +30,7 @@
 
 extern void synchronize_rcu(void);
 
-void *rcu_dereference(void *p)
+void *rcu_dereference_sym(void *p)
 {
 	return _rcu_dereference(p);
 }
@@ -51,13 +51,4 @@ void *rcu_cmpxchg_pointer_sym(void **p, void *old, void *_new)
 {
 	wmb();
 	return uatomic_cmpxchg(p, old, _new);
-}
-
-void *rcu_publish_content_sym(void **p, void *v)
-{
-	void *oldptr;
-
-	oldptr = _rcu_xchg_pointer(p, v);
-	synchronize_rcu();
-	return oldptr;
 }

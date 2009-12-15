@@ -71,12 +71,14 @@
  * should not be freed !).
  */
 
-#define _rcu_cmpxchg_pointer(p, old, _new)		\
-	({						\
-		if (!__builtin_constant_p(_new) ||	\
-		    ((_new) != NULL))			\
-			wmb();				\
-		uatomic_cmpxchg(p, old, _new);		\
+#define _rcu_cmpxchg_pointer(p, old, _new)				\
+	({								\
+		typeof(*p) _________pold = (old);			\
+		typeof(*p) _________pnew = (_new);			\
+		if (!__builtin_constant_p(_new) ||			\
+		    ((_new) != NULL))					\
+			wmb();						\
+		uatomic_cmpxchg(p, _________pold, _________pnew);	\
 	})
 
 /**
@@ -87,32 +89,21 @@
 
 #define _rcu_xchg_pointer(p, v)				\
 	({						\
+		typeof(*p) _________pv = (v);		\
 		if (!__builtin_constant_p(v) ||		\
 		    ((v) != NULL))			\
 			wmb();				\
-		uatomic_xchg(p, v);			\
+		uatomic_xchg(p, _________pv);		\
 	})
 
 
 #define _rcu_set_pointer(p, v)				\
 	({						\
+		typeof(*p) _________pv = (v);		\
 		if (!__builtin_constant_p(v) || 	\
 		    ((v) != NULL))			\
 			wmb();				\
-		STORE_SHARED(*(p), v);			\
-	})
-
-/*
- * _rcu_publish_content - Exchanges the pointer and waits for quiescent state.
- *
- * The pointer returned can be freed.
- */
-#define _rcu_publish_content(p, v)			\
-	({						\
-		void *oldptr;				\
-		oldptr = _rcu_xchg_pointer(p, v);	\
-		synchronize_rcu();			\
-		oldptr;					\
+		STORE_SHARED(*(p), _________pv);	\
 	})
 
 /**
