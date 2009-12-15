@@ -1,3 +1,10 @@
+liburcu (0.3.2-1) unstable; urgency=low
+
+  * New upstream release
+  * debian/liburcu-dev.docs: include additional documentation
+
+ -- Jon Bernard <jbernard@debian.org>  Tue, 15 Dec 2009 09:38:31 -0500
+
 liburcu (0.3.0-1) unstable; urgency=low
 
   * Initial release (Closes: #548931)
