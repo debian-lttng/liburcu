@@ -194,7 +194,10 @@ am_test_rwlock_timing_OBJECTS = test_rwlock_timing.$(OBJEXT) \
 	$(am__objects_3)
 test_rwlock_timing_OBJECTS = $(am_test_rwlock_timing_OBJECTS)
 test_rwlock_timing_LDADD = $(LDADD)
-am_test_uatomic_OBJECTS = test_uatomic.$(OBJEXT)
+am__test_uatomic_SOURCES_DIST = test_uatomic.c \
+	$(top_srcdir)/compat_futex.c \
+	$(top_srcdir)/compat_arch_@ARCHTYPE@.c
+am_test_uatomic_OBJECTS = test_uatomic.$(OBJEXT) $(am__objects_2)
 test_uatomic_OBJECTS = $(am_test_uatomic_OBJECTS)
 test_uatomic_LDADD = $(LDADD)
 am__test_urcu_SOURCES_DIST = test_urcu.c $(top_srcdir)/urcu.c \
@@ -440,8 +443,8 @@ DIST_SOURCES = $(rcutorture_qsbr_SOURCES) $(rcutorture_urcu_SOURCES) \
 	$(am__test_qsbr_lgc_SOURCES_DIST) \
 	$(am__test_qsbr_timing_SOURCES_DIST) \
 	$(am__test_rwlock_SOURCES_DIST) \
-	$(am__test_rwlock_timing_SOURCES_DIST) $(test_uatomic_SOURCES) \
-	$(am__test_urcu_SOURCES_DIST) \
+	$(am__test_rwlock_timing_SOURCES_DIST) \
+	$(am__test_uatomic_SOURCES_DIST) $(am__test_urcu_SOURCES_DIST) \
 	$(am__test_urcu_assign_SOURCES_DIST) \
 	$(am__test_urcu_assign_dynamic_link_SOURCES_DIST) \
 	$(am__test_urcu_bp_SOURCES_DIST) \
@@ -639,7 +642,7 @@ test_qsbr_dynamic_link_SOURCES = test_qsbr.c $(URCU_QSBR)
 test_qsbr_dynamic_link_CFLAGS = -DDYNAMIC_LINK_TEST $(AM_CFLAGS)
 test_urcu_mb_defer_SOURCES = test_urcu_defer.c $(URCU_MB_DEFER)
 test_urcu_mb_defer_CFLAGS = -DURCU_MB $(AM_CFLAGS)
-test_uatomic_SOURCES = test_uatomic.c
+test_uatomic_SOURCES = test_uatomic.c $(COMPAT)
 test_urcu_assign_SOURCES = test_urcu_assign.c $(URCU_SIGNAL)
 test_urcu_assign_dynamic_link_SOURCES = test_urcu_assign.c $(URCU_SIGNAL)
 test_urcu_assign_dynamic_link_CFLAGS = -DDYNAMIC_LINK_TEST $(AM_CFLAGS)
