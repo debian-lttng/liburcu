@@ -23,18 +23,13 @@
  */
 
 #include <urcu/compiler.h>
+#include <urcu/config.h>
 
-/* Assume P4 or newer */
-#define CONFIG_HAVE_FENCE 1
 #define CONFIG_HAVE_MEM_COHERENCY
 
 #define CACHE_LINE_SIZE	128
 
-#ifndef BITS_PER_LONG
-#define BITS_PER_LONG	(__SIZEOF_LONG__ * 8)
-#endif
-
-#ifdef CONFIG_HAVE_FENCE
+#ifdef CONFIG_URCU_HAVE_FENCE
 #define mb()    asm volatile("mfence":::"memory")
 #define rmb()   asm volatile("lfence":::"memory")
 #define wmb()   asm volatile("sfence"::: "memory")
@@ -63,10 +58,7 @@
 #define rmc()	barrier()
 #define wmc()	barrier()
 
-/* Assume SMP machine, given we don't have this information */
-#define CONFIG_SMP 1
-
-#ifdef CONFIG_SMP
+#ifdef CONFIG_URCU_SMP
 #define smp_mb()	mb()
 #define smp_rmb()	rmb()
 #define smp_wmb()	wmb()

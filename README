@@ -4,11 +4,26 @@ by Mathieu Desnoyers and Paul E. McKenney
 BUILDING
 --------
 
+	./bootstrap (skip if using tarball)
+	./configure
 	make
-	#force 32-bit build with: make -f Makefile32
-	#force 64-bit build with: make -f Makefile64
 	make install
-	
+
+	Hints:	Forcing 32-bit build:
+		* CFLAGS="-m32 -g -O2" ./configure
+
+		Forcing 64-bit build:
+		* CFLAGS="-m64 -g -O2" ./configure
+
+		Forcing a 32-bit build with 386 backward compatibility:
+		* CFLAGS="-m32 -g -O2" ./configure --target=i386-pc-linux-gnu
+
+ARCHITECTURES SUPPORTED
+-----------------------
+
+Currently, x86 (i386, i486, i586, i686), x86 64-bit, PowerPC 32/64, S390 and
+S390x are supported. Only tested on Linux so far, but should theoretically work
+on other operating systems.
 
 QUICK START GUIDE
 -----------------
@@ -122,3 +137,13 @@ Usage of DEBUG_YIELD
 
 	DEBUG_YIELD is used to add random delays in the code for testing
 	purposes.
+
+SMP support
+
+	By default the library is configured to use synchronization primitives
+	adequate for SMP systems. On uniprocessor systems, support for SMP
+	systems can be disabled with:
+
+		./configure --disable-smp-support
+
+	theoretically yielding slightly better performance.

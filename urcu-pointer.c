@@ -24,6 +24,8 @@
  * IBM's contributions to this file may be relicensed under LGPLv2 or later.
  */
 
+#include <urcu/uatomic_arch.h>
+
 #include "urcu-pointer-static.h"
 /* Do not #define _LGPL_SOURCE to ensure we can emit the wrapper symbols */
 #include "urcu-pointer.h"
@@ -50,5 +52,9 @@ void *rcu_xchg_pointer_sym(void **p, void *v)
 void *rcu_cmpxchg_pointer_sym(void **p, void *old, void *_new)
 {
 	wmb();
-	return uatomic_cmpxchg(p, old, _new);
+	if (likely(URCU_CAS_AVAIL()))
+		return uatomic_cmpxchg(p, old, _new);
+
+	/* Compatibility for i386. Old-timer. */
+	return compat_uatomic_cmpxchg(p, old, _new);
 }

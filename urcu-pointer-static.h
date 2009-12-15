@@ -32,7 +32,7 @@
 #include <urcu/compiler.h>
 #include <urcu/arch.h>
 #include <urcu/system.h>
-#include <urcu/arch_uatomic.h>
+#include <urcu/uatomic_arch.h>
 
 /**
  * _rcu_dereference - reads (copy) a RCU-protected pointer to a local variable
@@ -78,7 +78,10 @@
 		if (!__builtin_constant_p(_new) ||			\
 		    ((_new) != NULL))					\
 			wmb();						\
-		uatomic_cmpxchg(p, _________pold, _________pnew);	\
+		(likely(URCU_CAS_AVAIL()) ?				\
+			(uatomic_cmpxchg(p, _________pold, _________pnew)) : \
+			(compat_uatomic_cmpxchg(p, _________pold,	\
+						_________pnew)))	\
 	})
 
 /**
