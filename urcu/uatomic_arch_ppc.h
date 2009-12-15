@@ -23,6 +23,10 @@
 #include <urcu/compiler.h>
 #include <urcu/system.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif 
+
 #ifndef __SIZEOF_LONG__
 #ifdef __powerpc64__
 #define __SIZEOF_LONG__ 8
@@ -225,7 +229,10 @@ unsigned long _uatomic_add_return(void *addr, unsigned long val,
 #define uatomic_inc(addr)		uatomic_add((addr), 1)
 #define uatomic_dec(addr)		uatomic_add((addr), -1)
 
-#define URCU_CAS_AVAIL()	1
 #define compat_uatomic_cmpxchg(ptr, old, _new)	uatomic_cmpxchg(ptr, old, _new)
+
+#ifdef __cplusplus 
+}
+#endif
 
 #endif /* _URCU_ARCH_UATOMIC_PPC_H */
