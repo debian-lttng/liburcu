@@ -22,6 +22,10 @@
 
 #include <urcu/compiler.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif 
+
 #ifndef BITS_PER_LONG
 #define BITS_PER_LONG	(__SIZEOF_LONG__ * 8)
 #endif
@@ -396,5 +400,9 @@ void _uatomic_dec(void *addr, int len)
 }
 
 #define uatomic_dec(addr)	(_uatomic_dec((addr), sizeof(*(addr))))
+
+#ifdef __cplusplus 
+}
+#endif
 
 #endif /* _URCU_ARCH_UATOMIC_X86_H */

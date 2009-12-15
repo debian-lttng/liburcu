@@ -1,5 +1,5 @@
-#ifndef _ARCH_S390_H
-#define _ARCH_S390_H
+#ifndef _URCU_ARCH_S390_H
+#define _URCU_ARCH_S390_H
 
 /*
  * Trivial definitions for the S390 architecture based on information from the
@@ -29,9 +29,23 @@
  */
 
 #include <compiler.h>
-#include <config/config.h>
+#include <urcu/config.h>
+
+#ifdef __cplusplus
+extern "C" {
+#endif 
 
 #define CONFIG_HAVE_MEM_COHERENCY
+
+#define CACHE_LINE_SIZE	128
+
+#ifndef __SIZEOF_LONG__
+#ifdef __s390x__
+#define __SIZEOF_LONG__ 8
+#else
+#define __SIZEOF_LONG__ 4
+#endif
+#endif
 
 #ifndef BITS_PER_LONG
 #define BITS_PER_LONG	(__SIZEOF_LONG__ * 8)
@@ -84,4 +98,8 @@ static inline cycles_t get_cycles (void)
 	return cycles;
 }
 
-#endif /* _ARCH_S390_H */
+#ifdef __cplusplus 
+}
+#endif
+
+#endif /* _URCU_ARCH_S390_H */
