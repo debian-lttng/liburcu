@@ -1,3 +1,9 @@
+liburcu (0.3.4-1) unstable; urgency=low
+
+  * New upstream release
+
+ -- Jon Bernard <jbernard@debian.org>  Fri, 22 Jan 2010 12:31:17 -0500
+
 liburcu (0.3.2-1) unstable; urgency=low
 
   * New upstream release
