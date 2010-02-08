@@ -35,18 +35,22 @@ build_triplet = @build@
 host_triplet = @host@
 target_triplet = @target@
 noinst_PROGRAMS = test_urcu$(EXEEXT) test_urcu_dynamic_link$(EXEEXT) \
-	test_urcu_timing$(EXEEXT) test_rwlock_timing$(EXEEXT) \
+	test_urcu_timing$(EXEEXT) test_urcu_signal$(EXEEXT) \
+	test_urcu_signal_dynamic_link$(EXEEXT) \
+	test_urcu_signal_timing$(EXEEXT) test_rwlock_timing$(EXEEXT) \
 	test_rwlock$(EXEEXT) test_perthreadlock_timing$(EXEEXT) \
 	test_perthreadlock$(EXEEXT) test_urcu_yield$(EXEEXT) \
-	test_urcu_mb$(EXEEXT) test_qsbr_timing$(EXEEXT) \
-	test_qsbr$(EXEEXT) rcutorture_urcu$(EXEEXT) \
+	test_urcu_signal_yield$(EXEEXT) test_urcu_mb$(EXEEXT) \
+	test_qsbr_timing$(EXEEXT) test_qsbr$(EXEEXT) \
+	rcutorture_urcu$(EXEEXT) rcutorture_urcu_signal$(EXEEXT) \
 	rcutorture_urcu_mb$(EXEEXT) rcutorture_urcu_bp$(EXEEXT) \
 	rcutorture_qsbr$(EXEEXT) test_mutex$(EXEEXT) \
 	test_looplen$(EXEEXT) test_urcu_gc$(EXEEXT) \
-	test_urcu_gc_mb$(EXEEXT) test_qsbr_gc$(EXEEXT) \
-	test_qsbr_lgc$(EXEEXT) test_urcu_lgc$(EXEEXT) \
-	test_urcu_lgc_mb$(EXEEXT) test_qsbr_dynamic_link$(EXEEXT) \
-	test_urcu_mb_defer$(EXEEXT) test_uatomic$(EXEEXT) \
+	test_urcu_signal_gc$(EXEEXT) test_urcu_lgc$(EXEEXT) \
+	test_urcu_mb_gc$(EXEEXT) test_qsbr_gc$(EXEEXT) \
+	test_qsbr_lgc$(EXEEXT) test_urcu_signal_lgc$(EXEEXT) \
+	test_urcu_mb_lgc$(EXEEXT) test_qsbr_dynamic_link$(EXEEXT) \
+	test_urcu_defer$(EXEEXT) test_uatomic$(EXEEXT) \
 	test_urcu_assign$(EXEEXT) \
 	test_urcu_assign_dynamic_link$(EXEEXT) test_urcu_bp$(EXEEXT) \
 	test_urcu_bp_dynamic_link$(EXEEXT)
@@ -70,7 +74,7 @@ rcutorture_qsbr_LINK = $(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) \
 	$(CFLAGS) $(AM_LDFLAGS) $(LDFLAGS) -o $@
 am_rcutorture_urcu_OBJECTS = rcutorture_urcu-urcutorture.$(OBJEXT)
 rcutorture_urcu_OBJECTS = $(am_rcutorture_urcu_OBJECTS)
-rcutorture_urcu_DEPENDENCIES = $(URCU_SIGNAL_LIB)
+rcutorture_urcu_DEPENDENCIES = $(URCU)
 rcutorture_urcu_LINK = $(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(rcutorture_urcu_CFLAGS) \
 	$(CFLAGS) $(AM_LDFLAGS) $(LDFLAGS) -o $@
@@ -89,6 +93,14 @@ rcutorture_urcu_mb_DEPENDENCIES = $(URCU_MB_LIB)
 rcutorture_urcu_mb_LINK = $(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CCLD) \
 	$(rcutorture_urcu_mb_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) \
+	$(LDFLAGS) -o $@
+am_rcutorture_urcu_signal_OBJECTS =  \
+	rcutorture_urcu_signal-urcutorture.$(OBJEXT)
+rcutorture_urcu_signal_OBJECTS = $(am_rcutorture_urcu_signal_OBJECTS)
+rcutorture_urcu_signal_DEPENDENCIES = $(URCU_SIGNAL_LIB)
+rcutorture_urcu_signal_LINK = $(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) \
+	$(LIBTOOLFLAGS) --mode=link $(CCLD) \
+	$(rcutorture_urcu_signal_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) \
 	$(LDFLAGS) -o $@
 am_test_looplen_OBJECTS = test_looplen.$(OBJEXT)
 test_looplen_OBJECTS = $(am_test_looplen_OBJECTS)
@@ -264,19 +276,29 @@ test_urcu_bp_dynamic_link_LINK = $(LIBTOOL) --tag=CC \
 	$(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=link $(CCLD) \
 	$(test_urcu_bp_dynamic_link_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) \
 	$(LDFLAGS) -o $@
+am__test_urcu_defer_SOURCES_DIST = test_urcu_defer.c \
+	$(top_srcdir)/urcu.c $(top_srcdir)/urcu-defer.c \
+	$(top_srcdir)/urcu-pointer.c $(top_srcdir)/compat_futex.c \
+	$(top_srcdir)/compat_arch_@ARCHTYPE@.c
+am__objects_18 = urcu.$(OBJEXT) urcu-defer.$(OBJEXT) \
+	urcu-pointer.$(OBJEXT) $(am__objects_2)
+am_test_urcu_defer_OBJECTS = test_urcu_defer.$(OBJEXT) \
+	$(am__objects_18)
+test_urcu_defer_OBJECTS = $(am_test_urcu_defer_OBJECTS)
+test_urcu_defer_LDADD = $(LDADD)
 am__test_urcu_dynamic_link_SOURCES_DIST = test_urcu.c \
 	$(top_srcdir)/urcu.c $(top_srcdir)/urcu-pointer.c \
 	$(top_srcdir)/compat_futex.c \
 	$(top_srcdir)/compat_arch_@ARCHTYPE@.c
-@COMPAT_FUTEX_TRUE@am__objects_18 = test_urcu_dynamic_link-compat_futex.$(OBJEXT)
-@COMPAT_ARCH_FALSE@am__objects_19 = $(am__objects_18)
-@COMPAT_ARCH_TRUE@am__objects_19 = test_urcu_dynamic_link-compat_arch_@ARCHTYPE@.$(OBJEXT) \
-@COMPAT_ARCH_TRUE@	$(am__objects_18)
-am__objects_20 = test_urcu_dynamic_link-urcu.$(OBJEXT) \
+@COMPAT_FUTEX_TRUE@am__objects_19 = test_urcu_dynamic_link-compat_futex.$(OBJEXT)
+@COMPAT_ARCH_FALSE@am__objects_20 = $(am__objects_19)
+@COMPAT_ARCH_TRUE@am__objects_20 = test_urcu_dynamic_link-compat_arch_@ARCHTYPE@.$(OBJEXT) \
+@COMPAT_ARCH_TRUE@	$(am__objects_19)
+am__objects_21 = test_urcu_dynamic_link-urcu.$(OBJEXT) \
 	test_urcu_dynamic_link-urcu-pointer.$(OBJEXT) \
-	$(am__objects_19)
+	$(am__objects_20)
 am_test_urcu_dynamic_link_OBJECTS =  \
-	test_urcu_dynamic_link-test_urcu.$(OBJEXT) $(am__objects_20)
+	test_urcu_dynamic_link-test_urcu.$(OBJEXT) $(am__objects_21)
 test_urcu_dynamic_link_OBJECTS = $(am_test_urcu_dynamic_link_OBJECTS)
 test_urcu_dynamic_link_LDADD = $(LDADD)
 test_urcu_dynamic_link_LINK = $(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) \
@@ -289,94 +311,189 @@ am__test_urcu_gc_SOURCES_DIST = test_urcu_gc.c $(top_srcdir)/urcu.c \
 am_test_urcu_gc_OBJECTS = test_urcu_gc.$(OBJEXT) $(am__objects_3)
 test_urcu_gc_OBJECTS = $(am_test_urcu_gc_OBJECTS)
 test_urcu_gc_LDADD = $(LDADD)
-am__test_urcu_gc_mb_SOURCES_DIST = test_urcu_gc.c $(top_srcdir)/urcu.c \
-	$(top_srcdir)/urcu-pointer.c $(top_srcdir)/compat_futex.c \
-	$(top_srcdir)/compat_arch_@ARCHTYPE@.c
-@COMPAT_FUTEX_TRUE@am__objects_21 =  \
-@COMPAT_FUTEX_TRUE@	test_urcu_gc_mb-compat_futex.$(OBJEXT)
-@COMPAT_ARCH_FALSE@am__objects_22 = $(am__objects_21)
-@COMPAT_ARCH_TRUE@am__objects_22 = test_urcu_gc_mb-compat_arch_@ARCHTYPE@.$(OBJEXT) \
-@COMPAT_ARCH_TRUE@	$(am__objects_21)
-am__objects_23 = test_urcu_gc_mb-urcu.$(OBJEXT) \
-	test_urcu_gc_mb-urcu-pointer.$(OBJEXT) $(am__objects_22)
-am_test_urcu_gc_mb_OBJECTS = test_urcu_gc_mb-test_urcu_gc.$(OBJEXT) \
-	$(am__objects_23)
-test_urcu_gc_mb_OBJECTS = $(am_test_urcu_gc_mb_OBJECTS)
-test_urcu_gc_mb_LDADD = $(LDADD)
-test_urcu_gc_mb_LINK = $(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) \
-	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(test_urcu_gc_mb_CFLAGS) \
-	$(CFLAGS) $(AM_LDFLAGS) $(LDFLAGS) -o $@
 am__test_urcu_lgc_SOURCES_DIST = test_urcu_gc.c $(top_srcdir)/urcu.c \
 	$(top_srcdir)/urcu-pointer.c $(top_srcdir)/compat_futex.c \
 	$(top_srcdir)/compat_arch_@ARCHTYPE@.c
-@COMPAT_FUTEX_TRUE@am__objects_24 =  \
+@COMPAT_FUTEX_TRUE@am__objects_22 =  \
 @COMPAT_FUTEX_TRUE@	test_urcu_lgc-compat_futex.$(OBJEXT)
-@COMPAT_ARCH_FALSE@am__objects_25 = $(am__objects_24)
-@COMPAT_ARCH_TRUE@am__objects_25 = test_urcu_lgc-compat_arch_@ARCHTYPE@.$(OBJEXT) \
-@COMPAT_ARCH_TRUE@	$(am__objects_24)
-am__objects_26 = test_urcu_lgc-urcu.$(OBJEXT) \
-	test_urcu_lgc-urcu-pointer.$(OBJEXT) $(am__objects_25)
+@COMPAT_ARCH_FALSE@am__objects_23 = $(am__objects_22)
+@COMPAT_ARCH_TRUE@am__objects_23 = test_urcu_lgc-compat_arch_@ARCHTYPE@.$(OBJEXT) \
+@COMPAT_ARCH_TRUE@	$(am__objects_22)
+am__objects_24 = test_urcu_lgc-urcu.$(OBJEXT) \
+	test_urcu_lgc-urcu-pointer.$(OBJEXT) $(am__objects_23)
 am_test_urcu_lgc_OBJECTS = test_urcu_lgc-test_urcu_gc.$(OBJEXT) \
-	$(am__objects_26)
+	$(am__objects_24)
 test_urcu_lgc_OBJECTS = $(am_test_urcu_lgc_OBJECTS)
 test_urcu_lgc_LDADD = $(LDADD)
 test_urcu_lgc_LINK = $(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(test_urcu_lgc_CFLAGS) \
 	$(CFLAGS) $(AM_LDFLAGS) $(LDFLAGS) -o $@
-am__test_urcu_lgc_mb_SOURCES_DIST = test_urcu_gc.c \
-	$(top_srcdir)/urcu.c $(top_srcdir)/urcu-pointer.c \
-	$(top_srcdir)/compat_futex.c \
-	$(top_srcdir)/compat_arch_@ARCHTYPE@.c
-@COMPAT_FUTEX_TRUE@am__objects_27 =  \
-@COMPAT_FUTEX_TRUE@	test_urcu_lgc_mb-compat_futex.$(OBJEXT)
-@COMPAT_ARCH_FALSE@am__objects_28 = $(am__objects_27)
-@COMPAT_ARCH_TRUE@am__objects_28 = test_urcu_lgc_mb-compat_arch_@ARCHTYPE@.$(OBJEXT) \
-@COMPAT_ARCH_TRUE@	$(am__objects_27)
-am__objects_29 = test_urcu_lgc_mb-urcu.$(OBJEXT) \
-	test_urcu_lgc_mb-urcu-pointer.$(OBJEXT) $(am__objects_28)
-am_test_urcu_lgc_mb_OBJECTS = test_urcu_lgc_mb-test_urcu_gc.$(OBJEXT) \
-	$(am__objects_29)
-test_urcu_lgc_mb_OBJECTS = $(am_test_urcu_lgc_mb_OBJECTS)
-test_urcu_lgc_mb_LDADD = $(LDADD)
-test_urcu_lgc_mb_LINK = $(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) \
-	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(test_urcu_lgc_mb_CFLAGS) \
-	$(CFLAGS) $(AM_LDFLAGS) $(LDFLAGS) -o $@
 am__test_urcu_mb_SOURCES_DIST = test_urcu.c $(top_srcdir)/urcu.c \
 	$(top_srcdir)/urcu-pointer.c $(top_srcdir)/compat_futex.c \
 	$(top_srcdir)/compat_arch_@ARCHTYPE@.c
-@COMPAT_FUTEX_TRUE@am__objects_30 =  \
+@COMPAT_FUTEX_TRUE@am__objects_25 =  \
 @COMPAT_FUTEX_TRUE@	test_urcu_mb-compat_futex.$(OBJEXT)
-@COMPAT_ARCH_FALSE@am__objects_31 = $(am__objects_30)
-@COMPAT_ARCH_TRUE@am__objects_31 = test_urcu_mb-compat_arch_@ARCHTYPE@.$(OBJEXT) \
-@COMPAT_ARCH_TRUE@	$(am__objects_30)
-am__objects_32 = test_urcu_mb-urcu.$(OBJEXT) \
-	test_urcu_mb-urcu-pointer.$(OBJEXT) $(am__objects_31)
+@COMPAT_ARCH_FALSE@am__objects_26 = $(am__objects_25)
+@COMPAT_ARCH_TRUE@am__objects_26 = test_urcu_mb-compat_arch_@ARCHTYPE@.$(OBJEXT) \
+@COMPAT_ARCH_TRUE@	$(am__objects_25)
+am__objects_27 = test_urcu_mb-urcu.$(OBJEXT) \
+	test_urcu_mb-urcu-pointer.$(OBJEXT) $(am__objects_26)
 am_test_urcu_mb_OBJECTS = test_urcu_mb-test_urcu.$(OBJEXT) \
-	$(am__objects_32)
+	$(am__objects_27)
 test_urcu_mb_OBJECTS = $(am_test_urcu_mb_OBJECTS)
 test_urcu_mb_LDADD = $(LDADD)
 test_urcu_mb_LINK = $(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(test_urcu_mb_CFLAGS) \
 	$(CFLAGS) $(AM_LDFLAGS) $(LDFLAGS) -o $@
-am__test_urcu_mb_defer_SOURCES_DIST = test_urcu_defer.c \
-	$(top_srcdir)/urcu.c $(top_srcdir)/urcu-defer.c \
+am__test_urcu_mb_gc_SOURCES_DIST = test_urcu_gc.c $(top_srcdir)/urcu.c \
 	$(top_srcdir)/urcu-pointer.c $(top_srcdir)/compat_futex.c \
 	$(top_srcdir)/compat_arch_@ARCHTYPE@.c
-@COMPAT_FUTEX_TRUE@am__objects_33 =  \
-@COMPAT_FUTEX_TRUE@	test_urcu_mb_defer-compat_futex.$(OBJEXT)
-@COMPAT_ARCH_FALSE@am__objects_34 = $(am__objects_33)
-@COMPAT_ARCH_TRUE@am__objects_34 = test_urcu_mb_defer-compat_arch_@ARCHTYPE@.$(OBJEXT) \
-@COMPAT_ARCH_TRUE@	$(am__objects_33)
-am__objects_35 = test_urcu_mb_defer-urcu.$(OBJEXT) \
-	test_urcu_mb_defer-urcu-defer.$(OBJEXT) \
-	test_urcu_mb_defer-urcu-pointer.$(OBJEXT) $(am__objects_34)
-am_test_urcu_mb_defer_OBJECTS =  \
-	test_urcu_mb_defer-test_urcu_defer.$(OBJEXT) $(am__objects_35)
-test_urcu_mb_defer_OBJECTS = $(am_test_urcu_mb_defer_OBJECTS)
-test_urcu_mb_defer_LDADD = $(LDADD)
-test_urcu_mb_defer_LINK = $(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) \
+@COMPAT_FUTEX_TRUE@am__objects_28 =  \
+@COMPAT_FUTEX_TRUE@	test_urcu_mb_gc-compat_futex.$(OBJEXT)
+@COMPAT_ARCH_FALSE@am__objects_29 = $(am__objects_28)
+@COMPAT_ARCH_TRUE@am__objects_29 = test_urcu_mb_gc-compat_arch_@ARCHTYPE@.$(OBJEXT) \
+@COMPAT_ARCH_TRUE@	$(am__objects_28)
+am__objects_30 = test_urcu_mb_gc-urcu.$(OBJEXT) \
+	test_urcu_mb_gc-urcu-pointer.$(OBJEXT) $(am__objects_29)
+am_test_urcu_mb_gc_OBJECTS = test_urcu_mb_gc-test_urcu_gc.$(OBJEXT) \
+	$(am__objects_30)
+test_urcu_mb_gc_OBJECTS = $(am_test_urcu_mb_gc_OBJECTS)
+test_urcu_mb_gc_LDADD = $(LDADD)
+test_urcu_mb_gc_LINK = $(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) \
+	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(test_urcu_mb_gc_CFLAGS) \
+	$(CFLAGS) $(AM_LDFLAGS) $(LDFLAGS) -o $@
+am__test_urcu_mb_lgc_SOURCES_DIST = test_urcu_gc.c \
+	$(top_srcdir)/urcu.c $(top_srcdir)/urcu-pointer.c \
+	$(top_srcdir)/compat_futex.c \
+	$(top_srcdir)/compat_arch_@ARCHTYPE@.c
+@COMPAT_FUTEX_TRUE@am__objects_31 =  \
+@COMPAT_FUTEX_TRUE@	test_urcu_mb_lgc-compat_futex.$(OBJEXT)
+@COMPAT_ARCH_FALSE@am__objects_32 = $(am__objects_31)
+@COMPAT_ARCH_TRUE@am__objects_32 = test_urcu_mb_lgc-compat_arch_@ARCHTYPE@.$(OBJEXT) \
+@COMPAT_ARCH_TRUE@	$(am__objects_31)
+am__objects_33 = test_urcu_mb_lgc-urcu.$(OBJEXT) \
+	test_urcu_mb_lgc-urcu-pointer.$(OBJEXT) $(am__objects_32)
+am_test_urcu_mb_lgc_OBJECTS = test_urcu_mb_lgc-test_urcu_gc.$(OBJEXT) \
+	$(am__objects_33)
+test_urcu_mb_lgc_OBJECTS = $(am_test_urcu_mb_lgc_OBJECTS)
+test_urcu_mb_lgc_LDADD = $(LDADD)
+test_urcu_mb_lgc_LINK = $(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) \
+	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(test_urcu_mb_lgc_CFLAGS) \
+	$(CFLAGS) $(AM_LDFLAGS) $(LDFLAGS) -o $@
+am__test_urcu_signal_SOURCES_DIST = test_urcu.c $(top_srcdir)/urcu.c \
+	$(top_srcdir)/urcu-pointer.c $(top_srcdir)/compat_futex.c \
+	$(top_srcdir)/compat_arch_@ARCHTYPE@.c
+@COMPAT_FUTEX_TRUE@am__objects_34 =  \
+@COMPAT_FUTEX_TRUE@	test_urcu_signal-compat_futex.$(OBJEXT)
+@COMPAT_ARCH_FALSE@am__objects_35 = $(am__objects_34)
+@COMPAT_ARCH_TRUE@am__objects_35 = test_urcu_signal-compat_arch_@ARCHTYPE@.$(OBJEXT) \
+@COMPAT_ARCH_TRUE@	$(am__objects_34)
+am__objects_36 = test_urcu_signal-urcu.$(OBJEXT) \
+	test_urcu_signal-urcu-pointer.$(OBJEXT) $(am__objects_35)
+am_test_urcu_signal_OBJECTS = test_urcu_signal-test_urcu.$(OBJEXT) \
+	$(am__objects_36)
+test_urcu_signal_OBJECTS = $(am_test_urcu_signal_OBJECTS)
+test_urcu_signal_LDADD = $(LDADD)
+test_urcu_signal_LINK = $(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) \
+	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(test_urcu_signal_CFLAGS) \
+	$(CFLAGS) $(AM_LDFLAGS) $(LDFLAGS) -o $@
+am__test_urcu_signal_dynamic_link_SOURCES_DIST = test_urcu.c \
+	$(top_srcdir)/urcu.c $(top_srcdir)/urcu-pointer.c \
+	$(top_srcdir)/compat_futex.c \
+	$(top_srcdir)/compat_arch_@ARCHTYPE@.c
+@COMPAT_FUTEX_TRUE@am__objects_37 = test_urcu_signal_dynamic_link-compat_futex.$(OBJEXT)
+@COMPAT_ARCH_FALSE@am__objects_38 = $(am__objects_37)
+@COMPAT_ARCH_TRUE@am__objects_38 = test_urcu_signal_dynamic_link-compat_arch_@ARCHTYPE@.$(OBJEXT) \
+@COMPAT_ARCH_TRUE@	$(am__objects_37)
+am__objects_39 = test_urcu_signal_dynamic_link-urcu.$(OBJEXT) \
+	test_urcu_signal_dynamic_link-urcu-pointer.$(OBJEXT) \
+	$(am__objects_38)
+am_test_urcu_signal_dynamic_link_OBJECTS =  \
+	test_urcu_signal_dynamic_link-test_urcu.$(OBJEXT) \
+	$(am__objects_39)
+test_urcu_signal_dynamic_link_OBJECTS =  \
+	$(am_test_urcu_signal_dynamic_link_OBJECTS)
+test_urcu_signal_dynamic_link_LDADD = $(LDADD)
+test_urcu_signal_dynamic_link_LINK = $(LIBTOOL) --tag=CC \
+	$(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=link $(CCLD) \
+	$(test_urcu_signal_dynamic_link_CFLAGS) $(CFLAGS) \
+	$(AM_LDFLAGS) $(LDFLAGS) -o $@
+am__test_urcu_signal_gc_SOURCES_DIST = test_urcu_gc.c \
+	$(top_srcdir)/urcu.c $(top_srcdir)/urcu-pointer.c \
+	$(top_srcdir)/compat_futex.c \
+	$(top_srcdir)/compat_arch_@ARCHTYPE@.c
+@COMPAT_FUTEX_TRUE@am__objects_40 =  \
+@COMPAT_FUTEX_TRUE@	test_urcu_signal_gc-compat_futex.$(OBJEXT)
+@COMPAT_ARCH_FALSE@am__objects_41 = $(am__objects_40)
+@COMPAT_ARCH_TRUE@am__objects_41 = test_urcu_signal_gc-compat_arch_@ARCHTYPE@.$(OBJEXT) \
+@COMPAT_ARCH_TRUE@	$(am__objects_40)
+am__objects_42 = test_urcu_signal_gc-urcu.$(OBJEXT) \
+	test_urcu_signal_gc-urcu-pointer.$(OBJEXT) $(am__objects_41)
+am_test_urcu_signal_gc_OBJECTS =  \
+	test_urcu_signal_gc-test_urcu_gc.$(OBJEXT) $(am__objects_42)
+test_urcu_signal_gc_OBJECTS = $(am_test_urcu_signal_gc_OBJECTS)
+test_urcu_signal_gc_LDADD = $(LDADD)
+test_urcu_signal_gc_LINK = $(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CCLD) \
-	$(test_urcu_mb_defer_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) \
+	$(test_urcu_signal_gc_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) \
+	$(LDFLAGS) -o $@
+am__test_urcu_signal_lgc_SOURCES_DIST = test_urcu_gc.c \
+	$(top_srcdir)/urcu.c $(top_srcdir)/urcu-pointer.c \
+	$(top_srcdir)/compat_futex.c \
+	$(top_srcdir)/compat_arch_@ARCHTYPE@.c
+@COMPAT_FUTEX_TRUE@am__objects_43 = test_urcu_signal_lgc-compat_futex.$(OBJEXT)
+@COMPAT_ARCH_FALSE@am__objects_44 = $(am__objects_43)
+@COMPAT_ARCH_TRUE@am__objects_44 = test_urcu_signal_lgc-compat_arch_@ARCHTYPE@.$(OBJEXT) \
+@COMPAT_ARCH_TRUE@	$(am__objects_43)
+am__objects_45 = test_urcu_signal_lgc-urcu.$(OBJEXT) \
+	test_urcu_signal_lgc-urcu-pointer.$(OBJEXT) $(am__objects_44)
+am_test_urcu_signal_lgc_OBJECTS =  \
+	test_urcu_signal_lgc-test_urcu_gc.$(OBJEXT) $(am__objects_45)
+test_urcu_signal_lgc_OBJECTS = $(am_test_urcu_signal_lgc_OBJECTS)
+test_urcu_signal_lgc_LDADD = $(LDADD)
+test_urcu_signal_lgc_LINK = $(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) \
+	$(LIBTOOLFLAGS) --mode=link $(CCLD) \
+	$(test_urcu_signal_lgc_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) \
+	$(LDFLAGS) -o $@
+am__test_urcu_signal_timing_SOURCES_DIST = test_urcu_timing.c \
+	$(top_srcdir)/urcu.c $(top_srcdir)/urcu-pointer.c \
+	$(top_srcdir)/compat_futex.c \
+	$(top_srcdir)/compat_arch_@ARCHTYPE@.c
+@COMPAT_FUTEX_TRUE@am__objects_46 = test_urcu_signal_timing-compat_futex.$(OBJEXT)
+@COMPAT_ARCH_FALSE@am__objects_47 = $(am__objects_46)
+@COMPAT_ARCH_TRUE@am__objects_47 = test_urcu_signal_timing-compat_arch_@ARCHTYPE@.$(OBJEXT) \
+@COMPAT_ARCH_TRUE@	$(am__objects_46)
+am__objects_48 = test_urcu_signal_timing-urcu.$(OBJEXT) \
+	test_urcu_signal_timing-urcu-pointer.$(OBJEXT) \
+	$(am__objects_47)
+am_test_urcu_signal_timing_OBJECTS =  \
+	test_urcu_signal_timing-test_urcu_timing.$(OBJEXT) \
+	$(am__objects_48)
+test_urcu_signal_timing_OBJECTS =  \
+	$(am_test_urcu_signal_timing_OBJECTS)
+test_urcu_signal_timing_LDADD = $(LDADD)
+test_urcu_signal_timing_LINK = $(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) \
+	$(LIBTOOLFLAGS) --mode=link $(CCLD) \
+	$(test_urcu_signal_timing_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) \
+	$(LDFLAGS) -o $@
+am__test_urcu_signal_yield_SOURCES_DIST = test_urcu.c \
+	$(top_srcdir)/urcu.c $(top_srcdir)/urcu-pointer.c \
+	$(top_srcdir)/compat_futex.c \
+	$(top_srcdir)/compat_arch_@ARCHTYPE@.c
+@COMPAT_FUTEX_TRUE@am__objects_49 = test_urcu_signal_yield-compat_futex.$(OBJEXT)
+@COMPAT_ARCH_FALSE@am__objects_50 = $(am__objects_49)
+@COMPAT_ARCH_TRUE@am__objects_50 = test_urcu_signal_yield-compat_arch_@ARCHTYPE@.$(OBJEXT) \
+@COMPAT_ARCH_TRUE@	$(am__objects_49)
+am__objects_51 = test_urcu_signal_yield-urcu.$(OBJEXT) \
+	test_urcu_signal_yield-urcu-pointer.$(OBJEXT) \
+	$(am__objects_50)
+am_test_urcu_signal_yield_OBJECTS =  \
+	test_urcu_signal_yield-test_urcu.$(OBJEXT) $(am__objects_51)
+test_urcu_signal_yield_OBJECTS = $(am_test_urcu_signal_yield_OBJECTS)
+test_urcu_signal_yield_LDADD = $(LDADD)
+test_urcu_signal_yield_LINK = $(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) \
+	$(LIBTOOLFLAGS) --mode=link $(CCLD) \
+	$(test_urcu_signal_yield_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) \
 	$(LDFLAGS) -o $@
 am__test_urcu_timing_SOURCES_DIST = test_urcu_timing.c \
 	$(top_srcdir)/urcu.c $(top_srcdir)/urcu-pointer.c \
@@ -389,15 +506,15 @@ test_urcu_timing_LDADD = $(LDADD)
 am__test_urcu_yield_SOURCES_DIST = test_urcu.c $(top_srcdir)/urcu.c \
 	$(top_srcdir)/urcu-pointer.c $(top_srcdir)/compat_futex.c \
 	$(top_srcdir)/compat_arch_@ARCHTYPE@.c
-@COMPAT_FUTEX_TRUE@am__objects_36 =  \
+@COMPAT_FUTEX_TRUE@am__objects_52 =  \
 @COMPAT_FUTEX_TRUE@	test_urcu_yield-compat_futex.$(OBJEXT)
-@COMPAT_ARCH_FALSE@am__objects_37 = $(am__objects_36)
-@COMPAT_ARCH_TRUE@am__objects_37 = test_urcu_yield-compat_arch_@ARCHTYPE@.$(OBJEXT) \
-@COMPAT_ARCH_TRUE@	$(am__objects_36)
-am__objects_38 = test_urcu_yield-urcu.$(OBJEXT) \
-	test_urcu_yield-urcu-pointer.$(OBJEXT) $(am__objects_37)
+@COMPAT_ARCH_FALSE@am__objects_53 = $(am__objects_52)
+@COMPAT_ARCH_TRUE@am__objects_53 = test_urcu_yield-compat_arch_@ARCHTYPE@.$(OBJEXT) \
+@COMPAT_ARCH_TRUE@	$(am__objects_52)
+am__objects_54 = test_urcu_yield-urcu.$(OBJEXT) \
+	test_urcu_yield-urcu-pointer.$(OBJEXT) $(am__objects_53)
 am_test_urcu_yield_OBJECTS = test_urcu_yield-test_urcu.$(OBJEXT) \
-	$(am__objects_38)
+	$(am__objects_54)
 test_urcu_yield_OBJECTS = $(am_test_urcu_yield_OBJECTS)
 test_urcu_yield_LDADD = $(LDADD)
 test_urcu_yield_LINK = $(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) \
@@ -417,8 +534,8 @@ LINK = $(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) \
 	$(LDFLAGS) -o $@
 SOURCES = $(rcutorture_qsbr_SOURCES) $(rcutorture_urcu_SOURCES) \
 	$(rcutorture_urcu_bp_SOURCES) $(rcutorture_urcu_mb_SOURCES) \
-	$(test_looplen_SOURCES) $(test_mutex_SOURCES) \
-	$(test_perthreadlock_SOURCES) \
+	$(rcutorture_urcu_signal_SOURCES) $(test_looplen_SOURCES) \
+	$(test_mutex_SOURCES) $(test_perthreadlock_SOURCES) \
 	$(test_perthreadlock_timing_SOURCES) $(test_qsbr_SOURCES) \
 	$(test_qsbr_dynamic_link_SOURCES) $(test_qsbr_gc_SOURCES) \
 	$(test_qsbr_lgc_SOURCES) $(test_qsbr_timing_SOURCES) \
@@ -427,14 +544,19 @@ SOURCES = $(rcutorture_qsbr_SOURCES) $(rcutorture_urcu_SOURCES) \
 	$(test_urcu_assign_SOURCES) \
 	$(test_urcu_assign_dynamic_link_SOURCES) \
 	$(test_urcu_bp_SOURCES) $(test_urcu_bp_dynamic_link_SOURCES) \
-	$(test_urcu_dynamic_link_SOURCES) $(test_urcu_gc_SOURCES) \
-	$(test_urcu_gc_mb_SOURCES) $(test_urcu_lgc_SOURCES) \
-	$(test_urcu_lgc_mb_SOURCES) $(test_urcu_mb_SOURCES) \
-	$(test_urcu_mb_defer_SOURCES) $(test_urcu_timing_SOURCES) \
+	$(test_urcu_defer_SOURCES) $(test_urcu_dynamic_link_SOURCES) \
+	$(test_urcu_gc_SOURCES) $(test_urcu_lgc_SOURCES) \
+	$(test_urcu_mb_SOURCES) $(test_urcu_mb_gc_SOURCES) \
+	$(test_urcu_mb_lgc_SOURCES) $(test_urcu_signal_SOURCES) \
+	$(test_urcu_signal_dynamic_link_SOURCES) \
+	$(test_urcu_signal_gc_SOURCES) $(test_urcu_signal_lgc_SOURCES) \
+	$(test_urcu_signal_timing_SOURCES) \
+	$(test_urcu_signal_yield_SOURCES) $(test_urcu_timing_SOURCES) \
 	$(test_urcu_yield_SOURCES)
 DIST_SOURCES = $(rcutorture_qsbr_SOURCES) $(rcutorture_urcu_SOURCES) \
 	$(rcutorture_urcu_bp_SOURCES) $(rcutorture_urcu_mb_SOURCES) \
-	$(test_looplen_SOURCES) $(am__test_mutex_SOURCES_DIST) \
+	$(rcutorture_urcu_signal_SOURCES) $(test_looplen_SOURCES) \
+	$(am__test_mutex_SOURCES_DIST) \
 	$(am__test_perthreadlock_SOURCES_DIST) \
 	$(am__test_perthreadlock_timing_SOURCES_DIST) \
 	$(am__test_qsbr_SOURCES_DIST) \
@@ -449,13 +571,19 @@ DIST_SOURCES = $(rcutorture_qsbr_SOURCES) $(rcutorture_urcu_SOURCES) \
 	$(am__test_urcu_assign_dynamic_link_SOURCES_DIST) \
 	$(am__test_urcu_bp_SOURCES_DIST) \
 	$(am__test_urcu_bp_dynamic_link_SOURCES_DIST) \
+	$(am__test_urcu_defer_SOURCES_DIST) \
 	$(am__test_urcu_dynamic_link_SOURCES_DIST) \
 	$(am__test_urcu_gc_SOURCES_DIST) \
-	$(am__test_urcu_gc_mb_SOURCES_DIST) \
 	$(am__test_urcu_lgc_SOURCES_DIST) \
-	$(am__test_urcu_lgc_mb_SOURCES_DIST) \
 	$(am__test_urcu_mb_SOURCES_DIST) \
-	$(am__test_urcu_mb_defer_SOURCES_DIST) \
+	$(am__test_urcu_mb_gc_SOURCES_DIST) \
+	$(am__test_urcu_mb_lgc_SOURCES_DIST) \
+	$(am__test_urcu_signal_SOURCES_DIST) \
+	$(am__test_urcu_signal_dynamic_link_SOURCES_DIST) \
+	$(am__test_urcu_signal_gc_SOURCES_DIST) \
+	$(am__test_urcu_signal_lgc_SOURCES_DIST) \
+	$(am__test_urcu_signal_timing_SOURCES_DIST) \
+	$(am__test_urcu_signal_yield_SOURCES_DIST) \
 	$(am__test_urcu_timing_SOURCES_DIST) \
 	$(am__test_urcu_yield_SOURCES_DIST)
 HEADERS = $(noinst_HEADERS)
@@ -584,67 +712,83 @@ noinst_HEADERS = rcutorture.h
 @COMPAT_ARCH_FALSE@COMPAT = $(am__append_1)
 @COMPAT_ARCH_TRUE@COMPAT = $(top_srcdir)/compat_arch_@ARCHTYPE@.c \
 @COMPAT_ARCH_TRUE@	$(am__append_1)
-URCU_SIGNAL = $(top_srcdir)/urcu.c $(top_srcdir)/urcu-pointer.c $(COMPAT)
-# URCU_SIGNAL_YIELD uses urcu.c but -DDEBUG_YIELD must be defined
-URCU_SIGNAL_YIELD = $(top_srcdir)/urcu.c $(top_srcdir)/urcu-pointer.c $(COMPAT)
-# URCU_MB uses urcu.c but -DURCU_MB must be defined
-URCU_MB = $(top_srcdir)/urcu.c $(top_srcdir)/urcu-pointer.c $(COMPAT)
-URCU_BP = $(top_srcdir)/urcu-bp.c $(top_srcdir)/urcu-pointer.c $(COMPAT)
+URCU = $(top_srcdir)/urcu.c $(top_srcdir)/urcu-pointer.c $(COMPAT)
 URCU_QSBR = $(top_srcdir)/urcu-qsbr.c $(top_srcdir)/urcu-pointer.c $(COMPAT)
-# -DURCU_MB must be defined
-URCU_MB_DEFER = $(top_srcdir)/urcu.c $(top_srcdir)/urcu-defer.c $(top_srcdir)/urcu-pointer.c $(COMPAT)
-URCU_SIGNAL_LIB = $(top_builddir)/liburcu.la
-URCU_MB_LIB = $(top_builddir)/liburcu-mb.la
-URCU_BP_LIB = $(top_builddir)/liburcu-bp.la
+# URCU_MB uses urcu.c but -DRCU_MB must be defined
+URCU_MB = $(top_srcdir)/urcu.c $(top_srcdir)/urcu-pointer.c $(COMPAT)
+# URCU_SIGNAL uses urcu.c but -DRCU_SIGNAL must be defined
+URCU_SIGNAL = $(top_srcdir)/urcu.c $(top_srcdir)/urcu-pointer.c $(COMPAT)
+URCU_BP = $(top_srcdir)/urcu-bp.c $(top_srcdir)/urcu-pointer.c $(COMPAT)
+URCU_DEFER = $(top_srcdir)/urcu.c $(top_srcdir)/urcu-defer.c $(top_srcdir)/urcu-pointer.c $(COMPAT)
+URCU_LIB = $(top_builddir)/liburcu.la
 URCU_QSBR_LIB = $(top_builddir)/liburcu-qsbr.la
+URCU_MB_LIB = $(top_builddir)/liburcu-mb.la
+URCU_SIGNAL_LIB = $(top_builddir)/liburcu-signal.la
+URCU_BP_LIB = $(top_builddir)/liburcu-bp.la
 @GCC_API_FALSE@APIHEADER = api_@ARCHTYPE@.h
 @GCC_API_TRUE@APIHEADER = api_gcc.h
 EXTRA_DIST = $(top_srcdir)/tests/api_*.h
-test_urcu_SOURCES = test_urcu.c $(URCU_SIGNAL)
-test_urcu_dynamic_link_SOURCES = test_urcu.c $(URCU_SIGNAL)
+test_urcu_SOURCES = test_urcu.c $(URCU)
+test_urcu_dynamic_link_SOURCES = test_urcu.c $(URCU)
 test_urcu_dynamic_link_CFLAGS = -DDYNAMIC_LINK_TEST $(AM_CFLAGS)
-test_urcu_timing_SOURCES = test_urcu_timing.c $(URCU_SIGNAL)
+test_urcu_timing_SOURCES = test_urcu_timing.c $(URCU)
+test_urcu_yield_SOURCES = test_urcu.c $(URCU)
+test_urcu_yield_CFLAGS = -DDEBUG_YIELD $(AM_CFLAGS)
+test_qsbr_SOURCES = test_qsbr.c $(URCU_QSBR)
+test_qsbr_timing_SOURCES = test_qsbr_timing.c $(URCU_QSBR)
+test_urcu_mb_SOURCES = test_urcu.c $(URCU_MB)
+test_urcu_mb_CFLAGS = -DRCU_MB $(AM_CFLAGS)
+test_urcu_signal_SOURCES = test_urcu.c $(URCU_SIGNAL)
+test_urcu_signal_CFLAGS = -DRCU_SIGNAL $(AM_CFLAGS)
+test_urcu_signal_dynamic_link_SOURCES = test_urcu.c $(URCU_SIGNAL)
+test_urcu_signal_dynamic_link_CFLAGS = -DRCU_SIGNAL -DDYNAMIC_LINK_TEST \
+					$(AM_CFLAGS)
+
+test_urcu_signal_timing_SOURCES = test_urcu_timing.c $(URCU_SIGNAL)
+test_urcu_signal_timing_CFLAGS = -DRCU_SIGNAL $(AM_CFLAGS)
+test_urcu_signal_yield_SOURCES = test_urcu.c $(URCU_SIGNAL)
+test_urcu_signal_yield_CFLAGS = -DRCU_SIGNAL -DDEBUG_YIELD $(AM_CFLAGS)
 test_rwlock_timing_SOURCES = test_rwlock_timing.c $(URCU_SIGNAL)
 test_rwlock_SOURCES = test_rwlock.c $(URCU_SIGNAL)
 test_perthreadlock_timing_SOURCES = test_perthreadlock_timing.c $(URCU_SIGNAL)
 test_perthreadlock_SOURCES = test_perthreadlock.c $(URCU_SIGNAL)
-test_urcu_yield_SOURCES = test_urcu.c $(URCU_SIGNAL_YIELD)
-test_urcu_yield_CFLAGS = -DDEBUG_YIELD $(AM_CFLAGS)
-test_urcu_mb_SOURCES = test_urcu.c $(URCU_MB)
-test_urcu_mb_CFLAGS = -DURCU_MB $(AM_CFLAGS)
-test_qsbr_timing_SOURCES = test_qsbr_timing.c $(URCU_QSBR)
-test_qsbr_SOURCES = test_qsbr.c $(URCU_QSBR)
 rcutorture_urcu_SOURCES = urcutorture.c
-rcutorture_urcu_CFLAGS = -DTORTURE_URCU_SIGNAL $(AM_CFLAGS)
-rcutorture_urcu_LDADD = $(URCU_SIGNAL_LIB)
+rcutorture_urcu_CFLAGS = -DTORTURE_URCU $(AM_CFLAGS)
+rcutorture_urcu_LDADD = $(URCU)
 rcutorture_urcu_mb_SOURCES = urcutorture.c
 rcutorture_urcu_mb_CFLAGS = -DTORTURE_URCU_MB $(AM_CFLAGS)
 rcutorture_urcu_mb_LDADD = $(URCU_MB_LIB)
 rcutorture_qsbr_SOURCES = urcutorture.c
 rcutorture_qsbr_CFLAGS = -DTORTURE_QSBR $(AM_CFLAGS)
 rcutorture_qsbr_LDADD = $(URCU_QSBR_LIB)
+rcutorture_urcu_signal_SOURCES = urcutorture.c
+rcutorture_urcu_signal_CFLAGS = -DTORTURE_URCU_SIGNAL $(AM_CFLAGS)
+rcutorture_urcu_signal_LDADD = $(URCU_SIGNAL_LIB)
 rcutorture_urcu_bp_SOURCES = urcutorture.c
 rcutorture_urcu_bp_CFLAGS = -DTORTURE_URCU_BP $(AM_CFLAGS)
 rcutorture_urcu_bp_LDADD = $(URCU_BP_LIB)
-test_mutex_SOURCES = test_mutex.c $(URCU_SIGNAL)
+test_mutex_SOURCES = test_mutex.c $(URCU)
 test_looplen_SOURCES = test_looplen.c
-test_urcu_gc_SOURCES = test_urcu_gc.c $(URCU_SIGNAL)
-test_urcu_gc_mb_SOURCES = test_urcu_gc.c $(URCU_MB)
-test_urcu_gc_mb_CFLAGS = -DURCU_MB $(AM_CFLAGS)
+test_urcu_gc_SOURCES = test_urcu_gc.c $(URCU)
+test_urcu_signal_gc_SOURCES = test_urcu_gc.c $(URCU_SIGNAL)
+test_urcu_signal_gc_CFLAGS = -DRCU_SIGNAL $(AM_CFLAGS)
+test_urcu_mb_gc_SOURCES = test_urcu_gc.c $(URCU_MB)
+test_urcu_mb_gc_CFLAGS = -DRCU_MB $(AM_CFLAGS)
 test_qsbr_gc_SOURCES = test_qsbr_gc.c $(URCU_QSBR)
 test_qsbr_lgc_SOURCES = test_qsbr_gc.c $(URCU_QSBR)
 test_qsbr_lgc_CFLAGS = -DTEST_LOCAL_GC $(AM_CFLAGS)
-test_urcu_lgc_SOURCES = test_urcu_gc.c $(URCU_SIGNAL)
+test_urcu_lgc_SOURCES = test_urcu_gc.c $(URCU)
 test_urcu_lgc_CFLAGS = -DTEST_LOCAL_GC $(AM_CFLAGS)
-test_urcu_lgc_mb_SOURCES = test_urcu_gc.c $(URCU_MB)
-test_urcu_lgc_mb_CFLAGS = -DTEST_LOCAL_GC -DURCU_MB $(AM_CFLAGS)
+test_urcu_signal_lgc_SOURCES = test_urcu_gc.c $(URCU_SIGNAL)
+test_urcu_signal_lgc_CFLAGS = -DRCU_SIGNAL -DTEST_LOCAL_GC $(AM_CFLAGS)
+test_urcu_mb_lgc_SOURCES = test_urcu_gc.c $(URCU_MB)
+test_urcu_mb_lgc_CFLAGS = -DTEST_LOCAL_GC -DRCU_MB $(AM_CFLAGS)
 test_qsbr_dynamic_link_SOURCES = test_qsbr.c $(URCU_QSBR)
 test_qsbr_dynamic_link_CFLAGS = -DDYNAMIC_LINK_TEST $(AM_CFLAGS)
-test_urcu_mb_defer_SOURCES = test_urcu_defer.c $(URCU_MB_DEFER)
-test_urcu_mb_defer_CFLAGS = -DURCU_MB $(AM_CFLAGS)
+test_urcu_defer_SOURCES = test_urcu_defer.c $(URCU_DEFER)
 test_uatomic_SOURCES = test_uatomic.c $(COMPAT)
-test_urcu_assign_SOURCES = test_urcu_assign.c $(URCU_SIGNAL)
-test_urcu_assign_dynamic_link_SOURCES = test_urcu_assign.c $(URCU_SIGNAL)
+test_urcu_assign_SOURCES = test_urcu_assign.c $(URCU)
+test_urcu_assign_dynamic_link_SOURCES = test_urcu_assign.c $(URCU)
 test_urcu_assign_dynamic_link_CFLAGS = -DDYNAMIC_LINK_TEST $(AM_CFLAGS)
 test_urcu_bp_SOURCES = test_urcu_bp.c $(URCU_BP)
 test_urcu_bp_dynamic_link_SOURCES = test_urcu_bp.c $(URCU_BP)
@@ -701,6 +845,9 @@ rcutorture_urcu_bp$(EXEEXT): $(rcutorture_urcu_bp_OBJECTS) $(rcutorture_urcu_bp_
 rcutorture_urcu_mb$(EXEEXT): $(rcutorture_urcu_mb_OBJECTS) $(rcutorture_urcu_mb_DEPENDENCIES) 
 	@rm -f rcutorture_urcu_mb$(EXEEXT)
 	$(rcutorture_urcu_mb_LINK) $(rcutorture_urcu_mb_OBJECTS) $(rcutorture_urcu_mb_LDADD) $(LIBS)
+rcutorture_urcu_signal$(EXEEXT): $(rcutorture_urcu_signal_OBJECTS) $(rcutorture_urcu_signal_DEPENDENCIES) 
+	@rm -f rcutorture_urcu_signal$(EXEEXT)
+	$(rcutorture_urcu_signal_LINK) $(rcutorture_urcu_signal_OBJECTS) $(rcutorture_urcu_signal_LDADD) $(LIBS)
 test_looplen$(EXEEXT): $(test_looplen_OBJECTS) $(test_looplen_DEPENDENCIES) 
 	@rm -f test_looplen$(EXEEXT)
 	$(LINK) $(test_looplen_OBJECTS) $(test_looplen_LDADD) $(LIBS)
@@ -752,27 +899,45 @@ test_urcu_bp$(EXEEXT): $(test_urcu_bp_OBJECTS) $(test_urcu_bp_DEPENDENCIES)
 test_urcu_bp_dynamic_link$(EXEEXT): $(test_urcu_bp_dynamic_link_OBJECTS) $(test_urcu_bp_dynamic_link_DEPENDENCIES) 
 	@rm -f test_urcu_bp_dynamic_link$(EXEEXT)
 	$(test_urcu_bp_dynamic_link_LINK) $(test_urcu_bp_dynamic_link_OBJECTS) $(test_urcu_bp_dynamic_link_LDADD) $(LIBS)
+test_urcu_defer$(EXEEXT): $(test_urcu_defer_OBJECTS) $(test_urcu_defer_DEPENDENCIES) 
+	@rm -f test_urcu_defer$(EXEEXT)
+	$(LINK) $(test_urcu_defer_OBJECTS) $(test_urcu_defer_LDADD) $(LIBS)
 test_urcu_dynamic_link$(EXEEXT): $(test_urcu_dynamic_link_OBJECTS) $(test_urcu_dynamic_link_DEPENDENCIES) 
 	@rm -f test_urcu_dynamic_link$(EXEEXT)
 	$(test_urcu_dynamic_link_LINK) $(test_urcu_dynamic_link_OBJECTS) $(test_urcu_dynamic_link_LDADD) $(LIBS)
 test_urcu_gc$(EXEEXT): $(test_urcu_gc_OBJECTS) $(test_urcu_gc_DEPENDENCIES) 
 	@rm -f test_urcu_gc$(EXEEXT)
 	$(LINK) $(test_urcu_gc_OBJECTS) $(test_urcu_gc_LDADD) $(LIBS)
-test_urcu_gc_mb$(EXEEXT): $(test_urcu_gc_mb_OBJECTS) $(test_urcu_gc_mb_DEPENDENCIES) 
-	@rm -f test_urcu_gc_mb$(EXEEXT)
-	$(test_urcu_gc_mb_LINK) $(test_urcu_gc_mb_OBJECTS) $(test_urcu_gc_mb_LDADD) $(LIBS)
 test_urcu_lgc$(EXEEXT): $(test_urcu_lgc_OBJECTS) $(test_urcu_lgc_DEPENDENCIES) 
 	@rm -f test_urcu_lgc$(EXEEXT)
 	$(test_urcu_lgc_LINK) $(test_urcu_lgc_OBJECTS) $(test_urcu_lgc_LDADD) $(LIBS)
-test_urcu_lgc_mb$(EXEEXT): $(test_urcu_lgc_mb_OBJECTS) $(test_urcu_lgc_mb_DEPENDENCIES) 
-	@rm -f test_urcu_lgc_mb$(EXEEXT)
-	$(test_urcu_lgc_mb_LINK) $(test_urcu_lgc_mb_OBJECTS) $(test_urcu_lgc_mb_LDADD) $(LIBS)
 test_urcu_mb$(EXEEXT): $(test_urcu_mb_OBJECTS) $(test_urcu_mb_DEPENDENCIES) 
 	@rm -f test_urcu_mb$(EXEEXT)
 	$(test_urcu_mb_LINK) $(test_urcu_mb_OBJECTS) $(test_urcu_mb_LDADD) $(LIBS)
-test_urcu_mb_defer$(EXEEXT): $(test_urcu_mb_defer_OBJECTS) $(test_urcu_mb_defer_DEPENDENCIES) 
-	@rm -f test_urcu_mb_defer$(EXEEXT)
-	$(test_urcu_mb_defer_LINK) $(test_urcu_mb_defer_OBJECTS) $(test_urcu_mb_defer_LDADD) $(LIBS)
+test_urcu_mb_gc$(EXEEXT): $(test_urcu_mb_gc_OBJECTS) $(test_urcu_mb_gc_DEPENDENCIES) 
+	@rm -f test_urcu_mb_gc$(EXEEXT)
+	$(test_urcu_mb_gc_LINK) $(test_urcu_mb_gc_OBJECTS) $(test_urcu_mb_gc_LDADD) $(LIBS)
+test_urcu_mb_lgc$(EXEEXT): $(test_urcu_mb_lgc_OBJECTS) $(test_urcu_mb_lgc_DEPENDENCIES) 
+	@rm -f test_urcu_mb_lgc$(EXEEXT)
+	$(test_urcu_mb_lgc_LINK) $(test_urcu_mb_lgc_OBJECTS) $(test_urcu_mb_lgc_LDADD) $(LIBS)
+test_urcu_signal$(EXEEXT): $(test_urcu_signal_OBJECTS) $(test_urcu_signal_DEPENDENCIES) 
+	@rm -f test_urcu_signal$(EXEEXT)
+	$(test_urcu_signal_LINK) $(test_urcu_signal_OBJECTS) $(test_urcu_signal_LDADD) $(LIBS)
+test_urcu_signal_dynamic_link$(EXEEXT): $(test_urcu_signal_dynamic_link_OBJECTS) $(test_urcu_signal_dynamic_link_DEPENDENCIES) 
+	@rm -f test_urcu_signal_dynamic_link$(EXEEXT)
+	$(test_urcu_signal_dynamic_link_LINK) $(test_urcu_signal_dynamic_link_OBJECTS) $(test_urcu_signal_dynamic_link_LDADD) $(LIBS)
+test_urcu_signal_gc$(EXEEXT): $(test_urcu_signal_gc_OBJECTS) $(test_urcu_signal_gc_DEPENDENCIES) 
+	@rm -f test_urcu_signal_gc$(EXEEXT)
+	$(test_urcu_signal_gc_LINK) $(test_urcu_signal_gc_OBJECTS) $(test_urcu_signal_gc_LDADD) $(LIBS)
+test_urcu_signal_lgc$(EXEEXT): $(test_urcu_signal_lgc_OBJECTS) $(test_urcu_signal_lgc_DEPENDENCIES) 
+	@rm -f test_urcu_signal_lgc$(EXEEXT)
+	$(test_urcu_signal_lgc_LINK) $(test_urcu_signal_lgc_OBJECTS) $(test_urcu_signal_lgc_LDADD) $(LIBS)
+test_urcu_signal_timing$(EXEEXT): $(test_urcu_signal_timing_OBJECTS) $(test_urcu_signal_timing_DEPENDENCIES) 
+	@rm -f test_urcu_signal_timing$(EXEEXT)
+	$(test_urcu_signal_timing_LINK) $(test_urcu_signal_timing_OBJECTS) $(test_urcu_signal_timing_LDADD) $(LIBS)
+test_urcu_signal_yield$(EXEEXT): $(test_urcu_signal_yield_OBJECTS) $(test_urcu_signal_yield_DEPENDENCIES) 
+	@rm -f test_urcu_signal_yield$(EXEEXT)
+	$(test_urcu_signal_yield_LINK) $(test_urcu_signal_yield_OBJECTS) $(test_urcu_signal_yield_LDADD) $(LIBS)
 test_urcu_timing$(EXEEXT): $(test_urcu_timing_OBJECTS) $(test_urcu_timing_DEPENDENCIES) 
 	@rm -f test_urcu_timing$(EXEEXT)
 	$(LINK) $(test_urcu_timing_OBJECTS) $(test_urcu_timing_LDADD) $(LIBS)
@@ -792,6 +957,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rcutorture_urcu-urcutorture.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rcutorture_urcu_bp-urcutorture.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rcutorture_urcu_mb-urcutorture.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rcutorture_urcu_signal-urcutorture.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/test_looplen.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/test_mutex.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/test_perthreadlock.Po@am__quote@
@@ -825,38 +991,63 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/test_urcu_bp_dynamic_link-test_urcu_bp.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/test_urcu_bp_dynamic_link-urcu-bp.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/test_urcu_bp_dynamic_link-urcu-pointer.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/test_urcu_defer.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/test_urcu_dynamic_link-compat_arch_@ARCHTYPE@.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/test_urcu_dynamic_link-compat_futex.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/test_urcu_dynamic_link-test_urcu.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/test_urcu_dynamic_link-urcu-pointer.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/test_urcu_dynamic_link-urcu.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/test_urcu_gc.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/test_urcu_gc_mb-compat_arch_@ARCHTYPE@.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/test_urcu_gc_mb-compat_futex.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/test_urcu_gc_mb-test_urcu_gc.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/test_urcu_gc_mb-urcu-pointer.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/test_urcu_gc_mb-urcu.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/test_urcu_lgc-compat_arch_@ARCHTYPE@.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/test_urcu_lgc-compat_futex.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/test_urcu_lgc-test_urcu_gc.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/test_urcu_lgc-urcu-pointer.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/test_urcu_lgc-urcu.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/test_urcu_lgc_mb-compat_arch_@ARCHTYPE@.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/test_urcu_lgc_mb-compat_futex.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/test_urcu_lgc_mb-test_urcu_gc.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/test_urcu_lgc_mb-urcu-pointer.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/test_urcu_lgc_mb-urcu.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/test_urcu_mb-compat_arch_@ARCHTYPE@.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/test_urcu_mb-compat_futex.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/test_urcu_mb-test_urcu.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/test_urcu_mb-urcu-pointer.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/test_urcu_mb-urcu.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/test_urcu_mb_defer-compat_arch_@ARCHTYPE@.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/test_urcu_mb_defer-compat_futex.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/test_urcu_mb_defer-test_urcu_defer.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/test_urcu_mb_defer-urcu-defer.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/test_urcu_mb_defer-urcu-pointer.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/test_urcu_mb_defer-urcu.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/test_urcu_mb_gc-compat_arch_@ARCHTYPE@.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/test_urcu_mb_gc-compat_futex.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/test_urcu_mb_gc-test_urcu_gc.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/test_urcu_mb_gc-urcu-pointer.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/test_urcu_mb_gc-urcu.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/test_urcu_mb_lgc-compat_arch_@ARCHTYPE@.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/test_urcu_mb_lgc-compat_futex.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/test_urcu_mb_lgc-test_urcu_gc.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/test_urcu_mb_lgc-urcu-pointer.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/test_urcu_mb_lgc-urcu.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/test_urcu_signal-compat_arch_@ARCHTYPE@.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/test_urcu_signal-compat_futex.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/test_urcu_signal-test_urcu.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/test_urcu_signal-urcu-pointer.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/test_urcu_signal-urcu.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/test_urcu_signal_dynamic_link-compat_arch_@ARCHTYPE@.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/test_urcu_signal_dynamic_link-compat_futex.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/test_urcu_signal_dynamic_link-test_urcu.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/test_urcu_signal_dynamic_link-urcu-pointer.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/test_urcu_signal_dynamic_link-urcu.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/test_urcu_signal_gc-compat_arch_@ARCHTYPE@.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/test_urcu_signal_gc-compat_futex.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/test_urcu_signal_gc-test_urcu_gc.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/test_urcu_signal_gc-urcu-pointer.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/test_urcu_signal_gc-urcu.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/test_urcu_signal_lgc-compat_arch_@ARCHTYPE@.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/test_urcu_signal_lgc-compat_futex.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/test_urcu_signal_lgc-test_urcu_gc.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/test_urcu_signal_lgc-urcu-pointer.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/test_urcu_signal_lgc-urcu.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/test_urcu_signal_timing-compat_arch_@ARCHTYPE@.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/test_urcu_signal_timing-compat_futex.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/test_urcu_signal_timing-test_urcu_timing.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/test_urcu_signal_timing-urcu-pointer.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/test_urcu_signal_timing-urcu.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/test_urcu_signal_yield-compat_arch_@ARCHTYPE@.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/test_urcu_signal_yield-compat_futex.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/test_urcu_signal_yield-test_urcu.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/test_urcu_signal_yield-urcu-pointer.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/test_urcu_signal_yield-urcu.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/test_urcu_timing.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/test_urcu_yield-compat_arch_@ARCHTYPE@.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/test_urcu_yield-compat_futex.Po@am__quote@
@@ -864,6 +1055,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/test_urcu_yield-urcu-pointer.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/test_urcu_yield-urcu.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/urcu-bp.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/urcu-defer.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/urcu-pointer.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/urcu-qsbr.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/urcu.Po@am__quote@
@@ -944,6 +1136,20 @@ rcutorture_urcu_mb-urcutorture.obj: urcutorture.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	source='urcutorture.c' object='rcutorture_urcu_mb-urcutorture.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(rcutorture_urcu_mb_CFLAGS) $(CFLAGS) -c -o rcutorture_urcu_mb-urcutorture.obj `if test -f 'urcutorture.c'; then $(CYGPATH_W) 'urcutorture.c'; else $(CYGPATH_W) '$(srcdir)/urcutorture.c'; fi`
+
+rcutorture_urcu_signal-urcutorture.o: urcutorture.c
+@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(rcutorture_urcu_signal_CFLAGS) $(CFLAGS) -MT rcutorture_urcu_signal-urcutorture.o -MD -MP -MF $(DEPDIR)/rcutorture_urcu_signal-urcutorture.Tpo -c -o rcutorture_urcu_signal-urcutorture.o `test -f 'urcutorture.c' || echo '$(srcdir)/'`urcutorture.c
+@am__fastdepCC_TRUE@	mv -f $(DEPDIR)/rcutorture_urcu_signal-urcutorture.Tpo $(DEPDIR)/rcutorture_urcu_signal-urcutorture.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='urcutorture.c' object='rcutorture_urcu_signal-urcutorture.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(rcutorture_urcu_signal_CFLAGS) $(CFLAGS) -c -o rcutorture_urcu_signal-urcutorture.o `test -f 'urcutorture.c' || echo '$(srcdir)/'`urcutorture.c
+
+rcutorture_urcu_signal-urcutorture.obj: urcutorture.c
+@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(rcutorture_urcu_signal_CFLAGS) $(CFLAGS) -MT rcutorture_urcu_signal-urcutorture.obj -MD -MP -MF $(DEPDIR)/rcutorture_urcu_signal-urcutorture.Tpo -c -o rcutorture_urcu_signal-urcutorture.obj `if test -f 'urcutorture.c'; then $(CYGPATH_W) 'urcutorture.c'; else $(CYGPATH_W) '$(srcdir)/urcutorture.c'; fi`
+@am__fastdepCC_TRUE@	mv -f $(DEPDIR)/rcutorture_urcu_signal-urcutorture.Tpo $(DEPDIR)/rcutorture_urcu_signal-urcutorture.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='urcutorture.c' object='rcutorture_urcu_signal-urcutorture.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(rcutorture_urcu_signal_CFLAGS) $(CFLAGS) -c -o rcutorture_urcu_signal-urcutorture.obj `if test -f 'urcutorture.c'; then $(CYGPATH_W) 'urcutorture.c'; else $(CYGPATH_W) '$(srcdir)/urcutorture.c'; fi`
 
 urcu.o: $(top_srcdir)/urcu.c
 @am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT urcu.o -MD -MP -MF $(DEPDIR)/urcu.Tpo -c -o urcu.o `test -f '$(top_srcdir)/urcu.c' || echo '$(srcdir)/'`$(top_srcdir)/urcu.c
@@ -1309,6 +1515,20 @@ test_urcu_bp_dynamic_link-compat_arch_@ARCHTYPE@.obj: $(top_srcdir)/compat_arch_
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_urcu_bp_dynamic_link_CFLAGS) $(CFLAGS) -c -o test_urcu_bp_dynamic_link-compat_arch_@ARCHTYPE@.obj `if test -f '$(top_srcdir)/compat_arch_@ARCHTYPE@.c'; then $(CYGPATH_W) '$(top_srcdir)/compat_arch_@ARCHTYPE@.c'; else $(CYGPATH_W) '$(srcdir)/$(top_srcdir)/compat_arch_@ARCHTYPE@.c'; fi`
 
+urcu-defer.o: $(top_srcdir)/urcu-defer.c
+@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT urcu-defer.o -MD -MP -MF $(DEPDIR)/urcu-defer.Tpo -c -o urcu-defer.o `test -f '$(top_srcdir)/urcu-defer.c' || echo '$(srcdir)/'`$(top_srcdir)/urcu-defer.c
+@am__fastdepCC_TRUE@	mv -f $(DEPDIR)/urcu-defer.Tpo $(DEPDIR)/urcu-defer.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='$(top_srcdir)/urcu-defer.c' object='urcu-defer.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o urcu-defer.o `test -f '$(top_srcdir)/urcu-defer.c' || echo '$(srcdir)/'`$(top_srcdir)/urcu-defer.c
+
+urcu-defer.obj: $(top_srcdir)/urcu-defer.c
+@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT urcu-defer.obj -MD -MP -MF $(DEPDIR)/urcu-defer.Tpo -c -o urcu-defer.obj `if test -f '$(top_srcdir)/urcu-defer.c'; then $(CYGPATH_W) '$(top_srcdir)/urcu-defer.c'; else $(CYGPATH_W) '$(srcdir)/$(top_srcdir)/urcu-defer.c'; fi`
+@am__fastdepCC_TRUE@	mv -f $(DEPDIR)/urcu-defer.Tpo $(DEPDIR)/urcu-defer.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='$(top_srcdir)/urcu-defer.c' object='urcu-defer.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o urcu-defer.obj `if test -f '$(top_srcdir)/urcu-defer.c'; then $(CYGPATH_W) '$(top_srcdir)/urcu-defer.c'; else $(CYGPATH_W) '$(srcdir)/$(top_srcdir)/urcu-defer.c'; fi`
+
 test_urcu_dynamic_link-test_urcu.o: test_urcu.c
 @am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_urcu_dynamic_link_CFLAGS) $(CFLAGS) -MT test_urcu_dynamic_link-test_urcu.o -MD -MP -MF $(DEPDIR)/test_urcu_dynamic_link-test_urcu.Tpo -c -o test_urcu_dynamic_link-test_urcu.o `test -f 'test_urcu.c' || echo '$(srcdir)/'`test_urcu.c
 @am__fastdepCC_TRUE@	mv -f $(DEPDIR)/test_urcu_dynamic_link-test_urcu.Tpo $(DEPDIR)/test_urcu_dynamic_link-test_urcu.Po
@@ -1378,76 +1598,6 @@ test_urcu_dynamic_link-compat_arch_@ARCHTYPE@.obj: $(top_srcdir)/compat_arch_@AR
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	source='$(top_srcdir)/compat_arch_@ARCHTYPE@.c' object='test_urcu_dynamic_link-compat_arch_@ARCHTYPE@.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_urcu_dynamic_link_CFLAGS) $(CFLAGS) -c -o test_urcu_dynamic_link-compat_arch_@ARCHTYPE@.obj `if test -f '$(top_srcdir)/compat_arch_@ARCHTYPE@.c'; then $(CYGPATH_W) '$(top_srcdir)/compat_arch_@ARCHTYPE@.c'; else $(CYGPATH_W) '$(srcdir)/$(top_srcdir)/compat_arch_@ARCHTYPE@.c'; fi`
-
-test_urcu_gc_mb-test_urcu_gc.o: test_urcu_gc.c
-@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_urcu_gc_mb_CFLAGS) $(CFLAGS) -MT test_urcu_gc_mb-test_urcu_gc.o -MD -MP -MF $(DEPDIR)/test_urcu_gc_mb-test_urcu_gc.Tpo -c -o test_urcu_gc_mb-test_urcu_gc.o `test -f 'test_urcu_gc.c' || echo '$(srcdir)/'`test_urcu_gc.c
-@am__fastdepCC_TRUE@	mv -f $(DEPDIR)/test_urcu_gc_mb-test_urcu_gc.Tpo $(DEPDIR)/test_urcu_gc_mb-test_urcu_gc.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='test_urcu_gc.c' object='test_urcu_gc_mb-test_urcu_gc.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_urcu_gc_mb_CFLAGS) $(CFLAGS) -c -o test_urcu_gc_mb-test_urcu_gc.o `test -f 'test_urcu_gc.c' || echo '$(srcdir)/'`test_urcu_gc.c
-
-test_urcu_gc_mb-test_urcu_gc.obj: test_urcu_gc.c
-@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_urcu_gc_mb_CFLAGS) $(CFLAGS) -MT test_urcu_gc_mb-test_urcu_gc.obj -MD -MP -MF $(DEPDIR)/test_urcu_gc_mb-test_urcu_gc.Tpo -c -o test_urcu_gc_mb-test_urcu_gc.obj `if test -f 'test_urcu_gc.c'; then $(CYGPATH_W) 'test_urcu_gc.c'; else $(CYGPATH_W) '$(srcdir)/test_urcu_gc.c'; fi`
-@am__fastdepCC_TRUE@	mv -f $(DEPDIR)/test_urcu_gc_mb-test_urcu_gc.Tpo $(DEPDIR)/test_urcu_gc_mb-test_urcu_gc.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='test_urcu_gc.c' object='test_urcu_gc_mb-test_urcu_gc.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_urcu_gc_mb_CFLAGS) $(CFLAGS) -c -o test_urcu_gc_mb-test_urcu_gc.obj `if test -f 'test_urcu_gc.c'; then $(CYGPATH_W) 'test_urcu_gc.c'; else $(CYGPATH_W) '$(srcdir)/test_urcu_gc.c'; fi`
-
-test_urcu_gc_mb-urcu.o: $(top_srcdir)/urcu.c
-@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_urcu_gc_mb_CFLAGS) $(CFLAGS) -MT test_urcu_gc_mb-urcu.o -MD -MP -MF $(DEPDIR)/test_urcu_gc_mb-urcu.Tpo -c -o test_urcu_gc_mb-urcu.o `test -f '$(top_srcdir)/urcu.c' || echo '$(srcdir)/'`$(top_srcdir)/urcu.c
-@am__fastdepCC_TRUE@	mv -f $(DEPDIR)/test_urcu_gc_mb-urcu.Tpo $(DEPDIR)/test_urcu_gc_mb-urcu.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='$(top_srcdir)/urcu.c' object='test_urcu_gc_mb-urcu.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_urcu_gc_mb_CFLAGS) $(CFLAGS) -c -o test_urcu_gc_mb-urcu.o `test -f '$(top_srcdir)/urcu.c' || echo '$(srcdir)/'`$(top_srcdir)/urcu.c
-
-test_urcu_gc_mb-urcu.obj: $(top_srcdir)/urcu.c
-@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_urcu_gc_mb_CFLAGS) $(CFLAGS) -MT test_urcu_gc_mb-urcu.obj -MD -MP -MF $(DEPDIR)/test_urcu_gc_mb-urcu.Tpo -c -o test_urcu_gc_mb-urcu.obj `if test -f '$(top_srcdir)/urcu.c'; then $(CYGPATH_W) '$(top_srcdir)/urcu.c'; else $(CYGPATH_W) '$(srcdir)/$(top_srcdir)/urcu.c'; fi`
-@am__fastdepCC_TRUE@	mv -f $(DEPDIR)/test_urcu_gc_mb-urcu.Tpo $(DEPDIR)/test_urcu_gc_mb-urcu.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='$(top_srcdir)/urcu.c' object='test_urcu_gc_mb-urcu.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_urcu_gc_mb_CFLAGS) $(CFLAGS) -c -o test_urcu_gc_mb-urcu.obj `if test -f '$(top_srcdir)/urcu.c'; then $(CYGPATH_W) '$(top_srcdir)/urcu.c'; else $(CYGPATH_W) '$(srcdir)/$(top_srcdir)/urcu.c'; fi`
-
-test_urcu_gc_mb-urcu-pointer.o: $(top_srcdir)/urcu-pointer.c
-@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_urcu_gc_mb_CFLAGS) $(CFLAGS) -MT test_urcu_gc_mb-urcu-pointer.o -MD -MP -MF $(DEPDIR)/test_urcu_gc_mb-urcu-pointer.Tpo -c -o test_urcu_gc_mb-urcu-pointer.o `test -f '$(top_srcdir)/urcu-pointer.c' || echo '$(srcdir)/'`$(top_srcdir)/urcu-pointer.c
-@am__fastdepCC_TRUE@	mv -f $(DEPDIR)/test_urcu_gc_mb-urcu-pointer.Tpo $(DEPDIR)/test_urcu_gc_mb-urcu-pointer.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='$(top_srcdir)/urcu-pointer.c' object='test_urcu_gc_mb-urcu-pointer.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_urcu_gc_mb_CFLAGS) $(CFLAGS) -c -o test_urcu_gc_mb-urcu-pointer.o `test -f '$(top_srcdir)/urcu-pointer.c' || echo '$(srcdir)/'`$(top_srcdir)/urcu-pointer.c
-
-test_urcu_gc_mb-urcu-pointer.obj: $(top_srcdir)/urcu-pointer.c
-@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_urcu_gc_mb_CFLAGS) $(CFLAGS) -MT test_urcu_gc_mb-urcu-pointer.obj -MD -MP -MF $(DEPDIR)/test_urcu_gc_mb-urcu-pointer.Tpo -c -o test_urcu_gc_mb-urcu-pointer.obj `if test -f '$(top_srcdir)/urcu-pointer.c'; then $(CYGPATH_W) '$(top_srcdir)/urcu-pointer.c'; else $(CYGPATH_W) '$(srcdir)/$(top_srcdir)/urcu-pointer.c'; fi`
-@am__fastdepCC_TRUE@	mv -f $(DEPDIR)/test_urcu_gc_mb-urcu-pointer.Tpo $(DEPDIR)/test_urcu_gc_mb-urcu-pointer.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='$(top_srcdir)/urcu-pointer.c' object='test_urcu_gc_mb-urcu-pointer.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_urcu_gc_mb_CFLAGS) $(CFLAGS) -c -o test_urcu_gc_mb-urcu-pointer.obj `if test -f '$(top_srcdir)/urcu-pointer.c'; then $(CYGPATH_W) '$(top_srcdir)/urcu-pointer.c'; else $(CYGPATH_W) '$(srcdir)/$(top_srcdir)/urcu-pointer.c'; fi`
-
-test_urcu_gc_mb-compat_futex.o: $(top_srcdir)/compat_futex.c
-@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_urcu_gc_mb_CFLAGS) $(CFLAGS) -MT test_urcu_gc_mb-compat_futex.o -MD -MP -MF $(DEPDIR)/test_urcu_gc_mb-compat_futex.Tpo -c -o test_urcu_gc_mb-compat_futex.o `test -f '$(top_srcdir)/compat_futex.c' || echo '$(srcdir)/'`$(top_srcdir)/compat_futex.c
-@am__fastdepCC_TRUE@	mv -f $(DEPDIR)/test_urcu_gc_mb-compat_futex.Tpo $(DEPDIR)/test_urcu_gc_mb-compat_futex.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='$(top_srcdir)/compat_futex.c' object='test_urcu_gc_mb-compat_futex.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_urcu_gc_mb_CFLAGS) $(CFLAGS) -c -o test_urcu_gc_mb-compat_futex.o `test -f '$(top_srcdir)/compat_futex.c' || echo '$(srcdir)/'`$(top_srcdir)/compat_futex.c
-
-test_urcu_gc_mb-compat_futex.obj: $(top_srcdir)/compat_futex.c
-@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_urcu_gc_mb_CFLAGS) $(CFLAGS) -MT test_urcu_gc_mb-compat_futex.obj -MD -MP -MF $(DEPDIR)/test_urcu_gc_mb-compat_futex.Tpo -c -o test_urcu_gc_mb-compat_futex.obj `if test -f '$(top_srcdir)/compat_futex.c'; then $(CYGPATH_W) '$(top_srcdir)/compat_futex.c'; else $(CYGPATH_W) '$(srcdir)/$(top_srcdir)/compat_futex.c'; fi`
-@am__fastdepCC_TRUE@	mv -f $(DEPDIR)/test_urcu_gc_mb-compat_futex.Tpo $(DEPDIR)/test_urcu_gc_mb-compat_futex.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='$(top_srcdir)/compat_futex.c' object='test_urcu_gc_mb-compat_futex.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_urcu_gc_mb_CFLAGS) $(CFLAGS) -c -o test_urcu_gc_mb-compat_futex.obj `if test -f '$(top_srcdir)/compat_futex.c'; then $(CYGPATH_W) '$(top_srcdir)/compat_futex.c'; else $(CYGPATH_W) '$(srcdir)/$(top_srcdir)/compat_futex.c'; fi`
-
-test_urcu_gc_mb-compat_arch_@ARCHTYPE@.o: $(top_srcdir)/compat_arch_@ARCHTYPE@.c
-@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_urcu_gc_mb_CFLAGS) $(CFLAGS) -MT test_urcu_gc_mb-compat_arch_@ARCHTYPE@.o -MD -MP -MF $(DEPDIR)/test_urcu_gc_mb-compat_arch_@ARCHTYPE@.Tpo -c -o test_urcu_gc_mb-compat_arch_@ARCHTYPE@.o `test -f '$(top_srcdir)/compat_arch_@ARCHTYPE@.c' || echo '$(srcdir)/'`$(top_srcdir)/compat_arch_@ARCHTYPE@.c
-@am__fastdepCC_TRUE@	mv -f $(DEPDIR)/test_urcu_gc_mb-compat_arch_@ARCHTYPE@.Tpo $(DEPDIR)/test_urcu_gc_mb-compat_arch_@ARCHTYPE@.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='$(top_srcdir)/compat_arch_@ARCHTYPE@.c' object='test_urcu_gc_mb-compat_arch_@ARCHTYPE@.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_urcu_gc_mb_CFLAGS) $(CFLAGS) -c -o test_urcu_gc_mb-compat_arch_@ARCHTYPE@.o `test -f '$(top_srcdir)/compat_arch_@ARCHTYPE@.c' || echo '$(srcdir)/'`$(top_srcdir)/compat_arch_@ARCHTYPE@.c
-
-test_urcu_gc_mb-compat_arch_@ARCHTYPE@.obj: $(top_srcdir)/compat_arch_@ARCHTYPE@.c
-@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_urcu_gc_mb_CFLAGS) $(CFLAGS) -MT test_urcu_gc_mb-compat_arch_@ARCHTYPE@.obj -MD -MP -MF $(DEPDIR)/test_urcu_gc_mb-compat_arch_@ARCHTYPE@.Tpo -c -o test_urcu_gc_mb-compat_arch_@ARCHTYPE@.obj `if test -f '$(top_srcdir)/compat_arch_@ARCHTYPE@.c'; then $(CYGPATH_W) '$(top_srcdir)/compat_arch_@ARCHTYPE@.c'; else $(CYGPATH_W) '$(srcdir)/$(top_srcdir)/compat_arch_@ARCHTYPE@.c'; fi`
-@am__fastdepCC_TRUE@	mv -f $(DEPDIR)/test_urcu_gc_mb-compat_arch_@ARCHTYPE@.Tpo $(DEPDIR)/test_urcu_gc_mb-compat_arch_@ARCHTYPE@.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='$(top_srcdir)/compat_arch_@ARCHTYPE@.c' object='test_urcu_gc_mb-compat_arch_@ARCHTYPE@.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_urcu_gc_mb_CFLAGS) $(CFLAGS) -c -o test_urcu_gc_mb-compat_arch_@ARCHTYPE@.obj `if test -f '$(top_srcdir)/compat_arch_@ARCHTYPE@.c'; then $(CYGPATH_W) '$(top_srcdir)/compat_arch_@ARCHTYPE@.c'; else $(CYGPATH_W) '$(srcdir)/$(top_srcdir)/compat_arch_@ARCHTYPE@.c'; fi`
 
 test_urcu_lgc-test_urcu_gc.o: test_urcu_gc.c
 @am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_urcu_lgc_CFLAGS) $(CFLAGS) -MT test_urcu_lgc-test_urcu_gc.o -MD -MP -MF $(DEPDIR)/test_urcu_lgc-test_urcu_gc.Tpo -c -o test_urcu_lgc-test_urcu_gc.o `test -f 'test_urcu_gc.c' || echo '$(srcdir)/'`test_urcu_gc.c
@@ -1519,76 +1669,6 @@ test_urcu_lgc-compat_arch_@ARCHTYPE@.obj: $(top_srcdir)/compat_arch_@ARCHTYPE@.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_urcu_lgc_CFLAGS) $(CFLAGS) -c -o test_urcu_lgc-compat_arch_@ARCHTYPE@.obj `if test -f '$(top_srcdir)/compat_arch_@ARCHTYPE@.c'; then $(CYGPATH_W) '$(top_srcdir)/compat_arch_@ARCHTYPE@.c'; else $(CYGPATH_W) '$(srcdir)/$(top_srcdir)/compat_arch_@ARCHTYPE@.c'; fi`
 
-test_urcu_lgc_mb-test_urcu_gc.o: test_urcu_gc.c
-@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_urcu_lgc_mb_CFLAGS) $(CFLAGS) -MT test_urcu_lgc_mb-test_urcu_gc.o -MD -MP -MF $(DEPDIR)/test_urcu_lgc_mb-test_urcu_gc.Tpo -c -o test_urcu_lgc_mb-test_urcu_gc.o `test -f 'test_urcu_gc.c' || echo '$(srcdir)/'`test_urcu_gc.c
-@am__fastdepCC_TRUE@	mv -f $(DEPDIR)/test_urcu_lgc_mb-test_urcu_gc.Tpo $(DEPDIR)/test_urcu_lgc_mb-test_urcu_gc.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='test_urcu_gc.c' object='test_urcu_lgc_mb-test_urcu_gc.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_urcu_lgc_mb_CFLAGS) $(CFLAGS) -c -o test_urcu_lgc_mb-test_urcu_gc.o `test -f 'test_urcu_gc.c' || echo '$(srcdir)/'`test_urcu_gc.c
-
-test_urcu_lgc_mb-test_urcu_gc.obj: test_urcu_gc.c
-@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_urcu_lgc_mb_CFLAGS) $(CFLAGS) -MT test_urcu_lgc_mb-test_urcu_gc.obj -MD -MP -MF $(DEPDIR)/test_urcu_lgc_mb-test_urcu_gc.Tpo -c -o test_urcu_lgc_mb-test_urcu_gc.obj `if test -f 'test_urcu_gc.c'; then $(CYGPATH_W) 'test_urcu_gc.c'; else $(CYGPATH_W) '$(srcdir)/test_urcu_gc.c'; fi`
-@am__fastdepCC_TRUE@	mv -f $(DEPDIR)/test_urcu_lgc_mb-test_urcu_gc.Tpo $(DEPDIR)/test_urcu_lgc_mb-test_urcu_gc.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='test_urcu_gc.c' object='test_urcu_lgc_mb-test_urcu_gc.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_urcu_lgc_mb_CFLAGS) $(CFLAGS) -c -o test_urcu_lgc_mb-test_urcu_gc.obj `if test -f 'test_urcu_gc.c'; then $(CYGPATH_W) 'test_urcu_gc.c'; else $(CYGPATH_W) '$(srcdir)/test_urcu_gc.c'; fi`
-
-test_urcu_lgc_mb-urcu.o: $(top_srcdir)/urcu.c
-@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_urcu_lgc_mb_CFLAGS) $(CFLAGS) -MT test_urcu_lgc_mb-urcu.o -MD -MP -MF $(DEPDIR)/test_urcu_lgc_mb-urcu.Tpo -c -o test_urcu_lgc_mb-urcu.o `test -f '$(top_srcdir)/urcu.c' || echo '$(srcdir)/'`$(top_srcdir)/urcu.c
-@am__fastdepCC_TRUE@	mv -f $(DEPDIR)/test_urcu_lgc_mb-urcu.Tpo $(DEPDIR)/test_urcu_lgc_mb-urcu.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='$(top_srcdir)/urcu.c' object='test_urcu_lgc_mb-urcu.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_urcu_lgc_mb_CFLAGS) $(CFLAGS) -c -o test_urcu_lgc_mb-urcu.o `test -f '$(top_srcdir)/urcu.c' || echo '$(srcdir)/'`$(top_srcdir)/urcu.c
-
-test_urcu_lgc_mb-urcu.obj: $(top_srcdir)/urcu.c
-@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_urcu_lgc_mb_CFLAGS) $(CFLAGS) -MT test_urcu_lgc_mb-urcu.obj -MD -MP -MF $(DEPDIR)/test_urcu_lgc_mb-urcu.Tpo -c -o test_urcu_lgc_mb-urcu.obj `if test -f '$(top_srcdir)/urcu.c'; then $(CYGPATH_W) '$(top_srcdir)/urcu.c'; else $(CYGPATH_W) '$(srcdir)/$(top_srcdir)/urcu.c'; fi`
-@am__fastdepCC_TRUE@	mv -f $(DEPDIR)/test_urcu_lgc_mb-urcu.Tpo $(DEPDIR)/test_urcu_lgc_mb-urcu.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='$(top_srcdir)/urcu.c' object='test_urcu_lgc_mb-urcu.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_urcu_lgc_mb_CFLAGS) $(CFLAGS) -c -o test_urcu_lgc_mb-urcu.obj `if test -f '$(top_srcdir)/urcu.c'; then $(CYGPATH_W) '$(top_srcdir)/urcu.c'; else $(CYGPATH_W) '$(srcdir)/$(top_srcdir)/urcu.c'; fi`
-
-test_urcu_lgc_mb-urcu-pointer.o: $(top_srcdir)/urcu-pointer.c
-@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_urcu_lgc_mb_CFLAGS) $(CFLAGS) -MT test_urcu_lgc_mb-urcu-pointer.o -MD -MP -MF $(DEPDIR)/test_urcu_lgc_mb-urcu-pointer.Tpo -c -o test_urcu_lgc_mb-urcu-pointer.o `test -f '$(top_srcdir)/urcu-pointer.c' || echo '$(srcdir)/'`$(top_srcdir)/urcu-pointer.c
-@am__fastdepCC_TRUE@	mv -f $(DEPDIR)/test_urcu_lgc_mb-urcu-pointer.Tpo $(DEPDIR)/test_urcu_lgc_mb-urcu-pointer.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='$(top_srcdir)/urcu-pointer.c' object='test_urcu_lgc_mb-urcu-pointer.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_urcu_lgc_mb_CFLAGS) $(CFLAGS) -c -o test_urcu_lgc_mb-urcu-pointer.o `test -f '$(top_srcdir)/urcu-pointer.c' || echo '$(srcdir)/'`$(top_srcdir)/urcu-pointer.c
-
-test_urcu_lgc_mb-urcu-pointer.obj: $(top_srcdir)/urcu-pointer.c
-@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_urcu_lgc_mb_CFLAGS) $(CFLAGS) -MT test_urcu_lgc_mb-urcu-pointer.obj -MD -MP -MF $(DEPDIR)/test_urcu_lgc_mb-urcu-pointer.Tpo -c -o test_urcu_lgc_mb-urcu-pointer.obj `if test -f '$(top_srcdir)/urcu-pointer.c'; then $(CYGPATH_W) '$(top_srcdir)/urcu-pointer.c'; else $(CYGPATH_W) '$(srcdir)/$(top_srcdir)/urcu-pointer.c'; fi`
-@am__fastdepCC_TRUE@	mv -f $(DEPDIR)/test_urcu_lgc_mb-urcu-pointer.Tpo $(DEPDIR)/test_urcu_lgc_mb-urcu-pointer.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='$(top_srcdir)/urcu-pointer.c' object='test_urcu_lgc_mb-urcu-pointer.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_urcu_lgc_mb_CFLAGS) $(CFLAGS) -c -o test_urcu_lgc_mb-urcu-pointer.obj `if test -f '$(top_srcdir)/urcu-pointer.c'; then $(CYGPATH_W) '$(top_srcdir)/urcu-pointer.c'; else $(CYGPATH_W) '$(srcdir)/$(top_srcdir)/urcu-pointer.c'; fi`
-
-test_urcu_lgc_mb-compat_futex.o: $(top_srcdir)/compat_futex.c
-@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_urcu_lgc_mb_CFLAGS) $(CFLAGS) -MT test_urcu_lgc_mb-compat_futex.o -MD -MP -MF $(DEPDIR)/test_urcu_lgc_mb-compat_futex.Tpo -c -o test_urcu_lgc_mb-compat_futex.o `test -f '$(top_srcdir)/compat_futex.c' || echo '$(srcdir)/'`$(top_srcdir)/compat_futex.c
-@am__fastdepCC_TRUE@	mv -f $(DEPDIR)/test_urcu_lgc_mb-compat_futex.Tpo $(DEPDIR)/test_urcu_lgc_mb-compat_futex.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='$(top_srcdir)/compat_futex.c' object='test_urcu_lgc_mb-compat_futex.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_urcu_lgc_mb_CFLAGS) $(CFLAGS) -c -o test_urcu_lgc_mb-compat_futex.o `test -f '$(top_srcdir)/compat_futex.c' || echo '$(srcdir)/'`$(top_srcdir)/compat_futex.c
-
-test_urcu_lgc_mb-compat_futex.obj: $(top_srcdir)/compat_futex.c
-@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_urcu_lgc_mb_CFLAGS) $(CFLAGS) -MT test_urcu_lgc_mb-compat_futex.obj -MD -MP -MF $(DEPDIR)/test_urcu_lgc_mb-compat_futex.Tpo -c -o test_urcu_lgc_mb-compat_futex.obj `if test -f '$(top_srcdir)/compat_futex.c'; then $(CYGPATH_W) '$(top_srcdir)/compat_futex.c'; else $(CYGPATH_W) '$(srcdir)/$(top_srcdir)/compat_futex.c'; fi`
-@am__fastdepCC_TRUE@	mv -f $(DEPDIR)/test_urcu_lgc_mb-compat_futex.Tpo $(DEPDIR)/test_urcu_lgc_mb-compat_futex.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='$(top_srcdir)/compat_futex.c' object='test_urcu_lgc_mb-compat_futex.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_urcu_lgc_mb_CFLAGS) $(CFLAGS) -c -o test_urcu_lgc_mb-compat_futex.obj `if test -f '$(top_srcdir)/compat_futex.c'; then $(CYGPATH_W) '$(top_srcdir)/compat_futex.c'; else $(CYGPATH_W) '$(srcdir)/$(top_srcdir)/compat_futex.c'; fi`
-
-test_urcu_lgc_mb-compat_arch_@ARCHTYPE@.o: $(top_srcdir)/compat_arch_@ARCHTYPE@.c
-@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_urcu_lgc_mb_CFLAGS) $(CFLAGS) -MT test_urcu_lgc_mb-compat_arch_@ARCHTYPE@.o -MD -MP -MF $(DEPDIR)/test_urcu_lgc_mb-compat_arch_@ARCHTYPE@.Tpo -c -o test_urcu_lgc_mb-compat_arch_@ARCHTYPE@.o `test -f '$(top_srcdir)/compat_arch_@ARCHTYPE@.c' || echo '$(srcdir)/'`$(top_srcdir)/compat_arch_@ARCHTYPE@.c
-@am__fastdepCC_TRUE@	mv -f $(DEPDIR)/test_urcu_lgc_mb-compat_arch_@ARCHTYPE@.Tpo $(DEPDIR)/test_urcu_lgc_mb-compat_arch_@ARCHTYPE@.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='$(top_srcdir)/compat_arch_@ARCHTYPE@.c' object='test_urcu_lgc_mb-compat_arch_@ARCHTYPE@.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_urcu_lgc_mb_CFLAGS) $(CFLAGS) -c -o test_urcu_lgc_mb-compat_arch_@ARCHTYPE@.o `test -f '$(top_srcdir)/compat_arch_@ARCHTYPE@.c' || echo '$(srcdir)/'`$(top_srcdir)/compat_arch_@ARCHTYPE@.c
-
-test_urcu_lgc_mb-compat_arch_@ARCHTYPE@.obj: $(top_srcdir)/compat_arch_@ARCHTYPE@.c
-@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_urcu_lgc_mb_CFLAGS) $(CFLAGS) -MT test_urcu_lgc_mb-compat_arch_@ARCHTYPE@.obj -MD -MP -MF $(DEPDIR)/test_urcu_lgc_mb-compat_arch_@ARCHTYPE@.Tpo -c -o test_urcu_lgc_mb-compat_arch_@ARCHTYPE@.obj `if test -f '$(top_srcdir)/compat_arch_@ARCHTYPE@.c'; then $(CYGPATH_W) '$(top_srcdir)/compat_arch_@ARCHTYPE@.c'; else $(CYGPATH_W) '$(srcdir)/$(top_srcdir)/compat_arch_@ARCHTYPE@.c'; fi`
-@am__fastdepCC_TRUE@	mv -f $(DEPDIR)/test_urcu_lgc_mb-compat_arch_@ARCHTYPE@.Tpo $(DEPDIR)/test_urcu_lgc_mb-compat_arch_@ARCHTYPE@.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='$(top_srcdir)/compat_arch_@ARCHTYPE@.c' object='test_urcu_lgc_mb-compat_arch_@ARCHTYPE@.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_urcu_lgc_mb_CFLAGS) $(CFLAGS) -c -o test_urcu_lgc_mb-compat_arch_@ARCHTYPE@.obj `if test -f '$(top_srcdir)/compat_arch_@ARCHTYPE@.c'; then $(CYGPATH_W) '$(top_srcdir)/compat_arch_@ARCHTYPE@.c'; else $(CYGPATH_W) '$(srcdir)/$(top_srcdir)/compat_arch_@ARCHTYPE@.c'; fi`
-
 test_urcu_mb-test_urcu.o: test_urcu.c
 @am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_urcu_mb_CFLAGS) $(CFLAGS) -MT test_urcu_mb-test_urcu.o -MD -MP -MF $(DEPDIR)/test_urcu_mb-test_urcu.Tpo -c -o test_urcu_mb-test_urcu.o `test -f 'test_urcu.c' || echo '$(srcdir)/'`test_urcu.c
 @am__fastdepCC_TRUE@	mv -f $(DEPDIR)/test_urcu_mb-test_urcu.Tpo $(DEPDIR)/test_urcu_mb-test_urcu.Po
@@ -1659,89 +1739,565 @@ test_urcu_mb-compat_arch_@ARCHTYPE@.obj: $(top_srcdir)/compat_arch_@ARCHTYPE@.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_urcu_mb_CFLAGS) $(CFLAGS) -c -o test_urcu_mb-compat_arch_@ARCHTYPE@.obj `if test -f '$(top_srcdir)/compat_arch_@ARCHTYPE@.c'; then $(CYGPATH_W) '$(top_srcdir)/compat_arch_@ARCHTYPE@.c'; else $(CYGPATH_W) '$(srcdir)/$(top_srcdir)/compat_arch_@ARCHTYPE@.c'; fi`
 
-test_urcu_mb_defer-test_urcu_defer.o: test_urcu_defer.c
-@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_urcu_mb_defer_CFLAGS) $(CFLAGS) -MT test_urcu_mb_defer-test_urcu_defer.o -MD -MP -MF $(DEPDIR)/test_urcu_mb_defer-test_urcu_defer.Tpo -c -o test_urcu_mb_defer-test_urcu_defer.o `test -f 'test_urcu_defer.c' || echo '$(srcdir)/'`test_urcu_defer.c
-@am__fastdepCC_TRUE@	mv -f $(DEPDIR)/test_urcu_mb_defer-test_urcu_defer.Tpo $(DEPDIR)/test_urcu_mb_defer-test_urcu_defer.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='test_urcu_defer.c' object='test_urcu_mb_defer-test_urcu_defer.o' libtool=no @AMDEPBACKSLASH@
+test_urcu_mb_gc-test_urcu_gc.o: test_urcu_gc.c
+@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_urcu_mb_gc_CFLAGS) $(CFLAGS) -MT test_urcu_mb_gc-test_urcu_gc.o -MD -MP -MF $(DEPDIR)/test_urcu_mb_gc-test_urcu_gc.Tpo -c -o test_urcu_mb_gc-test_urcu_gc.o `test -f 'test_urcu_gc.c' || echo '$(srcdir)/'`test_urcu_gc.c
+@am__fastdepCC_TRUE@	mv -f $(DEPDIR)/test_urcu_mb_gc-test_urcu_gc.Tpo $(DEPDIR)/test_urcu_mb_gc-test_urcu_gc.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='test_urcu_gc.c' object='test_urcu_mb_gc-test_urcu_gc.o' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_urcu_mb_defer_CFLAGS) $(CFLAGS) -c -o test_urcu_mb_defer-test_urcu_defer.o `test -f 'test_urcu_defer.c' || echo '$(srcdir)/'`test_urcu_defer.c
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_urcu_mb_gc_CFLAGS) $(CFLAGS) -c -o test_urcu_mb_gc-test_urcu_gc.o `test -f 'test_urcu_gc.c' || echo '$(srcdir)/'`test_urcu_gc.c
 
-test_urcu_mb_defer-test_urcu_defer.obj: test_urcu_defer.c
-@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_urcu_mb_defer_CFLAGS) $(CFLAGS) -MT test_urcu_mb_defer-test_urcu_defer.obj -MD -MP -MF $(DEPDIR)/test_urcu_mb_defer-test_urcu_defer.Tpo -c -o test_urcu_mb_defer-test_urcu_defer.obj `if test -f 'test_urcu_defer.c'; then $(CYGPATH_W) 'test_urcu_defer.c'; else $(CYGPATH_W) '$(srcdir)/test_urcu_defer.c'; fi`
-@am__fastdepCC_TRUE@	mv -f $(DEPDIR)/test_urcu_mb_defer-test_urcu_defer.Tpo $(DEPDIR)/test_urcu_mb_defer-test_urcu_defer.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='test_urcu_defer.c' object='test_urcu_mb_defer-test_urcu_defer.obj' libtool=no @AMDEPBACKSLASH@
+test_urcu_mb_gc-test_urcu_gc.obj: test_urcu_gc.c
+@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_urcu_mb_gc_CFLAGS) $(CFLAGS) -MT test_urcu_mb_gc-test_urcu_gc.obj -MD -MP -MF $(DEPDIR)/test_urcu_mb_gc-test_urcu_gc.Tpo -c -o test_urcu_mb_gc-test_urcu_gc.obj `if test -f 'test_urcu_gc.c'; then $(CYGPATH_W) 'test_urcu_gc.c'; else $(CYGPATH_W) '$(srcdir)/test_urcu_gc.c'; fi`
+@am__fastdepCC_TRUE@	mv -f $(DEPDIR)/test_urcu_mb_gc-test_urcu_gc.Tpo $(DEPDIR)/test_urcu_mb_gc-test_urcu_gc.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='test_urcu_gc.c' object='test_urcu_mb_gc-test_urcu_gc.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_urcu_mb_defer_CFLAGS) $(CFLAGS) -c -o test_urcu_mb_defer-test_urcu_defer.obj `if test -f 'test_urcu_defer.c'; then $(CYGPATH_W) 'test_urcu_defer.c'; else $(CYGPATH_W) '$(srcdir)/test_urcu_defer.c'; fi`
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_urcu_mb_gc_CFLAGS) $(CFLAGS) -c -o test_urcu_mb_gc-test_urcu_gc.obj `if test -f 'test_urcu_gc.c'; then $(CYGPATH_W) 'test_urcu_gc.c'; else $(CYGPATH_W) '$(srcdir)/test_urcu_gc.c'; fi`
 
-test_urcu_mb_defer-urcu.o: $(top_srcdir)/urcu.c
-@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_urcu_mb_defer_CFLAGS) $(CFLAGS) -MT test_urcu_mb_defer-urcu.o -MD -MP -MF $(DEPDIR)/test_urcu_mb_defer-urcu.Tpo -c -o test_urcu_mb_defer-urcu.o `test -f '$(top_srcdir)/urcu.c' || echo '$(srcdir)/'`$(top_srcdir)/urcu.c
-@am__fastdepCC_TRUE@	mv -f $(DEPDIR)/test_urcu_mb_defer-urcu.Tpo $(DEPDIR)/test_urcu_mb_defer-urcu.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='$(top_srcdir)/urcu.c' object='test_urcu_mb_defer-urcu.o' libtool=no @AMDEPBACKSLASH@
+test_urcu_mb_gc-urcu.o: $(top_srcdir)/urcu.c
+@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_urcu_mb_gc_CFLAGS) $(CFLAGS) -MT test_urcu_mb_gc-urcu.o -MD -MP -MF $(DEPDIR)/test_urcu_mb_gc-urcu.Tpo -c -o test_urcu_mb_gc-urcu.o `test -f '$(top_srcdir)/urcu.c' || echo '$(srcdir)/'`$(top_srcdir)/urcu.c
+@am__fastdepCC_TRUE@	mv -f $(DEPDIR)/test_urcu_mb_gc-urcu.Tpo $(DEPDIR)/test_urcu_mb_gc-urcu.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='$(top_srcdir)/urcu.c' object='test_urcu_mb_gc-urcu.o' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_urcu_mb_defer_CFLAGS) $(CFLAGS) -c -o test_urcu_mb_defer-urcu.o `test -f '$(top_srcdir)/urcu.c' || echo '$(srcdir)/'`$(top_srcdir)/urcu.c
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_urcu_mb_gc_CFLAGS) $(CFLAGS) -c -o test_urcu_mb_gc-urcu.o `test -f '$(top_srcdir)/urcu.c' || echo '$(srcdir)/'`$(top_srcdir)/urcu.c
 
-test_urcu_mb_defer-urcu.obj: $(top_srcdir)/urcu.c
-@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_urcu_mb_defer_CFLAGS) $(CFLAGS) -MT test_urcu_mb_defer-urcu.obj -MD -MP -MF $(DEPDIR)/test_urcu_mb_defer-urcu.Tpo -c -o test_urcu_mb_defer-urcu.obj `if test -f '$(top_srcdir)/urcu.c'; then $(CYGPATH_W) '$(top_srcdir)/urcu.c'; else $(CYGPATH_W) '$(srcdir)/$(top_srcdir)/urcu.c'; fi`
-@am__fastdepCC_TRUE@	mv -f $(DEPDIR)/test_urcu_mb_defer-urcu.Tpo $(DEPDIR)/test_urcu_mb_defer-urcu.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='$(top_srcdir)/urcu.c' object='test_urcu_mb_defer-urcu.obj' libtool=no @AMDEPBACKSLASH@
+test_urcu_mb_gc-urcu.obj: $(top_srcdir)/urcu.c
+@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_urcu_mb_gc_CFLAGS) $(CFLAGS) -MT test_urcu_mb_gc-urcu.obj -MD -MP -MF $(DEPDIR)/test_urcu_mb_gc-urcu.Tpo -c -o test_urcu_mb_gc-urcu.obj `if test -f '$(top_srcdir)/urcu.c'; then $(CYGPATH_W) '$(top_srcdir)/urcu.c'; else $(CYGPATH_W) '$(srcdir)/$(top_srcdir)/urcu.c'; fi`
+@am__fastdepCC_TRUE@	mv -f $(DEPDIR)/test_urcu_mb_gc-urcu.Tpo $(DEPDIR)/test_urcu_mb_gc-urcu.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='$(top_srcdir)/urcu.c' object='test_urcu_mb_gc-urcu.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_urcu_mb_defer_CFLAGS) $(CFLAGS) -c -o test_urcu_mb_defer-urcu.obj `if test -f '$(top_srcdir)/urcu.c'; then $(CYGPATH_W) '$(top_srcdir)/urcu.c'; else $(CYGPATH_W) '$(srcdir)/$(top_srcdir)/urcu.c'; fi`
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_urcu_mb_gc_CFLAGS) $(CFLAGS) -c -o test_urcu_mb_gc-urcu.obj `if test -f '$(top_srcdir)/urcu.c'; then $(CYGPATH_W) '$(top_srcdir)/urcu.c'; else $(CYGPATH_W) '$(srcdir)/$(top_srcdir)/urcu.c'; fi`
 
-test_urcu_mb_defer-urcu-defer.o: $(top_srcdir)/urcu-defer.c
-@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_urcu_mb_defer_CFLAGS) $(CFLAGS) -MT test_urcu_mb_defer-urcu-defer.o -MD -MP -MF $(DEPDIR)/test_urcu_mb_defer-urcu-defer.Tpo -c -o test_urcu_mb_defer-urcu-defer.o `test -f '$(top_srcdir)/urcu-defer.c' || echo '$(srcdir)/'`$(top_srcdir)/urcu-defer.c
-@am__fastdepCC_TRUE@	mv -f $(DEPDIR)/test_urcu_mb_defer-urcu-defer.Tpo $(DEPDIR)/test_urcu_mb_defer-urcu-defer.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='$(top_srcdir)/urcu-defer.c' object='test_urcu_mb_defer-urcu-defer.o' libtool=no @AMDEPBACKSLASH@
+test_urcu_mb_gc-urcu-pointer.o: $(top_srcdir)/urcu-pointer.c
+@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_urcu_mb_gc_CFLAGS) $(CFLAGS) -MT test_urcu_mb_gc-urcu-pointer.o -MD -MP -MF $(DEPDIR)/test_urcu_mb_gc-urcu-pointer.Tpo -c -o test_urcu_mb_gc-urcu-pointer.o `test -f '$(top_srcdir)/urcu-pointer.c' || echo '$(srcdir)/'`$(top_srcdir)/urcu-pointer.c
+@am__fastdepCC_TRUE@	mv -f $(DEPDIR)/test_urcu_mb_gc-urcu-pointer.Tpo $(DEPDIR)/test_urcu_mb_gc-urcu-pointer.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='$(top_srcdir)/urcu-pointer.c' object='test_urcu_mb_gc-urcu-pointer.o' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_urcu_mb_defer_CFLAGS) $(CFLAGS) -c -o test_urcu_mb_defer-urcu-defer.o `test -f '$(top_srcdir)/urcu-defer.c' || echo '$(srcdir)/'`$(top_srcdir)/urcu-defer.c
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_urcu_mb_gc_CFLAGS) $(CFLAGS) -c -o test_urcu_mb_gc-urcu-pointer.o `test -f '$(top_srcdir)/urcu-pointer.c' || echo '$(srcdir)/'`$(top_srcdir)/urcu-pointer.c
 
-test_urcu_mb_defer-urcu-defer.obj: $(top_srcdir)/urcu-defer.c
-@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_urcu_mb_defer_CFLAGS) $(CFLAGS) -MT test_urcu_mb_defer-urcu-defer.obj -MD -MP -MF $(DEPDIR)/test_urcu_mb_defer-urcu-defer.Tpo -c -o test_urcu_mb_defer-urcu-defer.obj `if test -f '$(top_srcdir)/urcu-defer.c'; then $(CYGPATH_W) '$(top_srcdir)/urcu-defer.c'; else $(CYGPATH_W) '$(srcdir)/$(top_srcdir)/urcu-defer.c'; fi`
-@am__fastdepCC_TRUE@	mv -f $(DEPDIR)/test_urcu_mb_defer-urcu-defer.Tpo $(DEPDIR)/test_urcu_mb_defer-urcu-defer.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='$(top_srcdir)/urcu-defer.c' object='test_urcu_mb_defer-urcu-defer.obj' libtool=no @AMDEPBACKSLASH@
+test_urcu_mb_gc-urcu-pointer.obj: $(top_srcdir)/urcu-pointer.c
+@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_urcu_mb_gc_CFLAGS) $(CFLAGS) -MT test_urcu_mb_gc-urcu-pointer.obj -MD -MP -MF $(DEPDIR)/test_urcu_mb_gc-urcu-pointer.Tpo -c -o test_urcu_mb_gc-urcu-pointer.obj `if test -f '$(top_srcdir)/urcu-pointer.c'; then $(CYGPATH_W) '$(top_srcdir)/urcu-pointer.c'; else $(CYGPATH_W) '$(srcdir)/$(top_srcdir)/urcu-pointer.c'; fi`
+@am__fastdepCC_TRUE@	mv -f $(DEPDIR)/test_urcu_mb_gc-urcu-pointer.Tpo $(DEPDIR)/test_urcu_mb_gc-urcu-pointer.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='$(top_srcdir)/urcu-pointer.c' object='test_urcu_mb_gc-urcu-pointer.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_urcu_mb_defer_CFLAGS) $(CFLAGS) -c -o test_urcu_mb_defer-urcu-defer.obj `if test -f '$(top_srcdir)/urcu-defer.c'; then $(CYGPATH_W) '$(top_srcdir)/urcu-defer.c'; else $(CYGPATH_W) '$(srcdir)/$(top_srcdir)/urcu-defer.c'; fi`
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_urcu_mb_gc_CFLAGS) $(CFLAGS) -c -o test_urcu_mb_gc-urcu-pointer.obj `if test -f '$(top_srcdir)/urcu-pointer.c'; then $(CYGPATH_W) '$(top_srcdir)/urcu-pointer.c'; else $(CYGPATH_W) '$(srcdir)/$(top_srcdir)/urcu-pointer.c'; fi`
 
-test_urcu_mb_defer-urcu-pointer.o: $(top_srcdir)/urcu-pointer.c
-@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_urcu_mb_defer_CFLAGS) $(CFLAGS) -MT test_urcu_mb_defer-urcu-pointer.o -MD -MP -MF $(DEPDIR)/test_urcu_mb_defer-urcu-pointer.Tpo -c -o test_urcu_mb_defer-urcu-pointer.o `test -f '$(top_srcdir)/urcu-pointer.c' || echo '$(srcdir)/'`$(top_srcdir)/urcu-pointer.c
-@am__fastdepCC_TRUE@	mv -f $(DEPDIR)/test_urcu_mb_defer-urcu-pointer.Tpo $(DEPDIR)/test_urcu_mb_defer-urcu-pointer.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='$(top_srcdir)/urcu-pointer.c' object='test_urcu_mb_defer-urcu-pointer.o' libtool=no @AMDEPBACKSLASH@
+test_urcu_mb_gc-compat_futex.o: $(top_srcdir)/compat_futex.c
+@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_urcu_mb_gc_CFLAGS) $(CFLAGS) -MT test_urcu_mb_gc-compat_futex.o -MD -MP -MF $(DEPDIR)/test_urcu_mb_gc-compat_futex.Tpo -c -o test_urcu_mb_gc-compat_futex.o `test -f '$(top_srcdir)/compat_futex.c' || echo '$(srcdir)/'`$(top_srcdir)/compat_futex.c
+@am__fastdepCC_TRUE@	mv -f $(DEPDIR)/test_urcu_mb_gc-compat_futex.Tpo $(DEPDIR)/test_urcu_mb_gc-compat_futex.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='$(top_srcdir)/compat_futex.c' object='test_urcu_mb_gc-compat_futex.o' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_urcu_mb_defer_CFLAGS) $(CFLAGS) -c -o test_urcu_mb_defer-urcu-pointer.o `test -f '$(top_srcdir)/urcu-pointer.c' || echo '$(srcdir)/'`$(top_srcdir)/urcu-pointer.c
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_urcu_mb_gc_CFLAGS) $(CFLAGS) -c -o test_urcu_mb_gc-compat_futex.o `test -f '$(top_srcdir)/compat_futex.c' || echo '$(srcdir)/'`$(top_srcdir)/compat_futex.c
 
-test_urcu_mb_defer-urcu-pointer.obj: $(top_srcdir)/urcu-pointer.c
-@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_urcu_mb_defer_CFLAGS) $(CFLAGS) -MT test_urcu_mb_defer-urcu-pointer.obj -MD -MP -MF $(DEPDIR)/test_urcu_mb_defer-urcu-pointer.Tpo -c -o test_urcu_mb_defer-urcu-pointer.obj `if test -f '$(top_srcdir)/urcu-pointer.c'; then $(CYGPATH_W) '$(top_srcdir)/urcu-pointer.c'; else $(CYGPATH_W) '$(srcdir)/$(top_srcdir)/urcu-pointer.c'; fi`
-@am__fastdepCC_TRUE@	mv -f $(DEPDIR)/test_urcu_mb_defer-urcu-pointer.Tpo $(DEPDIR)/test_urcu_mb_defer-urcu-pointer.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='$(top_srcdir)/urcu-pointer.c' object='test_urcu_mb_defer-urcu-pointer.obj' libtool=no @AMDEPBACKSLASH@
+test_urcu_mb_gc-compat_futex.obj: $(top_srcdir)/compat_futex.c
+@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_urcu_mb_gc_CFLAGS) $(CFLAGS) -MT test_urcu_mb_gc-compat_futex.obj -MD -MP -MF $(DEPDIR)/test_urcu_mb_gc-compat_futex.Tpo -c -o test_urcu_mb_gc-compat_futex.obj `if test -f '$(top_srcdir)/compat_futex.c'; then $(CYGPATH_W) '$(top_srcdir)/compat_futex.c'; else $(CYGPATH_W) '$(srcdir)/$(top_srcdir)/compat_futex.c'; fi`
+@am__fastdepCC_TRUE@	mv -f $(DEPDIR)/test_urcu_mb_gc-compat_futex.Tpo $(DEPDIR)/test_urcu_mb_gc-compat_futex.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='$(top_srcdir)/compat_futex.c' object='test_urcu_mb_gc-compat_futex.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_urcu_mb_defer_CFLAGS) $(CFLAGS) -c -o test_urcu_mb_defer-urcu-pointer.obj `if test -f '$(top_srcdir)/urcu-pointer.c'; then $(CYGPATH_W) '$(top_srcdir)/urcu-pointer.c'; else $(CYGPATH_W) '$(srcdir)/$(top_srcdir)/urcu-pointer.c'; fi`
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_urcu_mb_gc_CFLAGS) $(CFLAGS) -c -o test_urcu_mb_gc-compat_futex.obj `if test -f '$(top_srcdir)/compat_futex.c'; then $(CYGPATH_W) '$(top_srcdir)/compat_futex.c'; else $(CYGPATH_W) '$(srcdir)/$(top_srcdir)/compat_futex.c'; fi`
 
-test_urcu_mb_defer-compat_futex.o: $(top_srcdir)/compat_futex.c
-@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_urcu_mb_defer_CFLAGS) $(CFLAGS) -MT test_urcu_mb_defer-compat_futex.o -MD -MP -MF $(DEPDIR)/test_urcu_mb_defer-compat_futex.Tpo -c -o test_urcu_mb_defer-compat_futex.o `test -f '$(top_srcdir)/compat_futex.c' || echo '$(srcdir)/'`$(top_srcdir)/compat_futex.c
-@am__fastdepCC_TRUE@	mv -f $(DEPDIR)/test_urcu_mb_defer-compat_futex.Tpo $(DEPDIR)/test_urcu_mb_defer-compat_futex.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='$(top_srcdir)/compat_futex.c' object='test_urcu_mb_defer-compat_futex.o' libtool=no @AMDEPBACKSLASH@
+test_urcu_mb_gc-compat_arch_@ARCHTYPE@.o: $(top_srcdir)/compat_arch_@ARCHTYPE@.c
+@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_urcu_mb_gc_CFLAGS) $(CFLAGS) -MT test_urcu_mb_gc-compat_arch_@ARCHTYPE@.o -MD -MP -MF $(DEPDIR)/test_urcu_mb_gc-compat_arch_@ARCHTYPE@.Tpo -c -o test_urcu_mb_gc-compat_arch_@ARCHTYPE@.o `test -f '$(top_srcdir)/compat_arch_@ARCHTYPE@.c' || echo '$(srcdir)/'`$(top_srcdir)/compat_arch_@ARCHTYPE@.c
+@am__fastdepCC_TRUE@	mv -f $(DEPDIR)/test_urcu_mb_gc-compat_arch_@ARCHTYPE@.Tpo $(DEPDIR)/test_urcu_mb_gc-compat_arch_@ARCHTYPE@.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='$(top_srcdir)/compat_arch_@ARCHTYPE@.c' object='test_urcu_mb_gc-compat_arch_@ARCHTYPE@.o' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_urcu_mb_defer_CFLAGS) $(CFLAGS) -c -o test_urcu_mb_defer-compat_futex.o `test -f '$(top_srcdir)/compat_futex.c' || echo '$(srcdir)/'`$(top_srcdir)/compat_futex.c
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_urcu_mb_gc_CFLAGS) $(CFLAGS) -c -o test_urcu_mb_gc-compat_arch_@ARCHTYPE@.o `test -f '$(top_srcdir)/compat_arch_@ARCHTYPE@.c' || echo '$(srcdir)/'`$(top_srcdir)/compat_arch_@ARCHTYPE@.c
 
-test_urcu_mb_defer-compat_futex.obj: $(top_srcdir)/compat_futex.c
-@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_urcu_mb_defer_CFLAGS) $(CFLAGS) -MT test_urcu_mb_defer-compat_futex.obj -MD -MP -MF $(DEPDIR)/test_urcu_mb_defer-compat_futex.Tpo -c -o test_urcu_mb_defer-compat_futex.obj `if test -f '$(top_srcdir)/compat_futex.c'; then $(CYGPATH_W) '$(top_srcdir)/compat_futex.c'; else $(CYGPATH_W) '$(srcdir)/$(top_srcdir)/compat_futex.c'; fi`
-@am__fastdepCC_TRUE@	mv -f $(DEPDIR)/test_urcu_mb_defer-compat_futex.Tpo $(DEPDIR)/test_urcu_mb_defer-compat_futex.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='$(top_srcdir)/compat_futex.c' object='test_urcu_mb_defer-compat_futex.obj' libtool=no @AMDEPBACKSLASH@
+test_urcu_mb_gc-compat_arch_@ARCHTYPE@.obj: $(top_srcdir)/compat_arch_@ARCHTYPE@.c
+@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_urcu_mb_gc_CFLAGS) $(CFLAGS) -MT test_urcu_mb_gc-compat_arch_@ARCHTYPE@.obj -MD -MP -MF $(DEPDIR)/test_urcu_mb_gc-compat_arch_@ARCHTYPE@.Tpo -c -o test_urcu_mb_gc-compat_arch_@ARCHTYPE@.obj `if test -f '$(top_srcdir)/compat_arch_@ARCHTYPE@.c'; then $(CYGPATH_W) '$(top_srcdir)/compat_arch_@ARCHTYPE@.c'; else $(CYGPATH_W) '$(srcdir)/$(top_srcdir)/compat_arch_@ARCHTYPE@.c'; fi`
+@am__fastdepCC_TRUE@	mv -f $(DEPDIR)/test_urcu_mb_gc-compat_arch_@ARCHTYPE@.Tpo $(DEPDIR)/test_urcu_mb_gc-compat_arch_@ARCHTYPE@.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='$(top_srcdir)/compat_arch_@ARCHTYPE@.c' object='test_urcu_mb_gc-compat_arch_@ARCHTYPE@.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_urcu_mb_defer_CFLAGS) $(CFLAGS) -c -o test_urcu_mb_defer-compat_futex.obj `if test -f '$(top_srcdir)/compat_futex.c'; then $(CYGPATH_W) '$(top_srcdir)/compat_futex.c'; else $(CYGPATH_W) '$(srcdir)/$(top_srcdir)/compat_futex.c'; fi`
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_urcu_mb_gc_CFLAGS) $(CFLAGS) -c -o test_urcu_mb_gc-compat_arch_@ARCHTYPE@.obj `if test -f '$(top_srcdir)/compat_arch_@ARCHTYPE@.c'; then $(CYGPATH_W) '$(top_srcdir)/compat_arch_@ARCHTYPE@.c'; else $(CYGPATH_W) '$(srcdir)/$(top_srcdir)/compat_arch_@ARCHTYPE@.c'; fi`
 
-test_urcu_mb_defer-compat_arch_@ARCHTYPE@.o: $(top_srcdir)/compat_arch_@ARCHTYPE@.c
-@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_urcu_mb_defer_CFLAGS) $(CFLAGS) -MT test_urcu_mb_defer-compat_arch_@ARCHTYPE@.o -MD -MP -MF $(DEPDIR)/test_urcu_mb_defer-compat_arch_@ARCHTYPE@.Tpo -c -o test_urcu_mb_defer-compat_arch_@ARCHTYPE@.o `test -f '$(top_srcdir)/compat_arch_@ARCHTYPE@.c' || echo '$(srcdir)/'`$(top_srcdir)/compat_arch_@ARCHTYPE@.c
-@am__fastdepCC_TRUE@	mv -f $(DEPDIR)/test_urcu_mb_defer-compat_arch_@ARCHTYPE@.Tpo $(DEPDIR)/test_urcu_mb_defer-compat_arch_@ARCHTYPE@.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='$(top_srcdir)/compat_arch_@ARCHTYPE@.c' object='test_urcu_mb_defer-compat_arch_@ARCHTYPE@.o' libtool=no @AMDEPBACKSLASH@
+test_urcu_mb_lgc-test_urcu_gc.o: test_urcu_gc.c
+@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_urcu_mb_lgc_CFLAGS) $(CFLAGS) -MT test_urcu_mb_lgc-test_urcu_gc.o -MD -MP -MF $(DEPDIR)/test_urcu_mb_lgc-test_urcu_gc.Tpo -c -o test_urcu_mb_lgc-test_urcu_gc.o `test -f 'test_urcu_gc.c' || echo '$(srcdir)/'`test_urcu_gc.c
+@am__fastdepCC_TRUE@	mv -f $(DEPDIR)/test_urcu_mb_lgc-test_urcu_gc.Tpo $(DEPDIR)/test_urcu_mb_lgc-test_urcu_gc.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='test_urcu_gc.c' object='test_urcu_mb_lgc-test_urcu_gc.o' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_urcu_mb_defer_CFLAGS) $(CFLAGS) -c -o test_urcu_mb_defer-compat_arch_@ARCHTYPE@.o `test -f '$(top_srcdir)/compat_arch_@ARCHTYPE@.c' || echo '$(srcdir)/'`$(top_srcdir)/compat_arch_@ARCHTYPE@.c
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_urcu_mb_lgc_CFLAGS) $(CFLAGS) -c -o test_urcu_mb_lgc-test_urcu_gc.o `test -f 'test_urcu_gc.c' || echo '$(srcdir)/'`test_urcu_gc.c
 
-test_urcu_mb_defer-compat_arch_@ARCHTYPE@.obj: $(top_srcdir)/compat_arch_@ARCHTYPE@.c
-@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_urcu_mb_defer_CFLAGS) $(CFLAGS) -MT test_urcu_mb_defer-compat_arch_@ARCHTYPE@.obj -MD -MP -MF $(DEPDIR)/test_urcu_mb_defer-compat_arch_@ARCHTYPE@.Tpo -c -o test_urcu_mb_defer-compat_arch_@ARCHTYPE@.obj `if test -f '$(top_srcdir)/compat_arch_@ARCHTYPE@.c'; then $(CYGPATH_W) '$(top_srcdir)/compat_arch_@ARCHTYPE@.c'; else $(CYGPATH_W) '$(srcdir)/$(top_srcdir)/compat_arch_@ARCHTYPE@.c'; fi`
-@am__fastdepCC_TRUE@	mv -f $(DEPDIR)/test_urcu_mb_defer-compat_arch_@ARCHTYPE@.Tpo $(DEPDIR)/test_urcu_mb_defer-compat_arch_@ARCHTYPE@.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='$(top_srcdir)/compat_arch_@ARCHTYPE@.c' object='test_urcu_mb_defer-compat_arch_@ARCHTYPE@.obj' libtool=no @AMDEPBACKSLASH@
+test_urcu_mb_lgc-test_urcu_gc.obj: test_urcu_gc.c
+@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_urcu_mb_lgc_CFLAGS) $(CFLAGS) -MT test_urcu_mb_lgc-test_urcu_gc.obj -MD -MP -MF $(DEPDIR)/test_urcu_mb_lgc-test_urcu_gc.Tpo -c -o test_urcu_mb_lgc-test_urcu_gc.obj `if test -f 'test_urcu_gc.c'; then $(CYGPATH_W) 'test_urcu_gc.c'; else $(CYGPATH_W) '$(srcdir)/test_urcu_gc.c'; fi`
+@am__fastdepCC_TRUE@	mv -f $(DEPDIR)/test_urcu_mb_lgc-test_urcu_gc.Tpo $(DEPDIR)/test_urcu_mb_lgc-test_urcu_gc.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='test_urcu_gc.c' object='test_urcu_mb_lgc-test_urcu_gc.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_urcu_mb_defer_CFLAGS) $(CFLAGS) -c -o test_urcu_mb_defer-compat_arch_@ARCHTYPE@.obj `if test -f '$(top_srcdir)/compat_arch_@ARCHTYPE@.c'; then $(CYGPATH_W) '$(top_srcdir)/compat_arch_@ARCHTYPE@.c'; else $(CYGPATH_W) '$(srcdir)/$(top_srcdir)/compat_arch_@ARCHTYPE@.c'; fi`
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_urcu_mb_lgc_CFLAGS) $(CFLAGS) -c -o test_urcu_mb_lgc-test_urcu_gc.obj `if test -f 'test_urcu_gc.c'; then $(CYGPATH_W) 'test_urcu_gc.c'; else $(CYGPATH_W) '$(srcdir)/test_urcu_gc.c'; fi`
+
+test_urcu_mb_lgc-urcu.o: $(top_srcdir)/urcu.c
+@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_urcu_mb_lgc_CFLAGS) $(CFLAGS) -MT test_urcu_mb_lgc-urcu.o -MD -MP -MF $(DEPDIR)/test_urcu_mb_lgc-urcu.Tpo -c -o test_urcu_mb_lgc-urcu.o `test -f '$(top_srcdir)/urcu.c' || echo '$(srcdir)/'`$(top_srcdir)/urcu.c
+@am__fastdepCC_TRUE@	mv -f $(DEPDIR)/test_urcu_mb_lgc-urcu.Tpo $(DEPDIR)/test_urcu_mb_lgc-urcu.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='$(top_srcdir)/urcu.c' object='test_urcu_mb_lgc-urcu.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_urcu_mb_lgc_CFLAGS) $(CFLAGS) -c -o test_urcu_mb_lgc-urcu.o `test -f '$(top_srcdir)/urcu.c' || echo '$(srcdir)/'`$(top_srcdir)/urcu.c
+
+test_urcu_mb_lgc-urcu.obj: $(top_srcdir)/urcu.c
+@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_urcu_mb_lgc_CFLAGS) $(CFLAGS) -MT test_urcu_mb_lgc-urcu.obj -MD -MP -MF $(DEPDIR)/test_urcu_mb_lgc-urcu.Tpo -c -o test_urcu_mb_lgc-urcu.obj `if test -f '$(top_srcdir)/urcu.c'; then $(CYGPATH_W) '$(top_srcdir)/urcu.c'; else $(CYGPATH_W) '$(srcdir)/$(top_srcdir)/urcu.c'; fi`
+@am__fastdepCC_TRUE@	mv -f $(DEPDIR)/test_urcu_mb_lgc-urcu.Tpo $(DEPDIR)/test_urcu_mb_lgc-urcu.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='$(top_srcdir)/urcu.c' object='test_urcu_mb_lgc-urcu.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_urcu_mb_lgc_CFLAGS) $(CFLAGS) -c -o test_urcu_mb_lgc-urcu.obj `if test -f '$(top_srcdir)/urcu.c'; then $(CYGPATH_W) '$(top_srcdir)/urcu.c'; else $(CYGPATH_W) '$(srcdir)/$(top_srcdir)/urcu.c'; fi`
+
+test_urcu_mb_lgc-urcu-pointer.o: $(top_srcdir)/urcu-pointer.c
+@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_urcu_mb_lgc_CFLAGS) $(CFLAGS) -MT test_urcu_mb_lgc-urcu-pointer.o -MD -MP -MF $(DEPDIR)/test_urcu_mb_lgc-urcu-pointer.Tpo -c -o test_urcu_mb_lgc-urcu-pointer.o `test -f '$(top_srcdir)/urcu-pointer.c' || echo '$(srcdir)/'`$(top_srcdir)/urcu-pointer.c
+@am__fastdepCC_TRUE@	mv -f $(DEPDIR)/test_urcu_mb_lgc-urcu-pointer.Tpo $(DEPDIR)/test_urcu_mb_lgc-urcu-pointer.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='$(top_srcdir)/urcu-pointer.c' object='test_urcu_mb_lgc-urcu-pointer.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_urcu_mb_lgc_CFLAGS) $(CFLAGS) -c -o test_urcu_mb_lgc-urcu-pointer.o `test -f '$(top_srcdir)/urcu-pointer.c' || echo '$(srcdir)/'`$(top_srcdir)/urcu-pointer.c
+
+test_urcu_mb_lgc-urcu-pointer.obj: $(top_srcdir)/urcu-pointer.c
+@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_urcu_mb_lgc_CFLAGS) $(CFLAGS) -MT test_urcu_mb_lgc-urcu-pointer.obj -MD -MP -MF $(DEPDIR)/test_urcu_mb_lgc-urcu-pointer.Tpo -c -o test_urcu_mb_lgc-urcu-pointer.obj `if test -f '$(top_srcdir)/urcu-pointer.c'; then $(CYGPATH_W) '$(top_srcdir)/urcu-pointer.c'; else $(CYGPATH_W) '$(srcdir)/$(top_srcdir)/urcu-pointer.c'; fi`
+@am__fastdepCC_TRUE@	mv -f $(DEPDIR)/test_urcu_mb_lgc-urcu-pointer.Tpo $(DEPDIR)/test_urcu_mb_lgc-urcu-pointer.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='$(top_srcdir)/urcu-pointer.c' object='test_urcu_mb_lgc-urcu-pointer.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_urcu_mb_lgc_CFLAGS) $(CFLAGS) -c -o test_urcu_mb_lgc-urcu-pointer.obj `if test -f '$(top_srcdir)/urcu-pointer.c'; then $(CYGPATH_W) '$(top_srcdir)/urcu-pointer.c'; else $(CYGPATH_W) '$(srcdir)/$(top_srcdir)/urcu-pointer.c'; fi`
+
+test_urcu_mb_lgc-compat_futex.o: $(top_srcdir)/compat_futex.c
+@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_urcu_mb_lgc_CFLAGS) $(CFLAGS) -MT test_urcu_mb_lgc-compat_futex.o -MD -MP -MF $(DEPDIR)/test_urcu_mb_lgc-compat_futex.Tpo -c -o test_urcu_mb_lgc-compat_futex.o `test -f '$(top_srcdir)/compat_futex.c' || echo '$(srcdir)/'`$(top_srcdir)/compat_futex.c
+@am__fastdepCC_TRUE@	mv -f $(DEPDIR)/test_urcu_mb_lgc-compat_futex.Tpo $(DEPDIR)/test_urcu_mb_lgc-compat_futex.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='$(top_srcdir)/compat_futex.c' object='test_urcu_mb_lgc-compat_futex.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_urcu_mb_lgc_CFLAGS) $(CFLAGS) -c -o test_urcu_mb_lgc-compat_futex.o `test -f '$(top_srcdir)/compat_futex.c' || echo '$(srcdir)/'`$(top_srcdir)/compat_futex.c
+
+test_urcu_mb_lgc-compat_futex.obj: $(top_srcdir)/compat_futex.c
+@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_urcu_mb_lgc_CFLAGS) $(CFLAGS) -MT test_urcu_mb_lgc-compat_futex.obj -MD -MP -MF $(DEPDIR)/test_urcu_mb_lgc-compat_futex.Tpo -c -o test_urcu_mb_lgc-compat_futex.obj `if test -f '$(top_srcdir)/compat_futex.c'; then $(CYGPATH_W) '$(top_srcdir)/compat_futex.c'; else $(CYGPATH_W) '$(srcdir)/$(top_srcdir)/compat_futex.c'; fi`
+@am__fastdepCC_TRUE@	mv -f $(DEPDIR)/test_urcu_mb_lgc-compat_futex.Tpo $(DEPDIR)/test_urcu_mb_lgc-compat_futex.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='$(top_srcdir)/compat_futex.c' object='test_urcu_mb_lgc-compat_futex.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_urcu_mb_lgc_CFLAGS) $(CFLAGS) -c -o test_urcu_mb_lgc-compat_futex.obj `if test -f '$(top_srcdir)/compat_futex.c'; then $(CYGPATH_W) '$(top_srcdir)/compat_futex.c'; else $(CYGPATH_W) '$(srcdir)/$(top_srcdir)/compat_futex.c'; fi`
+
+test_urcu_mb_lgc-compat_arch_@ARCHTYPE@.o: $(top_srcdir)/compat_arch_@ARCHTYPE@.c
+@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_urcu_mb_lgc_CFLAGS) $(CFLAGS) -MT test_urcu_mb_lgc-compat_arch_@ARCHTYPE@.o -MD -MP -MF $(DEPDIR)/test_urcu_mb_lgc-compat_arch_@ARCHTYPE@.Tpo -c -o test_urcu_mb_lgc-compat_arch_@ARCHTYPE@.o `test -f '$(top_srcdir)/compat_arch_@ARCHTYPE@.c' || echo '$(srcdir)/'`$(top_srcdir)/compat_arch_@ARCHTYPE@.c
+@am__fastdepCC_TRUE@	mv -f $(DEPDIR)/test_urcu_mb_lgc-compat_arch_@ARCHTYPE@.Tpo $(DEPDIR)/test_urcu_mb_lgc-compat_arch_@ARCHTYPE@.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='$(top_srcdir)/compat_arch_@ARCHTYPE@.c' object='test_urcu_mb_lgc-compat_arch_@ARCHTYPE@.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_urcu_mb_lgc_CFLAGS) $(CFLAGS) -c -o test_urcu_mb_lgc-compat_arch_@ARCHTYPE@.o `test -f '$(top_srcdir)/compat_arch_@ARCHTYPE@.c' || echo '$(srcdir)/'`$(top_srcdir)/compat_arch_@ARCHTYPE@.c
+
+test_urcu_mb_lgc-compat_arch_@ARCHTYPE@.obj: $(top_srcdir)/compat_arch_@ARCHTYPE@.c
+@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_urcu_mb_lgc_CFLAGS) $(CFLAGS) -MT test_urcu_mb_lgc-compat_arch_@ARCHTYPE@.obj -MD -MP -MF $(DEPDIR)/test_urcu_mb_lgc-compat_arch_@ARCHTYPE@.Tpo -c -o test_urcu_mb_lgc-compat_arch_@ARCHTYPE@.obj `if test -f '$(top_srcdir)/compat_arch_@ARCHTYPE@.c'; then $(CYGPATH_W) '$(top_srcdir)/compat_arch_@ARCHTYPE@.c'; else $(CYGPATH_W) '$(srcdir)/$(top_srcdir)/compat_arch_@ARCHTYPE@.c'; fi`
+@am__fastdepCC_TRUE@	mv -f $(DEPDIR)/test_urcu_mb_lgc-compat_arch_@ARCHTYPE@.Tpo $(DEPDIR)/test_urcu_mb_lgc-compat_arch_@ARCHTYPE@.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='$(top_srcdir)/compat_arch_@ARCHTYPE@.c' object='test_urcu_mb_lgc-compat_arch_@ARCHTYPE@.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_urcu_mb_lgc_CFLAGS) $(CFLAGS) -c -o test_urcu_mb_lgc-compat_arch_@ARCHTYPE@.obj `if test -f '$(top_srcdir)/compat_arch_@ARCHTYPE@.c'; then $(CYGPATH_W) '$(top_srcdir)/compat_arch_@ARCHTYPE@.c'; else $(CYGPATH_W) '$(srcdir)/$(top_srcdir)/compat_arch_@ARCHTYPE@.c'; fi`
+
+test_urcu_signal-test_urcu.o: test_urcu.c
+@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_urcu_signal_CFLAGS) $(CFLAGS) -MT test_urcu_signal-test_urcu.o -MD -MP -MF $(DEPDIR)/test_urcu_signal-test_urcu.Tpo -c -o test_urcu_signal-test_urcu.o `test -f 'test_urcu.c' || echo '$(srcdir)/'`test_urcu.c
+@am__fastdepCC_TRUE@	mv -f $(DEPDIR)/test_urcu_signal-test_urcu.Tpo $(DEPDIR)/test_urcu_signal-test_urcu.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='test_urcu.c' object='test_urcu_signal-test_urcu.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_urcu_signal_CFLAGS) $(CFLAGS) -c -o test_urcu_signal-test_urcu.o `test -f 'test_urcu.c' || echo '$(srcdir)/'`test_urcu.c
+
+test_urcu_signal-test_urcu.obj: test_urcu.c
+@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_urcu_signal_CFLAGS) $(CFLAGS) -MT test_urcu_signal-test_urcu.obj -MD -MP -MF $(DEPDIR)/test_urcu_signal-test_urcu.Tpo -c -o test_urcu_signal-test_urcu.obj `if test -f 'test_urcu.c'; then $(CYGPATH_W) 'test_urcu.c'; else $(CYGPATH_W) '$(srcdir)/test_urcu.c'; fi`
+@am__fastdepCC_TRUE@	mv -f $(DEPDIR)/test_urcu_signal-test_urcu.Tpo $(DEPDIR)/test_urcu_signal-test_urcu.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='test_urcu.c' object='test_urcu_signal-test_urcu.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_urcu_signal_CFLAGS) $(CFLAGS) -c -o test_urcu_signal-test_urcu.obj `if test -f 'test_urcu.c'; then $(CYGPATH_W) 'test_urcu.c'; else $(CYGPATH_W) '$(srcdir)/test_urcu.c'; fi`
+
+test_urcu_signal-urcu.o: $(top_srcdir)/urcu.c
+@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_urcu_signal_CFLAGS) $(CFLAGS) -MT test_urcu_signal-urcu.o -MD -MP -MF $(DEPDIR)/test_urcu_signal-urcu.Tpo -c -o test_urcu_signal-urcu.o `test -f '$(top_srcdir)/urcu.c' || echo '$(srcdir)/'`$(top_srcdir)/urcu.c
+@am__fastdepCC_TRUE@	mv -f $(DEPDIR)/test_urcu_signal-urcu.Tpo $(DEPDIR)/test_urcu_signal-urcu.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='$(top_srcdir)/urcu.c' object='test_urcu_signal-urcu.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_urcu_signal_CFLAGS) $(CFLAGS) -c -o test_urcu_signal-urcu.o `test -f '$(top_srcdir)/urcu.c' || echo '$(srcdir)/'`$(top_srcdir)/urcu.c
+
+test_urcu_signal-urcu.obj: $(top_srcdir)/urcu.c
+@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_urcu_signal_CFLAGS) $(CFLAGS) -MT test_urcu_signal-urcu.obj -MD -MP -MF $(DEPDIR)/test_urcu_signal-urcu.Tpo -c -o test_urcu_signal-urcu.obj `if test -f '$(top_srcdir)/urcu.c'; then $(CYGPATH_W) '$(top_srcdir)/urcu.c'; else $(CYGPATH_W) '$(srcdir)/$(top_srcdir)/urcu.c'; fi`
+@am__fastdepCC_TRUE@	mv -f $(DEPDIR)/test_urcu_signal-urcu.Tpo $(DEPDIR)/test_urcu_signal-urcu.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='$(top_srcdir)/urcu.c' object='test_urcu_signal-urcu.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_urcu_signal_CFLAGS) $(CFLAGS) -c -o test_urcu_signal-urcu.obj `if test -f '$(top_srcdir)/urcu.c'; then $(CYGPATH_W) '$(top_srcdir)/urcu.c'; else $(CYGPATH_W) '$(srcdir)/$(top_srcdir)/urcu.c'; fi`
+
+test_urcu_signal-urcu-pointer.o: $(top_srcdir)/urcu-pointer.c
+@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_urcu_signal_CFLAGS) $(CFLAGS) -MT test_urcu_signal-urcu-pointer.o -MD -MP -MF $(DEPDIR)/test_urcu_signal-urcu-pointer.Tpo -c -o test_urcu_signal-urcu-pointer.o `test -f '$(top_srcdir)/urcu-pointer.c' || echo '$(srcdir)/'`$(top_srcdir)/urcu-pointer.c
+@am__fastdepCC_TRUE@	mv -f $(DEPDIR)/test_urcu_signal-urcu-pointer.Tpo $(DEPDIR)/test_urcu_signal-urcu-pointer.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='$(top_srcdir)/urcu-pointer.c' object='test_urcu_signal-urcu-pointer.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_urcu_signal_CFLAGS) $(CFLAGS) -c -o test_urcu_signal-urcu-pointer.o `test -f '$(top_srcdir)/urcu-pointer.c' || echo '$(srcdir)/'`$(top_srcdir)/urcu-pointer.c
+
+test_urcu_signal-urcu-pointer.obj: $(top_srcdir)/urcu-pointer.c
+@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_urcu_signal_CFLAGS) $(CFLAGS) -MT test_urcu_signal-urcu-pointer.obj -MD -MP -MF $(DEPDIR)/test_urcu_signal-urcu-pointer.Tpo -c -o test_urcu_signal-urcu-pointer.obj `if test -f '$(top_srcdir)/urcu-pointer.c'; then $(CYGPATH_W) '$(top_srcdir)/urcu-pointer.c'; else $(CYGPATH_W) '$(srcdir)/$(top_srcdir)/urcu-pointer.c'; fi`
+@am__fastdepCC_TRUE@	mv -f $(DEPDIR)/test_urcu_signal-urcu-pointer.Tpo $(DEPDIR)/test_urcu_signal-urcu-pointer.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='$(top_srcdir)/urcu-pointer.c' object='test_urcu_signal-urcu-pointer.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_urcu_signal_CFLAGS) $(CFLAGS) -c -o test_urcu_signal-urcu-pointer.obj `if test -f '$(top_srcdir)/urcu-pointer.c'; then $(CYGPATH_W) '$(top_srcdir)/urcu-pointer.c'; else $(CYGPATH_W) '$(srcdir)/$(top_srcdir)/urcu-pointer.c'; fi`
+
+test_urcu_signal-compat_futex.o: $(top_srcdir)/compat_futex.c
+@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_urcu_signal_CFLAGS) $(CFLAGS) -MT test_urcu_signal-compat_futex.o -MD -MP -MF $(DEPDIR)/test_urcu_signal-compat_futex.Tpo -c -o test_urcu_signal-compat_futex.o `test -f '$(top_srcdir)/compat_futex.c' || echo '$(srcdir)/'`$(top_srcdir)/compat_futex.c
+@am__fastdepCC_TRUE@	mv -f $(DEPDIR)/test_urcu_signal-compat_futex.Tpo $(DEPDIR)/test_urcu_signal-compat_futex.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='$(top_srcdir)/compat_futex.c' object='test_urcu_signal-compat_futex.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_urcu_signal_CFLAGS) $(CFLAGS) -c -o test_urcu_signal-compat_futex.o `test -f '$(top_srcdir)/compat_futex.c' || echo '$(srcdir)/'`$(top_srcdir)/compat_futex.c
+
+test_urcu_signal-compat_futex.obj: $(top_srcdir)/compat_futex.c
+@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_urcu_signal_CFLAGS) $(CFLAGS) -MT test_urcu_signal-compat_futex.obj -MD -MP -MF $(DEPDIR)/test_urcu_signal-compat_futex.Tpo -c -o test_urcu_signal-compat_futex.obj `if test -f '$(top_srcdir)/compat_futex.c'; then $(CYGPATH_W) '$(top_srcdir)/compat_futex.c'; else $(CYGPATH_W) '$(srcdir)/$(top_srcdir)/compat_futex.c'; fi`
+@am__fastdepCC_TRUE@	mv -f $(DEPDIR)/test_urcu_signal-compat_futex.Tpo $(DEPDIR)/test_urcu_signal-compat_futex.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='$(top_srcdir)/compat_futex.c' object='test_urcu_signal-compat_futex.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_urcu_signal_CFLAGS) $(CFLAGS) -c -o test_urcu_signal-compat_futex.obj `if test -f '$(top_srcdir)/compat_futex.c'; then $(CYGPATH_W) '$(top_srcdir)/compat_futex.c'; else $(CYGPATH_W) '$(srcdir)/$(top_srcdir)/compat_futex.c'; fi`
+
+test_urcu_signal-compat_arch_@ARCHTYPE@.o: $(top_srcdir)/compat_arch_@ARCHTYPE@.c
+@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_urcu_signal_CFLAGS) $(CFLAGS) -MT test_urcu_signal-compat_arch_@ARCHTYPE@.o -MD -MP -MF $(DEPDIR)/test_urcu_signal-compat_arch_@ARCHTYPE@.Tpo -c -o test_urcu_signal-compat_arch_@ARCHTYPE@.o `test -f '$(top_srcdir)/compat_arch_@ARCHTYPE@.c' || echo '$(srcdir)/'`$(top_srcdir)/compat_arch_@ARCHTYPE@.c
+@am__fastdepCC_TRUE@	mv -f $(DEPDIR)/test_urcu_signal-compat_arch_@ARCHTYPE@.Tpo $(DEPDIR)/test_urcu_signal-compat_arch_@ARCHTYPE@.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='$(top_srcdir)/compat_arch_@ARCHTYPE@.c' object='test_urcu_signal-compat_arch_@ARCHTYPE@.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_urcu_signal_CFLAGS) $(CFLAGS) -c -o test_urcu_signal-compat_arch_@ARCHTYPE@.o `test -f '$(top_srcdir)/compat_arch_@ARCHTYPE@.c' || echo '$(srcdir)/'`$(top_srcdir)/compat_arch_@ARCHTYPE@.c
+
+test_urcu_signal-compat_arch_@ARCHTYPE@.obj: $(top_srcdir)/compat_arch_@ARCHTYPE@.c
+@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_urcu_signal_CFLAGS) $(CFLAGS) -MT test_urcu_signal-compat_arch_@ARCHTYPE@.obj -MD -MP -MF $(DEPDIR)/test_urcu_signal-compat_arch_@ARCHTYPE@.Tpo -c -o test_urcu_signal-compat_arch_@ARCHTYPE@.obj `if test -f '$(top_srcdir)/compat_arch_@ARCHTYPE@.c'; then $(CYGPATH_W) '$(top_srcdir)/compat_arch_@ARCHTYPE@.c'; else $(CYGPATH_W) '$(srcdir)/$(top_srcdir)/compat_arch_@ARCHTYPE@.c'; fi`
+@am__fastdepCC_TRUE@	mv -f $(DEPDIR)/test_urcu_signal-compat_arch_@ARCHTYPE@.Tpo $(DEPDIR)/test_urcu_signal-compat_arch_@ARCHTYPE@.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='$(top_srcdir)/compat_arch_@ARCHTYPE@.c' object='test_urcu_signal-compat_arch_@ARCHTYPE@.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_urcu_signal_CFLAGS) $(CFLAGS) -c -o test_urcu_signal-compat_arch_@ARCHTYPE@.obj `if test -f '$(top_srcdir)/compat_arch_@ARCHTYPE@.c'; then $(CYGPATH_W) '$(top_srcdir)/compat_arch_@ARCHTYPE@.c'; else $(CYGPATH_W) '$(srcdir)/$(top_srcdir)/compat_arch_@ARCHTYPE@.c'; fi`
+
+test_urcu_signal_dynamic_link-test_urcu.o: test_urcu.c
+@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_urcu_signal_dynamic_link_CFLAGS) $(CFLAGS) -MT test_urcu_signal_dynamic_link-test_urcu.o -MD -MP -MF $(DEPDIR)/test_urcu_signal_dynamic_link-test_urcu.Tpo -c -o test_urcu_signal_dynamic_link-test_urcu.o `test -f 'test_urcu.c' || echo '$(srcdir)/'`test_urcu.c
+@am__fastdepCC_TRUE@	mv -f $(DEPDIR)/test_urcu_signal_dynamic_link-test_urcu.Tpo $(DEPDIR)/test_urcu_signal_dynamic_link-test_urcu.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='test_urcu.c' object='test_urcu_signal_dynamic_link-test_urcu.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_urcu_signal_dynamic_link_CFLAGS) $(CFLAGS) -c -o test_urcu_signal_dynamic_link-test_urcu.o `test -f 'test_urcu.c' || echo '$(srcdir)/'`test_urcu.c
+
+test_urcu_signal_dynamic_link-test_urcu.obj: test_urcu.c
+@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_urcu_signal_dynamic_link_CFLAGS) $(CFLAGS) -MT test_urcu_signal_dynamic_link-test_urcu.obj -MD -MP -MF $(DEPDIR)/test_urcu_signal_dynamic_link-test_urcu.Tpo -c -o test_urcu_signal_dynamic_link-test_urcu.obj `if test -f 'test_urcu.c'; then $(CYGPATH_W) 'test_urcu.c'; else $(CYGPATH_W) '$(srcdir)/test_urcu.c'; fi`
+@am__fastdepCC_TRUE@	mv -f $(DEPDIR)/test_urcu_signal_dynamic_link-test_urcu.Tpo $(DEPDIR)/test_urcu_signal_dynamic_link-test_urcu.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='test_urcu.c' object='test_urcu_signal_dynamic_link-test_urcu.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_urcu_signal_dynamic_link_CFLAGS) $(CFLAGS) -c -o test_urcu_signal_dynamic_link-test_urcu.obj `if test -f 'test_urcu.c'; then $(CYGPATH_W) 'test_urcu.c'; else $(CYGPATH_W) '$(srcdir)/test_urcu.c'; fi`
+
+test_urcu_signal_dynamic_link-urcu.o: $(top_srcdir)/urcu.c
+@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_urcu_signal_dynamic_link_CFLAGS) $(CFLAGS) -MT test_urcu_signal_dynamic_link-urcu.o -MD -MP -MF $(DEPDIR)/test_urcu_signal_dynamic_link-urcu.Tpo -c -o test_urcu_signal_dynamic_link-urcu.o `test -f '$(top_srcdir)/urcu.c' || echo '$(srcdir)/'`$(top_srcdir)/urcu.c
+@am__fastdepCC_TRUE@	mv -f $(DEPDIR)/test_urcu_signal_dynamic_link-urcu.Tpo $(DEPDIR)/test_urcu_signal_dynamic_link-urcu.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='$(top_srcdir)/urcu.c' object='test_urcu_signal_dynamic_link-urcu.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_urcu_signal_dynamic_link_CFLAGS) $(CFLAGS) -c -o test_urcu_signal_dynamic_link-urcu.o `test -f '$(top_srcdir)/urcu.c' || echo '$(srcdir)/'`$(top_srcdir)/urcu.c
+
+test_urcu_signal_dynamic_link-urcu.obj: $(top_srcdir)/urcu.c
+@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_urcu_signal_dynamic_link_CFLAGS) $(CFLAGS) -MT test_urcu_signal_dynamic_link-urcu.obj -MD -MP -MF $(DEPDIR)/test_urcu_signal_dynamic_link-urcu.Tpo -c -o test_urcu_signal_dynamic_link-urcu.obj `if test -f '$(top_srcdir)/urcu.c'; then $(CYGPATH_W) '$(top_srcdir)/urcu.c'; else $(CYGPATH_W) '$(srcdir)/$(top_srcdir)/urcu.c'; fi`
+@am__fastdepCC_TRUE@	mv -f $(DEPDIR)/test_urcu_signal_dynamic_link-urcu.Tpo $(DEPDIR)/test_urcu_signal_dynamic_link-urcu.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='$(top_srcdir)/urcu.c' object='test_urcu_signal_dynamic_link-urcu.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_urcu_signal_dynamic_link_CFLAGS) $(CFLAGS) -c -o test_urcu_signal_dynamic_link-urcu.obj `if test -f '$(top_srcdir)/urcu.c'; then $(CYGPATH_W) '$(top_srcdir)/urcu.c'; else $(CYGPATH_W) '$(srcdir)/$(top_srcdir)/urcu.c'; fi`
+
+test_urcu_signal_dynamic_link-urcu-pointer.o: $(top_srcdir)/urcu-pointer.c
+@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_urcu_signal_dynamic_link_CFLAGS) $(CFLAGS) -MT test_urcu_signal_dynamic_link-urcu-pointer.o -MD -MP -MF $(DEPDIR)/test_urcu_signal_dynamic_link-urcu-pointer.Tpo -c -o test_urcu_signal_dynamic_link-urcu-pointer.o `test -f '$(top_srcdir)/urcu-pointer.c' || echo '$(srcdir)/'`$(top_srcdir)/urcu-pointer.c
+@am__fastdepCC_TRUE@	mv -f $(DEPDIR)/test_urcu_signal_dynamic_link-urcu-pointer.Tpo $(DEPDIR)/test_urcu_signal_dynamic_link-urcu-pointer.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='$(top_srcdir)/urcu-pointer.c' object='test_urcu_signal_dynamic_link-urcu-pointer.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_urcu_signal_dynamic_link_CFLAGS) $(CFLAGS) -c -o test_urcu_signal_dynamic_link-urcu-pointer.o `test -f '$(top_srcdir)/urcu-pointer.c' || echo '$(srcdir)/'`$(top_srcdir)/urcu-pointer.c
+
+test_urcu_signal_dynamic_link-urcu-pointer.obj: $(top_srcdir)/urcu-pointer.c
+@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_urcu_signal_dynamic_link_CFLAGS) $(CFLAGS) -MT test_urcu_signal_dynamic_link-urcu-pointer.obj -MD -MP -MF $(DEPDIR)/test_urcu_signal_dynamic_link-urcu-pointer.Tpo -c -o test_urcu_signal_dynamic_link-urcu-pointer.obj `if test -f '$(top_srcdir)/urcu-pointer.c'; then $(CYGPATH_W) '$(top_srcdir)/urcu-pointer.c'; else $(CYGPATH_W) '$(srcdir)/$(top_srcdir)/urcu-pointer.c'; fi`
+@am__fastdepCC_TRUE@	mv -f $(DEPDIR)/test_urcu_signal_dynamic_link-urcu-pointer.Tpo $(DEPDIR)/test_urcu_signal_dynamic_link-urcu-pointer.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='$(top_srcdir)/urcu-pointer.c' object='test_urcu_signal_dynamic_link-urcu-pointer.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_urcu_signal_dynamic_link_CFLAGS) $(CFLAGS) -c -o test_urcu_signal_dynamic_link-urcu-pointer.obj `if test -f '$(top_srcdir)/urcu-pointer.c'; then $(CYGPATH_W) '$(top_srcdir)/urcu-pointer.c'; else $(CYGPATH_W) '$(srcdir)/$(top_srcdir)/urcu-pointer.c'; fi`
+
+test_urcu_signal_dynamic_link-compat_futex.o: $(top_srcdir)/compat_futex.c
+@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_urcu_signal_dynamic_link_CFLAGS) $(CFLAGS) -MT test_urcu_signal_dynamic_link-compat_futex.o -MD -MP -MF $(DEPDIR)/test_urcu_signal_dynamic_link-compat_futex.Tpo -c -o test_urcu_signal_dynamic_link-compat_futex.o `test -f '$(top_srcdir)/compat_futex.c' || echo '$(srcdir)/'`$(top_srcdir)/compat_futex.c
+@am__fastdepCC_TRUE@	mv -f $(DEPDIR)/test_urcu_signal_dynamic_link-compat_futex.Tpo $(DEPDIR)/test_urcu_signal_dynamic_link-compat_futex.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='$(top_srcdir)/compat_futex.c' object='test_urcu_signal_dynamic_link-compat_futex.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_urcu_signal_dynamic_link_CFLAGS) $(CFLAGS) -c -o test_urcu_signal_dynamic_link-compat_futex.o `test -f '$(top_srcdir)/compat_futex.c' || echo '$(srcdir)/'`$(top_srcdir)/compat_futex.c
+
+test_urcu_signal_dynamic_link-compat_futex.obj: $(top_srcdir)/compat_futex.c
+@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_urcu_signal_dynamic_link_CFLAGS) $(CFLAGS) -MT test_urcu_signal_dynamic_link-compat_futex.obj -MD -MP -MF $(DEPDIR)/test_urcu_signal_dynamic_link-compat_futex.Tpo -c -o test_urcu_signal_dynamic_link-compat_futex.obj `if test -f '$(top_srcdir)/compat_futex.c'; then $(CYGPATH_W) '$(top_srcdir)/compat_futex.c'; else $(CYGPATH_W) '$(srcdir)/$(top_srcdir)/compat_futex.c'; fi`
+@am__fastdepCC_TRUE@	mv -f $(DEPDIR)/test_urcu_signal_dynamic_link-compat_futex.Tpo $(DEPDIR)/test_urcu_signal_dynamic_link-compat_futex.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='$(top_srcdir)/compat_futex.c' object='test_urcu_signal_dynamic_link-compat_futex.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_urcu_signal_dynamic_link_CFLAGS) $(CFLAGS) -c -o test_urcu_signal_dynamic_link-compat_futex.obj `if test -f '$(top_srcdir)/compat_futex.c'; then $(CYGPATH_W) '$(top_srcdir)/compat_futex.c'; else $(CYGPATH_W) '$(srcdir)/$(top_srcdir)/compat_futex.c'; fi`
+
+test_urcu_signal_dynamic_link-compat_arch_@ARCHTYPE@.o: $(top_srcdir)/compat_arch_@ARCHTYPE@.c
+@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_urcu_signal_dynamic_link_CFLAGS) $(CFLAGS) -MT test_urcu_signal_dynamic_link-compat_arch_@ARCHTYPE@.o -MD -MP -MF $(DEPDIR)/test_urcu_signal_dynamic_link-compat_arch_@ARCHTYPE@.Tpo -c -o test_urcu_signal_dynamic_link-compat_arch_@ARCHTYPE@.o `test -f '$(top_srcdir)/compat_arch_@ARCHTYPE@.c' || echo '$(srcdir)/'`$(top_srcdir)/compat_arch_@ARCHTYPE@.c
+@am__fastdepCC_TRUE@	mv -f $(DEPDIR)/test_urcu_signal_dynamic_link-compat_arch_@ARCHTYPE@.Tpo $(DEPDIR)/test_urcu_signal_dynamic_link-compat_arch_@ARCHTYPE@.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='$(top_srcdir)/compat_arch_@ARCHTYPE@.c' object='test_urcu_signal_dynamic_link-compat_arch_@ARCHTYPE@.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_urcu_signal_dynamic_link_CFLAGS) $(CFLAGS) -c -o test_urcu_signal_dynamic_link-compat_arch_@ARCHTYPE@.o `test -f '$(top_srcdir)/compat_arch_@ARCHTYPE@.c' || echo '$(srcdir)/'`$(top_srcdir)/compat_arch_@ARCHTYPE@.c
+
+test_urcu_signal_dynamic_link-compat_arch_@ARCHTYPE@.obj: $(top_srcdir)/compat_arch_@ARCHTYPE@.c
+@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_urcu_signal_dynamic_link_CFLAGS) $(CFLAGS) -MT test_urcu_signal_dynamic_link-compat_arch_@ARCHTYPE@.obj -MD -MP -MF $(DEPDIR)/test_urcu_signal_dynamic_link-compat_arch_@ARCHTYPE@.Tpo -c -o test_urcu_signal_dynamic_link-compat_arch_@ARCHTYPE@.obj `if test -f '$(top_srcdir)/compat_arch_@ARCHTYPE@.c'; then $(CYGPATH_W) '$(top_srcdir)/compat_arch_@ARCHTYPE@.c'; else $(CYGPATH_W) '$(srcdir)/$(top_srcdir)/compat_arch_@ARCHTYPE@.c'; fi`
+@am__fastdepCC_TRUE@	mv -f $(DEPDIR)/test_urcu_signal_dynamic_link-compat_arch_@ARCHTYPE@.Tpo $(DEPDIR)/test_urcu_signal_dynamic_link-compat_arch_@ARCHTYPE@.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='$(top_srcdir)/compat_arch_@ARCHTYPE@.c' object='test_urcu_signal_dynamic_link-compat_arch_@ARCHTYPE@.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_urcu_signal_dynamic_link_CFLAGS) $(CFLAGS) -c -o test_urcu_signal_dynamic_link-compat_arch_@ARCHTYPE@.obj `if test -f '$(top_srcdir)/compat_arch_@ARCHTYPE@.c'; then $(CYGPATH_W) '$(top_srcdir)/compat_arch_@ARCHTYPE@.c'; else $(CYGPATH_W) '$(srcdir)/$(top_srcdir)/compat_arch_@ARCHTYPE@.c'; fi`
+
+test_urcu_signal_gc-test_urcu_gc.o: test_urcu_gc.c
+@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_urcu_signal_gc_CFLAGS) $(CFLAGS) -MT test_urcu_signal_gc-test_urcu_gc.o -MD -MP -MF $(DEPDIR)/test_urcu_signal_gc-test_urcu_gc.Tpo -c -o test_urcu_signal_gc-test_urcu_gc.o `test -f 'test_urcu_gc.c' || echo '$(srcdir)/'`test_urcu_gc.c
+@am__fastdepCC_TRUE@	mv -f $(DEPDIR)/test_urcu_signal_gc-test_urcu_gc.Tpo $(DEPDIR)/test_urcu_signal_gc-test_urcu_gc.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='test_urcu_gc.c' object='test_urcu_signal_gc-test_urcu_gc.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_urcu_signal_gc_CFLAGS) $(CFLAGS) -c -o test_urcu_signal_gc-test_urcu_gc.o `test -f 'test_urcu_gc.c' || echo '$(srcdir)/'`test_urcu_gc.c
+
+test_urcu_signal_gc-test_urcu_gc.obj: test_urcu_gc.c
+@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_urcu_signal_gc_CFLAGS) $(CFLAGS) -MT test_urcu_signal_gc-test_urcu_gc.obj -MD -MP -MF $(DEPDIR)/test_urcu_signal_gc-test_urcu_gc.Tpo -c -o test_urcu_signal_gc-test_urcu_gc.obj `if test -f 'test_urcu_gc.c'; then $(CYGPATH_W) 'test_urcu_gc.c'; else $(CYGPATH_W) '$(srcdir)/test_urcu_gc.c'; fi`
+@am__fastdepCC_TRUE@	mv -f $(DEPDIR)/test_urcu_signal_gc-test_urcu_gc.Tpo $(DEPDIR)/test_urcu_signal_gc-test_urcu_gc.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='test_urcu_gc.c' object='test_urcu_signal_gc-test_urcu_gc.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_urcu_signal_gc_CFLAGS) $(CFLAGS) -c -o test_urcu_signal_gc-test_urcu_gc.obj `if test -f 'test_urcu_gc.c'; then $(CYGPATH_W) 'test_urcu_gc.c'; else $(CYGPATH_W) '$(srcdir)/test_urcu_gc.c'; fi`
+
+test_urcu_signal_gc-urcu.o: $(top_srcdir)/urcu.c
+@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_urcu_signal_gc_CFLAGS) $(CFLAGS) -MT test_urcu_signal_gc-urcu.o -MD -MP -MF $(DEPDIR)/test_urcu_signal_gc-urcu.Tpo -c -o test_urcu_signal_gc-urcu.o `test -f '$(top_srcdir)/urcu.c' || echo '$(srcdir)/'`$(top_srcdir)/urcu.c
+@am__fastdepCC_TRUE@	mv -f $(DEPDIR)/test_urcu_signal_gc-urcu.Tpo $(DEPDIR)/test_urcu_signal_gc-urcu.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='$(top_srcdir)/urcu.c' object='test_urcu_signal_gc-urcu.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_urcu_signal_gc_CFLAGS) $(CFLAGS) -c -o test_urcu_signal_gc-urcu.o `test -f '$(top_srcdir)/urcu.c' || echo '$(srcdir)/'`$(top_srcdir)/urcu.c
+
+test_urcu_signal_gc-urcu.obj: $(top_srcdir)/urcu.c
+@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_urcu_signal_gc_CFLAGS) $(CFLAGS) -MT test_urcu_signal_gc-urcu.obj -MD -MP -MF $(DEPDIR)/test_urcu_signal_gc-urcu.Tpo -c -o test_urcu_signal_gc-urcu.obj `if test -f '$(top_srcdir)/urcu.c'; then $(CYGPATH_W) '$(top_srcdir)/urcu.c'; else $(CYGPATH_W) '$(srcdir)/$(top_srcdir)/urcu.c'; fi`
+@am__fastdepCC_TRUE@	mv -f $(DEPDIR)/test_urcu_signal_gc-urcu.Tpo $(DEPDIR)/test_urcu_signal_gc-urcu.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='$(top_srcdir)/urcu.c' object='test_urcu_signal_gc-urcu.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_urcu_signal_gc_CFLAGS) $(CFLAGS) -c -o test_urcu_signal_gc-urcu.obj `if test -f '$(top_srcdir)/urcu.c'; then $(CYGPATH_W) '$(top_srcdir)/urcu.c'; else $(CYGPATH_W) '$(srcdir)/$(top_srcdir)/urcu.c'; fi`
+
+test_urcu_signal_gc-urcu-pointer.o: $(top_srcdir)/urcu-pointer.c
+@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_urcu_signal_gc_CFLAGS) $(CFLAGS) -MT test_urcu_signal_gc-urcu-pointer.o -MD -MP -MF $(DEPDIR)/test_urcu_signal_gc-urcu-pointer.Tpo -c -o test_urcu_signal_gc-urcu-pointer.o `test -f '$(top_srcdir)/urcu-pointer.c' || echo '$(srcdir)/'`$(top_srcdir)/urcu-pointer.c
+@am__fastdepCC_TRUE@	mv -f $(DEPDIR)/test_urcu_signal_gc-urcu-pointer.Tpo $(DEPDIR)/test_urcu_signal_gc-urcu-pointer.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='$(top_srcdir)/urcu-pointer.c' object='test_urcu_signal_gc-urcu-pointer.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_urcu_signal_gc_CFLAGS) $(CFLAGS) -c -o test_urcu_signal_gc-urcu-pointer.o `test -f '$(top_srcdir)/urcu-pointer.c' || echo '$(srcdir)/'`$(top_srcdir)/urcu-pointer.c
+
+test_urcu_signal_gc-urcu-pointer.obj: $(top_srcdir)/urcu-pointer.c
+@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_urcu_signal_gc_CFLAGS) $(CFLAGS) -MT test_urcu_signal_gc-urcu-pointer.obj -MD -MP -MF $(DEPDIR)/test_urcu_signal_gc-urcu-pointer.Tpo -c -o test_urcu_signal_gc-urcu-pointer.obj `if test -f '$(top_srcdir)/urcu-pointer.c'; then $(CYGPATH_W) '$(top_srcdir)/urcu-pointer.c'; else $(CYGPATH_W) '$(srcdir)/$(top_srcdir)/urcu-pointer.c'; fi`
+@am__fastdepCC_TRUE@	mv -f $(DEPDIR)/test_urcu_signal_gc-urcu-pointer.Tpo $(DEPDIR)/test_urcu_signal_gc-urcu-pointer.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='$(top_srcdir)/urcu-pointer.c' object='test_urcu_signal_gc-urcu-pointer.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_urcu_signal_gc_CFLAGS) $(CFLAGS) -c -o test_urcu_signal_gc-urcu-pointer.obj `if test -f '$(top_srcdir)/urcu-pointer.c'; then $(CYGPATH_W) '$(top_srcdir)/urcu-pointer.c'; else $(CYGPATH_W) '$(srcdir)/$(top_srcdir)/urcu-pointer.c'; fi`
+
+test_urcu_signal_gc-compat_futex.o: $(top_srcdir)/compat_futex.c
+@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_urcu_signal_gc_CFLAGS) $(CFLAGS) -MT test_urcu_signal_gc-compat_futex.o -MD -MP -MF $(DEPDIR)/test_urcu_signal_gc-compat_futex.Tpo -c -o test_urcu_signal_gc-compat_futex.o `test -f '$(top_srcdir)/compat_futex.c' || echo '$(srcdir)/'`$(top_srcdir)/compat_futex.c
+@am__fastdepCC_TRUE@	mv -f $(DEPDIR)/test_urcu_signal_gc-compat_futex.Tpo $(DEPDIR)/test_urcu_signal_gc-compat_futex.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='$(top_srcdir)/compat_futex.c' object='test_urcu_signal_gc-compat_futex.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_urcu_signal_gc_CFLAGS) $(CFLAGS) -c -o test_urcu_signal_gc-compat_futex.o `test -f '$(top_srcdir)/compat_futex.c' || echo '$(srcdir)/'`$(top_srcdir)/compat_futex.c
+
+test_urcu_signal_gc-compat_futex.obj: $(top_srcdir)/compat_futex.c
+@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_urcu_signal_gc_CFLAGS) $(CFLAGS) -MT test_urcu_signal_gc-compat_futex.obj -MD -MP -MF $(DEPDIR)/test_urcu_signal_gc-compat_futex.Tpo -c -o test_urcu_signal_gc-compat_futex.obj `if test -f '$(top_srcdir)/compat_futex.c'; then $(CYGPATH_W) '$(top_srcdir)/compat_futex.c'; else $(CYGPATH_W) '$(srcdir)/$(top_srcdir)/compat_futex.c'; fi`
+@am__fastdepCC_TRUE@	mv -f $(DEPDIR)/test_urcu_signal_gc-compat_futex.Tpo $(DEPDIR)/test_urcu_signal_gc-compat_futex.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='$(top_srcdir)/compat_futex.c' object='test_urcu_signal_gc-compat_futex.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_urcu_signal_gc_CFLAGS) $(CFLAGS) -c -o test_urcu_signal_gc-compat_futex.obj `if test -f '$(top_srcdir)/compat_futex.c'; then $(CYGPATH_W) '$(top_srcdir)/compat_futex.c'; else $(CYGPATH_W) '$(srcdir)/$(top_srcdir)/compat_futex.c'; fi`
+
+test_urcu_signal_gc-compat_arch_@ARCHTYPE@.o: $(top_srcdir)/compat_arch_@ARCHTYPE@.c
+@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_urcu_signal_gc_CFLAGS) $(CFLAGS) -MT test_urcu_signal_gc-compat_arch_@ARCHTYPE@.o -MD -MP -MF $(DEPDIR)/test_urcu_signal_gc-compat_arch_@ARCHTYPE@.Tpo -c -o test_urcu_signal_gc-compat_arch_@ARCHTYPE@.o `test -f '$(top_srcdir)/compat_arch_@ARCHTYPE@.c' || echo '$(srcdir)/'`$(top_srcdir)/compat_arch_@ARCHTYPE@.c
+@am__fastdepCC_TRUE@	mv -f $(DEPDIR)/test_urcu_signal_gc-compat_arch_@ARCHTYPE@.Tpo $(DEPDIR)/test_urcu_signal_gc-compat_arch_@ARCHTYPE@.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='$(top_srcdir)/compat_arch_@ARCHTYPE@.c' object='test_urcu_signal_gc-compat_arch_@ARCHTYPE@.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_urcu_signal_gc_CFLAGS) $(CFLAGS) -c -o test_urcu_signal_gc-compat_arch_@ARCHTYPE@.o `test -f '$(top_srcdir)/compat_arch_@ARCHTYPE@.c' || echo '$(srcdir)/'`$(top_srcdir)/compat_arch_@ARCHTYPE@.c
+
+test_urcu_signal_gc-compat_arch_@ARCHTYPE@.obj: $(top_srcdir)/compat_arch_@ARCHTYPE@.c
+@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_urcu_signal_gc_CFLAGS) $(CFLAGS) -MT test_urcu_signal_gc-compat_arch_@ARCHTYPE@.obj -MD -MP -MF $(DEPDIR)/test_urcu_signal_gc-compat_arch_@ARCHTYPE@.Tpo -c -o test_urcu_signal_gc-compat_arch_@ARCHTYPE@.obj `if test -f '$(top_srcdir)/compat_arch_@ARCHTYPE@.c'; then $(CYGPATH_W) '$(top_srcdir)/compat_arch_@ARCHTYPE@.c'; else $(CYGPATH_W) '$(srcdir)/$(top_srcdir)/compat_arch_@ARCHTYPE@.c'; fi`
+@am__fastdepCC_TRUE@	mv -f $(DEPDIR)/test_urcu_signal_gc-compat_arch_@ARCHTYPE@.Tpo $(DEPDIR)/test_urcu_signal_gc-compat_arch_@ARCHTYPE@.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='$(top_srcdir)/compat_arch_@ARCHTYPE@.c' object='test_urcu_signal_gc-compat_arch_@ARCHTYPE@.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_urcu_signal_gc_CFLAGS) $(CFLAGS) -c -o test_urcu_signal_gc-compat_arch_@ARCHTYPE@.obj `if test -f '$(top_srcdir)/compat_arch_@ARCHTYPE@.c'; then $(CYGPATH_W) '$(top_srcdir)/compat_arch_@ARCHTYPE@.c'; else $(CYGPATH_W) '$(srcdir)/$(top_srcdir)/compat_arch_@ARCHTYPE@.c'; fi`
+
+test_urcu_signal_lgc-test_urcu_gc.o: test_urcu_gc.c
+@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_urcu_signal_lgc_CFLAGS) $(CFLAGS) -MT test_urcu_signal_lgc-test_urcu_gc.o -MD -MP -MF $(DEPDIR)/test_urcu_signal_lgc-test_urcu_gc.Tpo -c -o test_urcu_signal_lgc-test_urcu_gc.o `test -f 'test_urcu_gc.c' || echo '$(srcdir)/'`test_urcu_gc.c
+@am__fastdepCC_TRUE@	mv -f $(DEPDIR)/test_urcu_signal_lgc-test_urcu_gc.Tpo $(DEPDIR)/test_urcu_signal_lgc-test_urcu_gc.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='test_urcu_gc.c' object='test_urcu_signal_lgc-test_urcu_gc.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_urcu_signal_lgc_CFLAGS) $(CFLAGS) -c -o test_urcu_signal_lgc-test_urcu_gc.o `test -f 'test_urcu_gc.c' || echo '$(srcdir)/'`test_urcu_gc.c
+
+test_urcu_signal_lgc-test_urcu_gc.obj: test_urcu_gc.c
+@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_urcu_signal_lgc_CFLAGS) $(CFLAGS) -MT test_urcu_signal_lgc-test_urcu_gc.obj -MD -MP -MF $(DEPDIR)/test_urcu_signal_lgc-test_urcu_gc.Tpo -c -o test_urcu_signal_lgc-test_urcu_gc.obj `if test -f 'test_urcu_gc.c'; then $(CYGPATH_W) 'test_urcu_gc.c'; else $(CYGPATH_W) '$(srcdir)/test_urcu_gc.c'; fi`
+@am__fastdepCC_TRUE@	mv -f $(DEPDIR)/test_urcu_signal_lgc-test_urcu_gc.Tpo $(DEPDIR)/test_urcu_signal_lgc-test_urcu_gc.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='test_urcu_gc.c' object='test_urcu_signal_lgc-test_urcu_gc.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_urcu_signal_lgc_CFLAGS) $(CFLAGS) -c -o test_urcu_signal_lgc-test_urcu_gc.obj `if test -f 'test_urcu_gc.c'; then $(CYGPATH_W) 'test_urcu_gc.c'; else $(CYGPATH_W) '$(srcdir)/test_urcu_gc.c'; fi`
+
+test_urcu_signal_lgc-urcu.o: $(top_srcdir)/urcu.c
+@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_urcu_signal_lgc_CFLAGS) $(CFLAGS) -MT test_urcu_signal_lgc-urcu.o -MD -MP -MF $(DEPDIR)/test_urcu_signal_lgc-urcu.Tpo -c -o test_urcu_signal_lgc-urcu.o `test -f '$(top_srcdir)/urcu.c' || echo '$(srcdir)/'`$(top_srcdir)/urcu.c
+@am__fastdepCC_TRUE@	mv -f $(DEPDIR)/test_urcu_signal_lgc-urcu.Tpo $(DEPDIR)/test_urcu_signal_lgc-urcu.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='$(top_srcdir)/urcu.c' object='test_urcu_signal_lgc-urcu.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_urcu_signal_lgc_CFLAGS) $(CFLAGS) -c -o test_urcu_signal_lgc-urcu.o `test -f '$(top_srcdir)/urcu.c' || echo '$(srcdir)/'`$(top_srcdir)/urcu.c
+
+test_urcu_signal_lgc-urcu.obj: $(top_srcdir)/urcu.c
+@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_urcu_signal_lgc_CFLAGS) $(CFLAGS) -MT test_urcu_signal_lgc-urcu.obj -MD -MP -MF $(DEPDIR)/test_urcu_signal_lgc-urcu.Tpo -c -o test_urcu_signal_lgc-urcu.obj `if test -f '$(top_srcdir)/urcu.c'; then $(CYGPATH_W) '$(top_srcdir)/urcu.c'; else $(CYGPATH_W) '$(srcdir)/$(top_srcdir)/urcu.c'; fi`
+@am__fastdepCC_TRUE@	mv -f $(DEPDIR)/test_urcu_signal_lgc-urcu.Tpo $(DEPDIR)/test_urcu_signal_lgc-urcu.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='$(top_srcdir)/urcu.c' object='test_urcu_signal_lgc-urcu.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_urcu_signal_lgc_CFLAGS) $(CFLAGS) -c -o test_urcu_signal_lgc-urcu.obj `if test -f '$(top_srcdir)/urcu.c'; then $(CYGPATH_W) '$(top_srcdir)/urcu.c'; else $(CYGPATH_W) '$(srcdir)/$(top_srcdir)/urcu.c'; fi`
+
+test_urcu_signal_lgc-urcu-pointer.o: $(top_srcdir)/urcu-pointer.c
+@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_urcu_signal_lgc_CFLAGS) $(CFLAGS) -MT test_urcu_signal_lgc-urcu-pointer.o -MD -MP -MF $(DEPDIR)/test_urcu_signal_lgc-urcu-pointer.Tpo -c -o test_urcu_signal_lgc-urcu-pointer.o `test -f '$(top_srcdir)/urcu-pointer.c' || echo '$(srcdir)/'`$(top_srcdir)/urcu-pointer.c
+@am__fastdepCC_TRUE@	mv -f $(DEPDIR)/test_urcu_signal_lgc-urcu-pointer.Tpo $(DEPDIR)/test_urcu_signal_lgc-urcu-pointer.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='$(top_srcdir)/urcu-pointer.c' object='test_urcu_signal_lgc-urcu-pointer.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_urcu_signal_lgc_CFLAGS) $(CFLAGS) -c -o test_urcu_signal_lgc-urcu-pointer.o `test -f '$(top_srcdir)/urcu-pointer.c' || echo '$(srcdir)/'`$(top_srcdir)/urcu-pointer.c
+
+test_urcu_signal_lgc-urcu-pointer.obj: $(top_srcdir)/urcu-pointer.c
+@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_urcu_signal_lgc_CFLAGS) $(CFLAGS) -MT test_urcu_signal_lgc-urcu-pointer.obj -MD -MP -MF $(DEPDIR)/test_urcu_signal_lgc-urcu-pointer.Tpo -c -o test_urcu_signal_lgc-urcu-pointer.obj `if test -f '$(top_srcdir)/urcu-pointer.c'; then $(CYGPATH_W) '$(top_srcdir)/urcu-pointer.c'; else $(CYGPATH_W) '$(srcdir)/$(top_srcdir)/urcu-pointer.c'; fi`
+@am__fastdepCC_TRUE@	mv -f $(DEPDIR)/test_urcu_signal_lgc-urcu-pointer.Tpo $(DEPDIR)/test_urcu_signal_lgc-urcu-pointer.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='$(top_srcdir)/urcu-pointer.c' object='test_urcu_signal_lgc-urcu-pointer.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_urcu_signal_lgc_CFLAGS) $(CFLAGS) -c -o test_urcu_signal_lgc-urcu-pointer.obj `if test -f '$(top_srcdir)/urcu-pointer.c'; then $(CYGPATH_W) '$(top_srcdir)/urcu-pointer.c'; else $(CYGPATH_W) '$(srcdir)/$(top_srcdir)/urcu-pointer.c'; fi`
+
+test_urcu_signal_lgc-compat_futex.o: $(top_srcdir)/compat_futex.c
+@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_urcu_signal_lgc_CFLAGS) $(CFLAGS) -MT test_urcu_signal_lgc-compat_futex.o -MD -MP -MF $(DEPDIR)/test_urcu_signal_lgc-compat_futex.Tpo -c -o test_urcu_signal_lgc-compat_futex.o `test -f '$(top_srcdir)/compat_futex.c' || echo '$(srcdir)/'`$(top_srcdir)/compat_futex.c
+@am__fastdepCC_TRUE@	mv -f $(DEPDIR)/test_urcu_signal_lgc-compat_futex.Tpo $(DEPDIR)/test_urcu_signal_lgc-compat_futex.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='$(top_srcdir)/compat_futex.c' object='test_urcu_signal_lgc-compat_futex.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_urcu_signal_lgc_CFLAGS) $(CFLAGS) -c -o test_urcu_signal_lgc-compat_futex.o `test -f '$(top_srcdir)/compat_futex.c' || echo '$(srcdir)/'`$(top_srcdir)/compat_futex.c
+
+test_urcu_signal_lgc-compat_futex.obj: $(top_srcdir)/compat_futex.c
+@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_urcu_signal_lgc_CFLAGS) $(CFLAGS) -MT test_urcu_signal_lgc-compat_futex.obj -MD -MP -MF $(DEPDIR)/test_urcu_signal_lgc-compat_futex.Tpo -c -o test_urcu_signal_lgc-compat_futex.obj `if test -f '$(top_srcdir)/compat_futex.c'; then $(CYGPATH_W) '$(top_srcdir)/compat_futex.c'; else $(CYGPATH_W) '$(srcdir)/$(top_srcdir)/compat_futex.c'; fi`
+@am__fastdepCC_TRUE@	mv -f $(DEPDIR)/test_urcu_signal_lgc-compat_futex.Tpo $(DEPDIR)/test_urcu_signal_lgc-compat_futex.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='$(top_srcdir)/compat_futex.c' object='test_urcu_signal_lgc-compat_futex.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_urcu_signal_lgc_CFLAGS) $(CFLAGS) -c -o test_urcu_signal_lgc-compat_futex.obj `if test -f '$(top_srcdir)/compat_futex.c'; then $(CYGPATH_W) '$(top_srcdir)/compat_futex.c'; else $(CYGPATH_W) '$(srcdir)/$(top_srcdir)/compat_futex.c'; fi`
+
+test_urcu_signal_lgc-compat_arch_@ARCHTYPE@.o: $(top_srcdir)/compat_arch_@ARCHTYPE@.c
+@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_urcu_signal_lgc_CFLAGS) $(CFLAGS) -MT test_urcu_signal_lgc-compat_arch_@ARCHTYPE@.o -MD -MP -MF $(DEPDIR)/test_urcu_signal_lgc-compat_arch_@ARCHTYPE@.Tpo -c -o test_urcu_signal_lgc-compat_arch_@ARCHTYPE@.o `test -f '$(top_srcdir)/compat_arch_@ARCHTYPE@.c' || echo '$(srcdir)/'`$(top_srcdir)/compat_arch_@ARCHTYPE@.c
+@am__fastdepCC_TRUE@	mv -f $(DEPDIR)/test_urcu_signal_lgc-compat_arch_@ARCHTYPE@.Tpo $(DEPDIR)/test_urcu_signal_lgc-compat_arch_@ARCHTYPE@.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='$(top_srcdir)/compat_arch_@ARCHTYPE@.c' object='test_urcu_signal_lgc-compat_arch_@ARCHTYPE@.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_urcu_signal_lgc_CFLAGS) $(CFLAGS) -c -o test_urcu_signal_lgc-compat_arch_@ARCHTYPE@.o `test -f '$(top_srcdir)/compat_arch_@ARCHTYPE@.c' || echo '$(srcdir)/'`$(top_srcdir)/compat_arch_@ARCHTYPE@.c
+
+test_urcu_signal_lgc-compat_arch_@ARCHTYPE@.obj: $(top_srcdir)/compat_arch_@ARCHTYPE@.c
+@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_urcu_signal_lgc_CFLAGS) $(CFLAGS) -MT test_urcu_signal_lgc-compat_arch_@ARCHTYPE@.obj -MD -MP -MF $(DEPDIR)/test_urcu_signal_lgc-compat_arch_@ARCHTYPE@.Tpo -c -o test_urcu_signal_lgc-compat_arch_@ARCHTYPE@.obj `if test -f '$(top_srcdir)/compat_arch_@ARCHTYPE@.c'; then $(CYGPATH_W) '$(top_srcdir)/compat_arch_@ARCHTYPE@.c'; else $(CYGPATH_W) '$(srcdir)/$(top_srcdir)/compat_arch_@ARCHTYPE@.c'; fi`
+@am__fastdepCC_TRUE@	mv -f $(DEPDIR)/test_urcu_signal_lgc-compat_arch_@ARCHTYPE@.Tpo $(DEPDIR)/test_urcu_signal_lgc-compat_arch_@ARCHTYPE@.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='$(top_srcdir)/compat_arch_@ARCHTYPE@.c' object='test_urcu_signal_lgc-compat_arch_@ARCHTYPE@.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_urcu_signal_lgc_CFLAGS) $(CFLAGS) -c -o test_urcu_signal_lgc-compat_arch_@ARCHTYPE@.obj `if test -f '$(top_srcdir)/compat_arch_@ARCHTYPE@.c'; then $(CYGPATH_W) '$(top_srcdir)/compat_arch_@ARCHTYPE@.c'; else $(CYGPATH_W) '$(srcdir)/$(top_srcdir)/compat_arch_@ARCHTYPE@.c'; fi`
+
+test_urcu_signal_timing-test_urcu_timing.o: test_urcu_timing.c
+@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_urcu_signal_timing_CFLAGS) $(CFLAGS) -MT test_urcu_signal_timing-test_urcu_timing.o -MD -MP -MF $(DEPDIR)/test_urcu_signal_timing-test_urcu_timing.Tpo -c -o test_urcu_signal_timing-test_urcu_timing.o `test -f 'test_urcu_timing.c' || echo '$(srcdir)/'`test_urcu_timing.c
+@am__fastdepCC_TRUE@	mv -f $(DEPDIR)/test_urcu_signal_timing-test_urcu_timing.Tpo $(DEPDIR)/test_urcu_signal_timing-test_urcu_timing.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='test_urcu_timing.c' object='test_urcu_signal_timing-test_urcu_timing.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_urcu_signal_timing_CFLAGS) $(CFLAGS) -c -o test_urcu_signal_timing-test_urcu_timing.o `test -f 'test_urcu_timing.c' || echo '$(srcdir)/'`test_urcu_timing.c
+
+test_urcu_signal_timing-test_urcu_timing.obj: test_urcu_timing.c
+@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_urcu_signal_timing_CFLAGS) $(CFLAGS) -MT test_urcu_signal_timing-test_urcu_timing.obj -MD -MP -MF $(DEPDIR)/test_urcu_signal_timing-test_urcu_timing.Tpo -c -o test_urcu_signal_timing-test_urcu_timing.obj `if test -f 'test_urcu_timing.c'; then $(CYGPATH_W) 'test_urcu_timing.c'; else $(CYGPATH_W) '$(srcdir)/test_urcu_timing.c'; fi`
+@am__fastdepCC_TRUE@	mv -f $(DEPDIR)/test_urcu_signal_timing-test_urcu_timing.Tpo $(DEPDIR)/test_urcu_signal_timing-test_urcu_timing.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='test_urcu_timing.c' object='test_urcu_signal_timing-test_urcu_timing.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_urcu_signal_timing_CFLAGS) $(CFLAGS) -c -o test_urcu_signal_timing-test_urcu_timing.obj `if test -f 'test_urcu_timing.c'; then $(CYGPATH_W) 'test_urcu_timing.c'; else $(CYGPATH_W) '$(srcdir)/test_urcu_timing.c'; fi`
+
+test_urcu_signal_timing-urcu.o: $(top_srcdir)/urcu.c
+@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_urcu_signal_timing_CFLAGS) $(CFLAGS) -MT test_urcu_signal_timing-urcu.o -MD -MP -MF $(DEPDIR)/test_urcu_signal_timing-urcu.Tpo -c -o test_urcu_signal_timing-urcu.o `test -f '$(top_srcdir)/urcu.c' || echo '$(srcdir)/'`$(top_srcdir)/urcu.c
+@am__fastdepCC_TRUE@	mv -f $(DEPDIR)/test_urcu_signal_timing-urcu.Tpo $(DEPDIR)/test_urcu_signal_timing-urcu.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='$(top_srcdir)/urcu.c' object='test_urcu_signal_timing-urcu.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_urcu_signal_timing_CFLAGS) $(CFLAGS) -c -o test_urcu_signal_timing-urcu.o `test -f '$(top_srcdir)/urcu.c' || echo '$(srcdir)/'`$(top_srcdir)/urcu.c
+
+test_urcu_signal_timing-urcu.obj: $(top_srcdir)/urcu.c
+@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_urcu_signal_timing_CFLAGS) $(CFLAGS) -MT test_urcu_signal_timing-urcu.obj -MD -MP -MF $(DEPDIR)/test_urcu_signal_timing-urcu.Tpo -c -o test_urcu_signal_timing-urcu.obj `if test -f '$(top_srcdir)/urcu.c'; then $(CYGPATH_W) '$(top_srcdir)/urcu.c'; else $(CYGPATH_W) '$(srcdir)/$(top_srcdir)/urcu.c'; fi`
+@am__fastdepCC_TRUE@	mv -f $(DEPDIR)/test_urcu_signal_timing-urcu.Tpo $(DEPDIR)/test_urcu_signal_timing-urcu.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='$(top_srcdir)/urcu.c' object='test_urcu_signal_timing-urcu.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_urcu_signal_timing_CFLAGS) $(CFLAGS) -c -o test_urcu_signal_timing-urcu.obj `if test -f '$(top_srcdir)/urcu.c'; then $(CYGPATH_W) '$(top_srcdir)/urcu.c'; else $(CYGPATH_W) '$(srcdir)/$(top_srcdir)/urcu.c'; fi`
+
+test_urcu_signal_timing-urcu-pointer.o: $(top_srcdir)/urcu-pointer.c
+@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_urcu_signal_timing_CFLAGS) $(CFLAGS) -MT test_urcu_signal_timing-urcu-pointer.o -MD -MP -MF $(DEPDIR)/test_urcu_signal_timing-urcu-pointer.Tpo -c -o test_urcu_signal_timing-urcu-pointer.o `test -f '$(top_srcdir)/urcu-pointer.c' || echo '$(srcdir)/'`$(top_srcdir)/urcu-pointer.c
+@am__fastdepCC_TRUE@	mv -f $(DEPDIR)/test_urcu_signal_timing-urcu-pointer.Tpo $(DEPDIR)/test_urcu_signal_timing-urcu-pointer.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='$(top_srcdir)/urcu-pointer.c' object='test_urcu_signal_timing-urcu-pointer.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_urcu_signal_timing_CFLAGS) $(CFLAGS) -c -o test_urcu_signal_timing-urcu-pointer.o `test -f '$(top_srcdir)/urcu-pointer.c' || echo '$(srcdir)/'`$(top_srcdir)/urcu-pointer.c
+
+test_urcu_signal_timing-urcu-pointer.obj: $(top_srcdir)/urcu-pointer.c
+@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_urcu_signal_timing_CFLAGS) $(CFLAGS) -MT test_urcu_signal_timing-urcu-pointer.obj -MD -MP -MF $(DEPDIR)/test_urcu_signal_timing-urcu-pointer.Tpo -c -o test_urcu_signal_timing-urcu-pointer.obj `if test -f '$(top_srcdir)/urcu-pointer.c'; then $(CYGPATH_W) '$(top_srcdir)/urcu-pointer.c'; else $(CYGPATH_W) '$(srcdir)/$(top_srcdir)/urcu-pointer.c'; fi`
+@am__fastdepCC_TRUE@	mv -f $(DEPDIR)/test_urcu_signal_timing-urcu-pointer.Tpo $(DEPDIR)/test_urcu_signal_timing-urcu-pointer.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='$(top_srcdir)/urcu-pointer.c' object='test_urcu_signal_timing-urcu-pointer.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_urcu_signal_timing_CFLAGS) $(CFLAGS) -c -o test_urcu_signal_timing-urcu-pointer.obj `if test -f '$(top_srcdir)/urcu-pointer.c'; then $(CYGPATH_W) '$(top_srcdir)/urcu-pointer.c'; else $(CYGPATH_W) '$(srcdir)/$(top_srcdir)/urcu-pointer.c'; fi`
+
+test_urcu_signal_timing-compat_futex.o: $(top_srcdir)/compat_futex.c
+@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_urcu_signal_timing_CFLAGS) $(CFLAGS) -MT test_urcu_signal_timing-compat_futex.o -MD -MP -MF $(DEPDIR)/test_urcu_signal_timing-compat_futex.Tpo -c -o test_urcu_signal_timing-compat_futex.o `test -f '$(top_srcdir)/compat_futex.c' || echo '$(srcdir)/'`$(top_srcdir)/compat_futex.c
+@am__fastdepCC_TRUE@	mv -f $(DEPDIR)/test_urcu_signal_timing-compat_futex.Tpo $(DEPDIR)/test_urcu_signal_timing-compat_futex.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='$(top_srcdir)/compat_futex.c' object='test_urcu_signal_timing-compat_futex.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_urcu_signal_timing_CFLAGS) $(CFLAGS) -c -o test_urcu_signal_timing-compat_futex.o `test -f '$(top_srcdir)/compat_futex.c' || echo '$(srcdir)/'`$(top_srcdir)/compat_futex.c
+
+test_urcu_signal_timing-compat_futex.obj: $(top_srcdir)/compat_futex.c
+@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_urcu_signal_timing_CFLAGS) $(CFLAGS) -MT test_urcu_signal_timing-compat_futex.obj -MD -MP -MF $(DEPDIR)/test_urcu_signal_timing-compat_futex.Tpo -c -o test_urcu_signal_timing-compat_futex.obj `if test -f '$(top_srcdir)/compat_futex.c'; then $(CYGPATH_W) '$(top_srcdir)/compat_futex.c'; else $(CYGPATH_W) '$(srcdir)/$(top_srcdir)/compat_futex.c'; fi`
+@am__fastdepCC_TRUE@	mv -f $(DEPDIR)/test_urcu_signal_timing-compat_futex.Tpo $(DEPDIR)/test_urcu_signal_timing-compat_futex.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='$(top_srcdir)/compat_futex.c' object='test_urcu_signal_timing-compat_futex.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_urcu_signal_timing_CFLAGS) $(CFLAGS) -c -o test_urcu_signal_timing-compat_futex.obj `if test -f '$(top_srcdir)/compat_futex.c'; then $(CYGPATH_W) '$(top_srcdir)/compat_futex.c'; else $(CYGPATH_W) '$(srcdir)/$(top_srcdir)/compat_futex.c'; fi`
+
+test_urcu_signal_timing-compat_arch_@ARCHTYPE@.o: $(top_srcdir)/compat_arch_@ARCHTYPE@.c
+@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_urcu_signal_timing_CFLAGS) $(CFLAGS) -MT test_urcu_signal_timing-compat_arch_@ARCHTYPE@.o -MD -MP -MF $(DEPDIR)/test_urcu_signal_timing-compat_arch_@ARCHTYPE@.Tpo -c -o test_urcu_signal_timing-compat_arch_@ARCHTYPE@.o `test -f '$(top_srcdir)/compat_arch_@ARCHTYPE@.c' || echo '$(srcdir)/'`$(top_srcdir)/compat_arch_@ARCHTYPE@.c
+@am__fastdepCC_TRUE@	mv -f $(DEPDIR)/test_urcu_signal_timing-compat_arch_@ARCHTYPE@.Tpo $(DEPDIR)/test_urcu_signal_timing-compat_arch_@ARCHTYPE@.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='$(top_srcdir)/compat_arch_@ARCHTYPE@.c' object='test_urcu_signal_timing-compat_arch_@ARCHTYPE@.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_urcu_signal_timing_CFLAGS) $(CFLAGS) -c -o test_urcu_signal_timing-compat_arch_@ARCHTYPE@.o `test -f '$(top_srcdir)/compat_arch_@ARCHTYPE@.c' || echo '$(srcdir)/'`$(top_srcdir)/compat_arch_@ARCHTYPE@.c
+
+test_urcu_signal_timing-compat_arch_@ARCHTYPE@.obj: $(top_srcdir)/compat_arch_@ARCHTYPE@.c
+@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_urcu_signal_timing_CFLAGS) $(CFLAGS) -MT test_urcu_signal_timing-compat_arch_@ARCHTYPE@.obj -MD -MP -MF $(DEPDIR)/test_urcu_signal_timing-compat_arch_@ARCHTYPE@.Tpo -c -o test_urcu_signal_timing-compat_arch_@ARCHTYPE@.obj `if test -f '$(top_srcdir)/compat_arch_@ARCHTYPE@.c'; then $(CYGPATH_W) '$(top_srcdir)/compat_arch_@ARCHTYPE@.c'; else $(CYGPATH_W) '$(srcdir)/$(top_srcdir)/compat_arch_@ARCHTYPE@.c'; fi`
+@am__fastdepCC_TRUE@	mv -f $(DEPDIR)/test_urcu_signal_timing-compat_arch_@ARCHTYPE@.Tpo $(DEPDIR)/test_urcu_signal_timing-compat_arch_@ARCHTYPE@.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='$(top_srcdir)/compat_arch_@ARCHTYPE@.c' object='test_urcu_signal_timing-compat_arch_@ARCHTYPE@.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_urcu_signal_timing_CFLAGS) $(CFLAGS) -c -o test_urcu_signal_timing-compat_arch_@ARCHTYPE@.obj `if test -f '$(top_srcdir)/compat_arch_@ARCHTYPE@.c'; then $(CYGPATH_W) '$(top_srcdir)/compat_arch_@ARCHTYPE@.c'; else $(CYGPATH_W) '$(srcdir)/$(top_srcdir)/compat_arch_@ARCHTYPE@.c'; fi`
+
+test_urcu_signal_yield-test_urcu.o: test_urcu.c
+@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_urcu_signal_yield_CFLAGS) $(CFLAGS) -MT test_urcu_signal_yield-test_urcu.o -MD -MP -MF $(DEPDIR)/test_urcu_signal_yield-test_urcu.Tpo -c -o test_urcu_signal_yield-test_urcu.o `test -f 'test_urcu.c' || echo '$(srcdir)/'`test_urcu.c
+@am__fastdepCC_TRUE@	mv -f $(DEPDIR)/test_urcu_signal_yield-test_urcu.Tpo $(DEPDIR)/test_urcu_signal_yield-test_urcu.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='test_urcu.c' object='test_urcu_signal_yield-test_urcu.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_urcu_signal_yield_CFLAGS) $(CFLAGS) -c -o test_urcu_signal_yield-test_urcu.o `test -f 'test_urcu.c' || echo '$(srcdir)/'`test_urcu.c
+
+test_urcu_signal_yield-test_urcu.obj: test_urcu.c
+@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_urcu_signal_yield_CFLAGS) $(CFLAGS) -MT test_urcu_signal_yield-test_urcu.obj -MD -MP -MF $(DEPDIR)/test_urcu_signal_yield-test_urcu.Tpo -c -o test_urcu_signal_yield-test_urcu.obj `if test -f 'test_urcu.c'; then $(CYGPATH_W) 'test_urcu.c'; else $(CYGPATH_W) '$(srcdir)/test_urcu.c'; fi`
+@am__fastdepCC_TRUE@	mv -f $(DEPDIR)/test_urcu_signal_yield-test_urcu.Tpo $(DEPDIR)/test_urcu_signal_yield-test_urcu.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='test_urcu.c' object='test_urcu_signal_yield-test_urcu.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_urcu_signal_yield_CFLAGS) $(CFLAGS) -c -o test_urcu_signal_yield-test_urcu.obj `if test -f 'test_urcu.c'; then $(CYGPATH_W) 'test_urcu.c'; else $(CYGPATH_W) '$(srcdir)/test_urcu.c'; fi`
+
+test_urcu_signal_yield-urcu.o: $(top_srcdir)/urcu.c
+@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_urcu_signal_yield_CFLAGS) $(CFLAGS) -MT test_urcu_signal_yield-urcu.o -MD -MP -MF $(DEPDIR)/test_urcu_signal_yield-urcu.Tpo -c -o test_urcu_signal_yield-urcu.o `test -f '$(top_srcdir)/urcu.c' || echo '$(srcdir)/'`$(top_srcdir)/urcu.c
+@am__fastdepCC_TRUE@	mv -f $(DEPDIR)/test_urcu_signal_yield-urcu.Tpo $(DEPDIR)/test_urcu_signal_yield-urcu.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='$(top_srcdir)/urcu.c' object='test_urcu_signal_yield-urcu.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_urcu_signal_yield_CFLAGS) $(CFLAGS) -c -o test_urcu_signal_yield-urcu.o `test -f '$(top_srcdir)/urcu.c' || echo '$(srcdir)/'`$(top_srcdir)/urcu.c
+
+test_urcu_signal_yield-urcu.obj: $(top_srcdir)/urcu.c
+@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_urcu_signal_yield_CFLAGS) $(CFLAGS) -MT test_urcu_signal_yield-urcu.obj -MD -MP -MF $(DEPDIR)/test_urcu_signal_yield-urcu.Tpo -c -o test_urcu_signal_yield-urcu.obj `if test -f '$(top_srcdir)/urcu.c'; then $(CYGPATH_W) '$(top_srcdir)/urcu.c'; else $(CYGPATH_W) '$(srcdir)/$(top_srcdir)/urcu.c'; fi`
+@am__fastdepCC_TRUE@	mv -f $(DEPDIR)/test_urcu_signal_yield-urcu.Tpo $(DEPDIR)/test_urcu_signal_yield-urcu.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='$(top_srcdir)/urcu.c' object='test_urcu_signal_yield-urcu.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_urcu_signal_yield_CFLAGS) $(CFLAGS) -c -o test_urcu_signal_yield-urcu.obj `if test -f '$(top_srcdir)/urcu.c'; then $(CYGPATH_W) '$(top_srcdir)/urcu.c'; else $(CYGPATH_W) '$(srcdir)/$(top_srcdir)/urcu.c'; fi`
+
+test_urcu_signal_yield-urcu-pointer.o: $(top_srcdir)/urcu-pointer.c
+@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_urcu_signal_yield_CFLAGS) $(CFLAGS) -MT test_urcu_signal_yield-urcu-pointer.o -MD -MP -MF $(DEPDIR)/test_urcu_signal_yield-urcu-pointer.Tpo -c -o test_urcu_signal_yield-urcu-pointer.o `test -f '$(top_srcdir)/urcu-pointer.c' || echo '$(srcdir)/'`$(top_srcdir)/urcu-pointer.c
+@am__fastdepCC_TRUE@	mv -f $(DEPDIR)/test_urcu_signal_yield-urcu-pointer.Tpo $(DEPDIR)/test_urcu_signal_yield-urcu-pointer.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='$(top_srcdir)/urcu-pointer.c' object='test_urcu_signal_yield-urcu-pointer.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_urcu_signal_yield_CFLAGS) $(CFLAGS) -c -o test_urcu_signal_yield-urcu-pointer.o `test -f '$(top_srcdir)/urcu-pointer.c' || echo '$(srcdir)/'`$(top_srcdir)/urcu-pointer.c
+
+test_urcu_signal_yield-urcu-pointer.obj: $(top_srcdir)/urcu-pointer.c
+@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_urcu_signal_yield_CFLAGS) $(CFLAGS) -MT test_urcu_signal_yield-urcu-pointer.obj -MD -MP -MF $(DEPDIR)/test_urcu_signal_yield-urcu-pointer.Tpo -c -o test_urcu_signal_yield-urcu-pointer.obj `if test -f '$(top_srcdir)/urcu-pointer.c'; then $(CYGPATH_W) '$(top_srcdir)/urcu-pointer.c'; else $(CYGPATH_W) '$(srcdir)/$(top_srcdir)/urcu-pointer.c'; fi`
+@am__fastdepCC_TRUE@	mv -f $(DEPDIR)/test_urcu_signal_yield-urcu-pointer.Tpo $(DEPDIR)/test_urcu_signal_yield-urcu-pointer.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='$(top_srcdir)/urcu-pointer.c' object='test_urcu_signal_yield-urcu-pointer.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_urcu_signal_yield_CFLAGS) $(CFLAGS) -c -o test_urcu_signal_yield-urcu-pointer.obj `if test -f '$(top_srcdir)/urcu-pointer.c'; then $(CYGPATH_W) '$(top_srcdir)/urcu-pointer.c'; else $(CYGPATH_W) '$(srcdir)/$(top_srcdir)/urcu-pointer.c'; fi`
+
+test_urcu_signal_yield-compat_futex.o: $(top_srcdir)/compat_futex.c
+@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_urcu_signal_yield_CFLAGS) $(CFLAGS) -MT test_urcu_signal_yield-compat_futex.o -MD -MP -MF $(DEPDIR)/test_urcu_signal_yield-compat_futex.Tpo -c -o test_urcu_signal_yield-compat_futex.o `test -f '$(top_srcdir)/compat_futex.c' || echo '$(srcdir)/'`$(top_srcdir)/compat_futex.c
+@am__fastdepCC_TRUE@	mv -f $(DEPDIR)/test_urcu_signal_yield-compat_futex.Tpo $(DEPDIR)/test_urcu_signal_yield-compat_futex.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='$(top_srcdir)/compat_futex.c' object='test_urcu_signal_yield-compat_futex.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_urcu_signal_yield_CFLAGS) $(CFLAGS) -c -o test_urcu_signal_yield-compat_futex.o `test -f '$(top_srcdir)/compat_futex.c' || echo '$(srcdir)/'`$(top_srcdir)/compat_futex.c
+
+test_urcu_signal_yield-compat_futex.obj: $(top_srcdir)/compat_futex.c
+@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_urcu_signal_yield_CFLAGS) $(CFLAGS) -MT test_urcu_signal_yield-compat_futex.obj -MD -MP -MF $(DEPDIR)/test_urcu_signal_yield-compat_futex.Tpo -c -o test_urcu_signal_yield-compat_futex.obj `if test -f '$(top_srcdir)/compat_futex.c'; then $(CYGPATH_W) '$(top_srcdir)/compat_futex.c'; else $(CYGPATH_W) '$(srcdir)/$(top_srcdir)/compat_futex.c'; fi`
+@am__fastdepCC_TRUE@	mv -f $(DEPDIR)/test_urcu_signal_yield-compat_futex.Tpo $(DEPDIR)/test_urcu_signal_yield-compat_futex.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='$(top_srcdir)/compat_futex.c' object='test_urcu_signal_yield-compat_futex.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_urcu_signal_yield_CFLAGS) $(CFLAGS) -c -o test_urcu_signal_yield-compat_futex.obj `if test -f '$(top_srcdir)/compat_futex.c'; then $(CYGPATH_W) '$(top_srcdir)/compat_futex.c'; else $(CYGPATH_W) '$(srcdir)/$(top_srcdir)/compat_futex.c'; fi`
+
+test_urcu_signal_yield-compat_arch_@ARCHTYPE@.o: $(top_srcdir)/compat_arch_@ARCHTYPE@.c
+@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_urcu_signal_yield_CFLAGS) $(CFLAGS) -MT test_urcu_signal_yield-compat_arch_@ARCHTYPE@.o -MD -MP -MF $(DEPDIR)/test_urcu_signal_yield-compat_arch_@ARCHTYPE@.Tpo -c -o test_urcu_signal_yield-compat_arch_@ARCHTYPE@.o `test -f '$(top_srcdir)/compat_arch_@ARCHTYPE@.c' || echo '$(srcdir)/'`$(top_srcdir)/compat_arch_@ARCHTYPE@.c
+@am__fastdepCC_TRUE@	mv -f $(DEPDIR)/test_urcu_signal_yield-compat_arch_@ARCHTYPE@.Tpo $(DEPDIR)/test_urcu_signal_yield-compat_arch_@ARCHTYPE@.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='$(top_srcdir)/compat_arch_@ARCHTYPE@.c' object='test_urcu_signal_yield-compat_arch_@ARCHTYPE@.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_urcu_signal_yield_CFLAGS) $(CFLAGS) -c -o test_urcu_signal_yield-compat_arch_@ARCHTYPE@.o `test -f '$(top_srcdir)/compat_arch_@ARCHTYPE@.c' || echo '$(srcdir)/'`$(top_srcdir)/compat_arch_@ARCHTYPE@.c
+
+test_urcu_signal_yield-compat_arch_@ARCHTYPE@.obj: $(top_srcdir)/compat_arch_@ARCHTYPE@.c
+@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_urcu_signal_yield_CFLAGS) $(CFLAGS) -MT test_urcu_signal_yield-compat_arch_@ARCHTYPE@.obj -MD -MP -MF $(DEPDIR)/test_urcu_signal_yield-compat_arch_@ARCHTYPE@.Tpo -c -o test_urcu_signal_yield-compat_arch_@ARCHTYPE@.obj `if test -f '$(top_srcdir)/compat_arch_@ARCHTYPE@.c'; then $(CYGPATH_W) '$(top_srcdir)/compat_arch_@ARCHTYPE@.c'; else $(CYGPATH_W) '$(srcdir)/$(top_srcdir)/compat_arch_@ARCHTYPE@.c'; fi`
+@am__fastdepCC_TRUE@	mv -f $(DEPDIR)/test_urcu_signal_yield-compat_arch_@ARCHTYPE@.Tpo $(DEPDIR)/test_urcu_signal_yield-compat_arch_@ARCHTYPE@.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='$(top_srcdir)/compat_arch_@ARCHTYPE@.c' object='test_urcu_signal_yield-compat_arch_@ARCHTYPE@.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_urcu_signal_yield_CFLAGS) $(CFLAGS) -c -o test_urcu_signal_yield-compat_arch_@ARCHTYPE@.obj `if test -f '$(top_srcdir)/compat_arch_@ARCHTYPE@.c'; then $(CYGPATH_W) '$(top_srcdir)/compat_arch_@ARCHTYPE@.c'; else $(CYGPATH_W) '$(srcdir)/$(top_srcdir)/compat_arch_@ARCHTYPE@.c'; fi`
 
 test_urcu_yield-test_urcu.o: test_urcu.c
 @am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_urcu_yield_CFLAGS) $(CFLAGS) -MT test_urcu_yield-test_urcu.o -MD -MP -MF $(DEPDIR)/test_urcu_yield-test_urcu.Tpo -c -o test_urcu_yield-test_urcu.o `test -f 'test_urcu.c' || echo '$(srcdir)/'`test_urcu.c

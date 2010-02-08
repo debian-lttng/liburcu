@@ -39,20 +39,20 @@
 
 void __attribute__((destructor)) rcu_exit(void);
 
-static pthread_mutex_t urcu_mutex = PTHREAD_MUTEX_INITIALIZER;
+static pthread_mutex_t rcu_gp_lock = PTHREAD_MUTEX_INITIALIZER;
 
 int gp_futex;
 
 /*
  * Global grace period counter.
  */
-unsigned long urcu_gp_ctr = RCU_GP_ONLINE;
+unsigned long rcu_gp_ctr = RCU_GP_ONLINE;
 
 /*
  * Written to only by each individual reader. Read by both the reader and the
  * writers.
  */
-struct urcu_reader __thread urcu_reader;
+struct rcu_reader __thread rcu_reader;
 
 #ifdef DEBUG_YIELD
 unsigned int yield_active;
@@ -61,18 +61,18 @@ unsigned int __thread rand_yield;
 
 static LIST_HEAD(registry);
 
-static void internal_urcu_lock(void)
+static void mutex_lock(pthread_mutex_t *mutex)
 {
 	int ret;
 
 #ifndef DISTRUST_SIGNALS_EXTREME
-	ret = pthread_mutex_lock(&urcu_mutex);
+	ret = pthread_mutex_lock(mutex);
 	if (ret) {
 		perror("Error in pthread mutex lock");
 		exit(-1);
 	}
 #else /* #ifndef DISTRUST_SIGNALS_EXTREME */
-	while ((ret = pthread_mutex_trylock(&urcu_mutex)) != 0) {
+	while ((ret = pthread_mutex_trylock(mutex)) != 0) {
 		if (ret != EBUSY && ret != EINTR) {
 			printf("ret = %d, errno = %d\n", ret, errno);
 			perror("Error in pthread mutex lock");
@@ -83,11 +83,11 @@ static void internal_urcu_lock(void)
 #endif /* #else #ifndef DISTRUST_SIGNALS_EXTREME */
 }
 
-static void internal_urcu_unlock(void)
+static void mutex_unlock(pthread_mutex_t *mutex)
 {
 	int ret;
 
-	ret = pthread_mutex_unlock(&urcu_mutex);
+	ret = pthread_mutex_unlock(mutex);
 	if (ret) {
 		perror("Error in pthread mutex unlock");
 		exit(-1);
@@ -106,14 +106,20 @@ static void wait_gp(void)
 		      NULL, NULL, 0);
 }
 
-static void wait_for_quiescent_state(void)
+static void update_counter_and_wait(void)
 {
 	LIST_HEAD(qsreaders);
 	int wait_loops = 0;
-	struct urcu_reader *index, *tmp;
+	struct rcu_reader *index, *tmp;
 
-	if (list_empty(&registry))
-		return;
+#if (BITS_PER_LONG < 64)
+	/* Switch parity: 0 -> 1, 1 -> 0 */
+	STORE_SHARED(rcu_gp_ctr, rcu_gp_ctr ^ RCU_GP_CTR);
+#else	/* !(BITS_PER_LONG < 64) */
+	/* Increment current G.P. */
+	STORE_SHARED(rcu_gp_ctr, rcu_gp_ctr + RCU_GP_CTR);
+#endif	/* !(BITS_PER_LONG < 64) */
+
 	/*
 	 * Wait for each thread rcu_reader_qs_gp count to become 0.
 	 */
@@ -159,19 +165,11 @@ static void wait_for_quiescent_state(void)
  */
 
 #if (BITS_PER_LONG < 64)
-/*
- * called with urcu_mutex held.
- */
-static void switch_next_urcu_qparity(void)
-{
-	STORE_SHARED(urcu_gp_ctr, urcu_gp_ctr ^ RCU_GP_CTR);
-}
-
 void synchronize_rcu(void)
 {
 	unsigned long was_online;
 
-	was_online = urcu_reader.ctr;
+	was_online = rcu_reader.ctr;
 
 	/* All threads should read qparity before accessing data structure
 	 * where new ptr points to.
@@ -185,24 +183,17 @@ void synchronize_rcu(void)
 	 * threads registered as readers.
 	 */
 	if (was_online)
-		STORE_SHARED(urcu_reader.ctr, 0);
+		STORE_SHARED(rcu_reader.ctr, 0);
 
-	internal_urcu_lock();
+	mutex_lock(&rcu_gp_lock);
 
-	switch_next_urcu_qparity();	/* 0 -> 1 */
-
-	/*
-	 * Must commit qparity update to memory before waiting for parity
-	 * 0 quiescent state. Failure to do so could result in the writer
-	 * waiting forever while new readers are always accessing data (no
-	 * progress).
-	 * Ensured by STORE_SHARED and LOAD_SHARED.
-	 */
+	if (list_empty(&registry))
+		goto out;
 
 	/*
 	 * Wait for previous parity to be empty of readers.
 	 */
-	wait_for_quiescent_state();	/* Wait readers in parity 0 */
+	update_counter_and_wait();	/* 0 -> 1, wait readers in parity 0 */
 
 	/*
 	 * Must finish waiting for quiescent state for parity 0 before
@@ -212,29 +203,26 @@ void synchronize_rcu(void)
 	 * Ensured by STORE_SHARED and LOAD_SHARED.
 	 */
 
-	switch_next_urcu_qparity();	/* 1 -> 0 */
-
 	/*
-	 * Must commit qparity update to memory before waiting for parity
-	 * 1 quiescent state. Failure to do so could result in the writer
-	 * waiting forever while new readers are always accessing data (no
-	 * progress).
-	 * Ensured by STORE_SHARED and LOAD_SHARED.
+	 * Adding a smp_mb() which is _not_ formally required, but makes the
+	 * model easier to understand. It does not have a big performance impact
+	 * anyway, given this is the write-side.
 	 */
+	smp_mb();
 
 	/*
 	 * Wait for previous parity to be empty of readers.
 	 */
-	wait_for_quiescent_state();	/* Wait readers in parity 1 */
-
-	internal_urcu_unlock();
+	update_counter_and_wait();	/* 1 -> 0, wait readers in parity 1 */
+out:
+	mutex_unlock(&rcu_gp_lock);
 
 	/*
 	 * Finish waiting for reader threads before letting the old ptr being
 	 * freed.
 	 */
 	if (was_online)
-		_STORE_SHARED(urcu_reader.ctr, LOAD_SHARED(urcu_gp_ctr));
+		_STORE_SHARED(rcu_reader.ctr, LOAD_SHARED(rcu_gp_ctr));
 	smp_mb();
 }
 #else /* !(BITS_PER_LONG < 64) */
@@ -242,7 +230,7 @@ void synchronize_rcu(void)
 {
 	unsigned long was_online;
 
-	was_online = urcu_reader.ctr;
+	was_online = rcu_reader.ctr;
 
 	/*
 	 * Mark the writer thread offline to make sure we don't wait for
@@ -251,15 +239,17 @@ void synchronize_rcu(void)
 	 */
 	smp_mb();
 	if (was_online)
-		STORE_SHARED(urcu_reader.ctr, 0);
+		STORE_SHARED(rcu_reader.ctr, 0);
 
-	internal_urcu_lock();
-	STORE_SHARED(urcu_gp_ctr, urcu_gp_ctr + RCU_GP_CTR);
-	wait_for_quiescent_state();
-	internal_urcu_unlock();
+	mutex_lock(&rcu_gp_lock);
+	if (list_empty(&registry))
+		goto out;
+	update_counter_and_wait();
+out:
+	mutex_unlock(&rcu_gp_lock);
 
 	if (was_online)
-		_STORE_SHARED(urcu_reader.ctr, LOAD_SHARED(urcu_gp_ctr));
+		_STORE_SHARED(rcu_reader.ctr, LOAD_SHARED(rcu_gp_ctr));
 	smp_mb();
 }
 #endif  /* !(BITS_PER_LONG < 64) */
@@ -295,12 +285,12 @@ void rcu_thread_online(void)
 
 void rcu_register_thread(void)
 {
-	urcu_reader.tid = pthread_self();
-	assert(urcu_reader.ctr == 0);
+	rcu_reader.tid = pthread_self();
+	assert(rcu_reader.ctr == 0);
 
-	internal_urcu_lock();
-	list_add(&urcu_reader.head, &registry);
-	internal_urcu_unlock();
+	mutex_lock(&rcu_gp_lock);
+	list_add(&rcu_reader.head, &registry);
+	mutex_unlock(&rcu_gp_lock);
 	_rcu_thread_online();
 }
 
@@ -311,9 +301,9 @@ void rcu_unregister_thread(void)
 	 * with a waiting writer.
 	 */
 	_rcu_thread_offline();
-	internal_urcu_lock();
-	list_del(&urcu_reader.head);
-	internal_urcu_unlock();
+	mutex_lock(&rcu_gp_lock);
+	list_del(&rcu_reader.head);
+	mutex_unlock(&rcu_gp_lock);
 }
 
 void rcu_exit(void)
