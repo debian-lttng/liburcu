@@ -23,6 +23,7 @@
  * IBM's contributions to this file may be relicensed under LGPLv2 or later.
  */
 
+#define _BSD_SOURCE
 #include <stdio.h>
 #include <pthread.h>
 #include <signal.h>
@@ -36,34 +37,43 @@
 /* Do not #define _LGPL_SOURCE to ensure we can emit the wrapper symbols */
 #include "urcu.h"
 
-#ifndef URCU_MB
+#ifdef RCU_MEMBARRIER
 static int init_done;
+int has_sys_membarrier;
 
-void __attribute__((constructor)) urcu_init(void);
-void __attribute__((destructor)) urcu_exit(void);
-#else
-void urcu_init(void)
+void __attribute__((constructor)) rcu_init(void);
+#endif
+
+#ifdef RCU_MB
+void rcu_init(void)
 {
 }
 #endif
 
-static pthread_mutex_t urcu_mutex = PTHREAD_MUTEX_INITIALIZER;
+#ifdef RCU_SIGNAL
+static int init_done;
+
+void __attribute__((constructor)) rcu_init(void);
+void __attribute__((destructor)) rcu_exit(void);
+#endif
+
+static pthread_mutex_t rcu_gp_lock = PTHREAD_MUTEX_INITIALIZER;
 
 int gp_futex;
 
 /*
  * Global grace period counter.
- * Contains the current RCU_GP_CTR_BIT.
+ * Contains the current RCU_GP_CTR_PHASE.
  * Also has a RCU_GP_COUNT of 1, to accelerate the reader fast path.
  * Written to only by writer with mutex taken. Read by both writer and readers.
  */
-long urcu_gp_ctr = RCU_GP_COUNT;
+long rcu_gp_ctr = RCU_GP_COUNT;
 
 /*
  * Written to only by each individual reader. Read by both the reader and the
  * writers.
  */
-struct urcu_reader __thread urcu_reader;
+struct rcu_reader __thread rcu_reader;
 
 #ifdef DEBUG_YIELD
 unsigned int yield_active;
@@ -72,26 +82,26 @@ unsigned int __thread rand_yield;
 
 static LIST_HEAD(registry);
 
-static void internal_urcu_lock(void)
+static void mutex_lock(pthread_mutex_t *mutex)
 {
 	int ret;
 
 #ifndef DISTRUST_SIGNALS_EXTREME
-	ret = pthread_mutex_lock(&urcu_mutex);
+	ret = pthread_mutex_lock(mutex);
 	if (ret) {
 		perror("Error in pthread mutex lock");
 		exit(-1);
 	}
 #else /* #ifndef DISTRUST_SIGNALS_EXTREME */
-	while ((ret = pthread_mutex_trylock(&urcu_mutex)) != 0) {
+	while ((ret = pthread_mutex_trylock(mutex)) != 0) {
 		if (ret != EBUSY && ret != EINTR) {
 			printf("ret = %d, errno = %d\n", ret, errno);
 			perror("Error in pthread mutex lock");
 			exit(-1);
 		}
-		if (urcu_reader.need_mb) {
+		if (rcu_reader.need_mb) {
 			smp_mb();
-			urcu_reader.need_mb = 0;
+			rcu_reader.need_mb = 0;
 			smp_mb();
 		}
 		poll(NULL,0,10);
@@ -99,66 +109,38 @@ static void internal_urcu_lock(void)
 #endif /* #else #ifndef DISTRUST_SIGNALS_EXTREME */
 }
 
-static void internal_urcu_unlock(void)
+static void mutex_unlock(pthread_mutex_t *mutex)
 {
 	int ret;
 
-	ret = pthread_mutex_unlock(&urcu_mutex);
+	ret = pthread_mutex_unlock(mutex);
 	if (ret) {
 		perror("Error in pthread mutex unlock");
 		exit(-1);
 	}
 }
 
-/*
- * called with urcu_mutex held.
- */
-static void switch_next_urcu_qparity(void)
+#ifdef RCU_MEMBARRIER
+static void smp_mb_master(int group)
 {
-	STORE_SHARED(urcu_gp_ctr, urcu_gp_ctr ^ RCU_GP_CTR_BIT);
+	if (likely(has_sys_membarrier))
+		membarrier(MEMBARRIER_EXPEDITED);
+	else
+		smp_mb();
 }
+#endif
 
-#ifdef URCU_MB
-#if 0 /* unused */
-static void force_mb_single_thread(struct urcu_reader *index)
+#ifdef RCU_MB
+static void smp_mb_master(int group)
 {
 	smp_mb();
 }
-#endif //0
+#endif
 
-static void force_mb_all_threads(void)
+#ifdef RCU_SIGNAL
+static void force_mb_all_readers(void)
 {
-	smp_mb();
-}
-#else /* #ifdef URCU_MB */
-#if 0 /* unused */
-static void force_mb_single_thread(struct urcu_reader *index)
-{
-	assert(!list_empty(&registry));
-	/*
-	 * pthread_kill has a smp_mb(). But beware, we assume it performs
-	 * a cache flush on architectures with non-coherent cache. Let's play
-	 * safe and don't assume anything : we use smp_mc() to make sure the
-	 * cache flush is enforced.
-	 */
-	index->need_mb = 1;
-	smp_mc();	/* write ->need_mb before sending the signals */
-	pthread_kill(index->tid, SIGURCU);
-	smp_mb();
-	/*
-	 * Wait for sighandler (and thus mb()) to execute on every thread.
-	 * BUSY-LOOP.
-	 */
-	while (index->need_mb) {
-		poll(NULL, 0, 1);
-	}
-	smp_mb();	/* read ->need_mb before ending the barrier */
-}
-#endif //0
-
-static void force_mb_all_threads(void)
-{
-	struct urcu_reader *index;
+	struct rcu_reader *index;
 
 	/*
 	 * Ask for each threads to execute a smp_mb() so we can consider the
@@ -175,7 +157,7 @@ static void force_mb_all_threads(void)
 	list_for_each_entry(index, &registry, head) {
 		index->need_mb = 1;
 		smp_mc();	/* write need_mb before sending the signal */
-		pthread_kill(index->tid, SIGURCU);
+		pthread_kill(index->tid, SIGRCU);
 	}
 	/*
 	 * Wait for sighandler (and thus mb()) to execute on every thread.
@@ -192,13 +174,18 @@ static void force_mb_all_threads(void)
 	 */
 	list_for_each_entry(index, &registry, head) {
 		while (index->need_mb) {
-			pthread_kill(index->tid, SIGURCU);
+			pthread_kill(index->tid, SIGRCU);
 			poll(NULL, 0, 1);
 		}
 	}
 	smp_mb();	/* read ->need_mb before ending the barrier */
 }
-#endif /* #else #ifdef URCU_MB */
+
+static void smp_mb_master(int group)
+{
+	force_mb_all_readers();
+}
+#endif /* #ifdef RCU_SIGNAL */
 
 /*
  * synchronize_rcu() waiting. Single thread.
@@ -206,29 +193,44 @@ static void force_mb_all_threads(void)
 static void wait_gp(void)
 {
 	/* Read reader_gp before read futex */
-	force_mb_all_threads();
+	smp_mb_master(RCU_MB_GROUP);
 	if (uatomic_read(&gp_futex) == -1)
 		futex_async(&gp_futex, FUTEX_WAIT, -1,
 		      NULL, NULL, 0);
 }
 
-void wait_for_quiescent_state(void)
+void update_counter_and_wait(void)
 {
 	LIST_HEAD(qsreaders);
 	int wait_loops = 0;
-	struct urcu_reader *index, *tmp;
+	struct rcu_reader *index, *tmp;
 
-	if (list_empty(&registry))
-		return;
+	/* Switch parity: 0 -> 1, 1 -> 0 */
+	STORE_SHARED(rcu_gp_ctr, rcu_gp_ctr ^ RCU_GP_CTR_PHASE);
+
 	/*
-	 * Wait for each thread urcu_reader.ctr count to become 0.
+	 * Must commit qparity update to memory before waiting for other parity
+	 * quiescent state. Failure to do so could result in the writer waiting
+	 * forever while new readers are always accessing data (no progress).
+	 * Ensured by STORE_SHARED and LOAD_SHARED.
+	 */
+
+	/*
+	 * Adding a smp_mb() which is _not_ formally required, but makes the
+	 * model easier to understand. It does not have a big performance impact
+	 * anyway, given this is the write-side.
+	 */
+	smp_mb();
+
+	/*
+	 * Wait for each thread rcu_reader.ctr count to become 0.
 	 */
 	for (;;) {
 		wait_loops++;
 		if (wait_loops == RCU_QS_ACTIVE_ATTEMPTS) {
 			uatomic_dec(&gp_futex);
 			/* Write futex before read reader_gp */
-			force_mb_all_threads();
+			smp_mb_master(RCU_MB_GROUP);
 		}
 
 		list_for_each_entry_safe(index, tmp, &registry, head) {
@@ -240,7 +242,7 @@ void wait_for_quiescent_state(void)
 		if (list_empty(&registry)) {
 			if (wait_loops == RCU_QS_ACTIVE_ATTEMPTS) {
 				/* Read reader_gp before write futex */
-				force_mb_all_threads();
+				smp_mb_master(RCU_MB_GROUP);
 				uatomic_set(&gp_futex, 0);
 			}
 			break;
@@ -253,12 +255,12 @@ void wait_for_quiescent_state(void)
 #else /* #ifndef HAS_INCOHERENT_CACHES */
 		/*
 		 * BUSY-LOOP. Force the reader thread to commit its
-		 * urcu_reader.ctr update to memory if we wait for too long.
+		 * rcu_reader.ctr update to memory if we wait for too long.
 		 */
 		if (list_empty(&registry)) {
 			if (wait_loops == RCU_QS_ACTIVE_ATTEMPTS) {
 				/* Read reader_gp before write futex */
-				force_mb_all_threads();
+				smp_mb_master(RCU_MB_GROUP);
 				uatomic_set(&gp_futex, 0);
 			}
 			break;
@@ -268,7 +270,7 @@ void wait_for_quiescent_state(void)
 				wait_gp();
 				break; /* only escape switch */
 			case KICK_READER_LOOPS:
-				force_mb_all_threads();
+				smp_mb_master(RCU_MB_GROUP);
 				wait_loops = 0;
 				break; /* only escape switch */
 			default:
@@ -283,35 +285,21 @@ void wait_for_quiescent_state(void)
 
 void synchronize_rcu(void)
 {
-	internal_urcu_lock();
+	mutex_lock(&rcu_gp_lock);
+
+	if (list_empty(&registry))
+		goto out;
 
 	/* All threads should read qparity before accessing data structure
-	 * where new ptr points to. Must be done within internal_urcu_lock
-	 * because it iterates on reader threads.*/
+	 * where new ptr points to. Must be done within rcu_gp_lock because it
+	 * iterates on reader threads.*/
 	/* Write new ptr before changing the qparity */
-	force_mb_all_threads();
-
-	switch_next_urcu_qparity();	/* 0 -> 1 */
-
-	/*
-	 * Must commit qparity update to memory before waiting for parity
-	 * 0 quiescent state. Failure to do so could result in the writer
-	 * waiting forever while new readers are always accessing data (no
-	 * progress).
-	 * Ensured by STORE_SHARED and LOAD_SHARED.
-	 */
-
-	/*
-	 * Adding a smp_mb() which is _not_ formally required, but makes the
-	 * model easier to understand. It does not have a big performance impact
-	 * anyway, given this is the write-side.
-	 */
-	smp_mb();
+	smp_mb_master(RCU_MB_GROUP);
 
 	/*
 	 * Wait for previous parity to be empty of readers.
 	 */
-	wait_for_quiescent_state();	/* Wait readers in parity 0 */
+	update_counter_and_wait();	/* 0 -> 1, wait readers in parity 0 */
 
 	/*
 	 * Must finish waiting for quiescent state for parity 0 before
@@ -328,34 +316,17 @@ void synchronize_rcu(void)
 	 */
 	smp_mb();
 
-	switch_next_urcu_qparity();	/* 1 -> 0 */
-
-	/*
-	 * Must commit qparity update to memory before waiting for parity
-	 * 1 quiescent state. Failure to do so could result in the writer
-	 * waiting forever while new readers are always accessing data (no
-	 * progress).
-	 * Ensured by STORE_SHARED and LOAD_SHARED.
-	 */
-
-	/*
-	 * Adding a smp_mb() which is _not_ formally required, but makes the
-	 * model easier to understand. It does not have a big performance impact
-	 * anyway, given this is the write-side.
-	 */
-	smp_mb();
-
 	/*
 	 * Wait for previous parity to be empty of readers.
 	 */
-	wait_for_quiescent_state();	/* Wait readers in parity 1 */
+	update_counter_and_wait();	/* 1 -> 0, wait readers in parity 1 */
 
 	/* Finish waiting for reader threads before letting the old ptr being
-	 * freed. Must be done within internal_urcu_lock because it iterates on
-	 * reader threads. */
-	force_mb_all_threads();
-
-	internal_urcu_unlock();
+	 * freed. Must be done within rcu_gp_lock because it iterates on reader
+	 * threads. */
+	smp_mb_master(RCU_MB_GROUP);
+out:
+	mutex_unlock(&rcu_gp_lock);
 }
 
 /*
@@ -374,25 +345,36 @@ void rcu_read_unlock(void)
 
 void rcu_register_thread(void)
 {
-	urcu_reader.tid = pthread_self();
-	assert(urcu_reader.need_mb == 0);
-	assert(urcu_reader.ctr == 0);
+	rcu_reader.tid = pthread_self();
+	assert(rcu_reader.need_mb == 0);
+	assert(rcu_reader.ctr == 0);
 
-	internal_urcu_lock();
-	urcu_init();	/* In case gcc does not support constructor attribute */
-	list_add(&urcu_reader.head, &registry);
-	internal_urcu_unlock();
+	mutex_lock(&rcu_gp_lock);
+	rcu_init();	/* In case gcc does not support constructor attribute */
+	list_add(&rcu_reader.head, &registry);
+	mutex_unlock(&rcu_gp_lock);
 }
 
 void rcu_unregister_thread(void)
 {
-	internal_urcu_lock();
-	list_del(&urcu_reader.head);
-	internal_urcu_unlock();
+	mutex_lock(&rcu_gp_lock);
+	list_del(&rcu_reader.head);
+	mutex_unlock(&rcu_gp_lock);
 }
 
-#ifndef URCU_MB
-static void sigurcu_handler(int signo, siginfo_t *siginfo, void *context)
+#ifdef RCU_MEMBARRIER
+void rcu_init(void)
+{
+	if (init_done)
+		return;
+	init_done = 1;
+	if (!membarrier(MEMBARRIER_EXPEDITED | MEMBARRIER_QUERY))
+		has_sys_membarrier = 1;
+}
+#endif
+
+#ifdef RCU_SIGNAL
+static void sigrcu_handler(int signo, siginfo_t *siginfo, void *context)
 {
 	/*
 	 * Executing this smp_mb() is the only purpose of this signal handler.
@@ -400,19 +382,19 @@ static void sigurcu_handler(int signo, siginfo_t *siginfo, void *context)
 	 * executed on.
 	 */
 	smp_mb();
-	urcu_reader.need_mb = 0;
+	rcu_reader.need_mb = 0;
 	smp_mb();
 }
 
 /*
- * urcu_init constructor. Called when the library is linked, but also when
+ * rcu_init constructor. Called when the library is linked, but also when
  * reader threads are calling rcu_register_thread().
  * Should only be called by a single thread at a given time. This is ensured by
- * holing the internal_urcu_lock() from rcu_register_thread() or by running at
- * library load time, which should not be executed by multiple threads nor
- * concurrently with rcu_register_thread() anyway.
+ * holing the rcu_gp_lock from rcu_register_thread() or by running at library
+ * load time, which should not be executed by multiple threads nor concurrently
+ * with rcu_register_thread() anyway.
  */
-void urcu_init(void)
+void rcu_init(void)
 {
 	struct sigaction act;
 	int ret;
@@ -421,27 +403,27 @@ void urcu_init(void)
 		return;
 	init_done = 1;
 
-	act.sa_sigaction = sigurcu_handler;
+	act.sa_sigaction = sigrcu_handler;
 	act.sa_flags = SA_SIGINFO | SA_RESTART;
 	sigemptyset(&act.sa_mask);
-	ret = sigaction(SIGURCU, &act, NULL);
+	ret = sigaction(SIGRCU, &act, NULL);
 	if (ret) {
 		perror("Error in sigaction");
 		exit(-1);
 	}
 }
 
-void urcu_exit(void)
+void rcu_exit(void)
 {
 	struct sigaction act;
 	int ret;
 
-	ret = sigaction(SIGURCU, NULL, &act);
+	ret = sigaction(SIGRCU, NULL, &act);
 	if (ret) {
 		perror("Error in sigaction");
 		exit(-1);
 	}
-	assert(act.sa_sigaction == sigurcu_handler);
+	assert(act.sa_sigaction == sigrcu_handler);
 	assert(list_empty(&registry));
 }
-#endif /* #ifndef URCU_MB */
+#endif /* #ifdef RCU_SIGNAL */

@@ -45,6 +45,27 @@
 extern "C" {
 #endif 
 
+/* Default is RCU_MEMBARRIER */
+#if !defined(RCU_MEMBARRIER) && !defined(RCU_MB) && !defined(RCU_SIGNAL)
+#define RCU_MEMBARRIER
+#endif
+
+#ifdef RCU_MEMBARRIER
+#include <unistd.h>
+#include <sys/syscall.h>
+
+/* If the headers do not support SYS_membarrier, statically use RCU_MB */
+#ifdef SYS_membarrier
+# define MEMBARRIER_EXPEDITED		(1 << 0)
+# define MEMBARRIER_DELAYED		(1 << 1)
+# define MEMBARRIER_QUERY		(1 << 16)
+# define membarrier(...)		syscall(__NR_membarrier, __VA_ARGS__)
+#else
+# undef RCU_MEMBARRIER
+# define RCU_MB
+#endif
+#endif
+
 /*
  * This code section can only be included in LGPL 2.1 compatible source code.
  * See below for the function call wrappers which can be used in code meant to
@@ -55,15 +76,20 @@ extern "C" {
 
 /*
  * The signal number used by the RCU library can be overridden with
- * -DSIGURCU= when compiling the library.
+ * -DSIGRCU= when compiling the library.
+ * Provide backward compatibility for liburcu 0.3.x SIGURCU.
  */
-#ifndef SIGURCU
-#define SIGURCU SIGUSR1
+#ifdef SIGURCU
+#define SIGRCU SIGURCU
+#endif
+
+#ifndef SIGRCU
+#define SIGRCU SIGUSR1
 #endif
 
 /*
  * If a reader is really non-cooperative and refuses to commit its
- * urcu_active_readers count to memory (there is no barrier in the reader
+ * rcu_active_readers count to memory (there is no barrier in the reader
  * per-se), kick it after a few loops waiting for it.
  */
 #define KICK_READER_LOOPS 10000
@@ -89,14 +115,13 @@ extern "C" {
 #define YIELD_WRITE	(1 << 1)
 
 /*
- * Updates without URCU_MB are much slower. Account this in
- * the delay.
+ * Updates with RCU_SIGNAL are much slower. Account this in the delay.
  */
-#ifdef URCU_MB
+#ifdef RCU_SIGNAL
 /* maximum sleep delay, in us */
-#define MAX_SLEEP 50
-#else
 #define MAX_SLEEP 30000
+#else
+#define MAX_SLEEP 50
 #endif
 
 extern unsigned int yield_active;
@@ -135,35 +160,64 @@ static inline void debug_yield_init(void)
 }
 #endif
 
-#ifdef URCU_MB
-static inline void reader_barrier()
+/*
+ * RCU memory barrier broadcast group. Currently, only broadcast to all process
+ * threads is supported (group 0).
+ *
+ * Slave barriers are only guaranteed to be ordered wrt master barriers.
+ *
+ * The pair ordering is detailed as (O: ordered, X: not ordered) :
+ *               slave  master
+ *        slave    X      O
+ *        master   O      O
+ */
+
+#define MB_GROUP_ALL		0
+#define RCU_MB_GROUP		MB_GROUP_ALL
+
+#ifdef RCU_MEMBARRIER
+extern int has_sys_membarrier;
+
+static inline void smp_mb_slave(int group)
+{
+	if (likely(has_sys_membarrier))
+		barrier();
+	else
+		smp_mb();
+}
+#endif
+
+#ifdef RCU_MB
+static inline void smp_mb_slave(int group)
 {
 	smp_mb();
 }
-#else
-static inline void reader_barrier()
+#endif
+
+#ifdef RCU_SIGNAL
+static inline void smp_mb_slave(int group)
 {
 	barrier();
 }
 #endif
 
 /*
- * The trick here is that RCU_GP_CTR_BIT must be a multiple of 8 so we can use a
- * full 8-bits, 16-bits or 32-bits bitmask for the lower order bits.
+ * The trick here is that RCU_GP_CTR_PHASE must be a multiple of 8 so we can use
+ * a full 8-bits, 16-bits or 32-bits bitmask for the lower order bits.
  */
 #define RCU_GP_COUNT		(1UL << 0)
 /* Use the amount of bits equal to half of the architecture long size */
-#define RCU_GP_CTR_BIT		(1UL << (sizeof(long) << 2))
-#define RCU_GP_CTR_NEST_MASK	(RCU_GP_CTR_BIT - 1)
+#define RCU_GP_CTR_PHASE	(1UL << (sizeof(long) << 2))
+#define RCU_GP_CTR_NEST_MASK	(RCU_GP_CTR_PHASE - 1)
 
 /*
  * Global quiescent period counter with low-order bits unused.
  * Using a int rather than a char to eliminate false register dependencies
  * causing stalls on some architectures.
  */
-extern long urcu_gp_ctr;
+extern long rcu_gp_ctr;
 
-struct urcu_reader {
+struct rcu_reader {
 	/* Data used by both reader and synchronize_rcu() */
 	long ctr;
 	char need_mb;
@@ -172,7 +226,7 @@ struct urcu_reader {
 	pthread_t tid;
 };
 
-extern struct urcu_reader __thread urcu_reader;
+extern struct rcu_reader __thread rcu_reader;
 
 extern int gp_futex;
 
@@ -200,24 +254,27 @@ static inline int rcu_old_gp_ongoing(long *value)
 	 */
 	v = LOAD_SHARED(*value);
 	return (v & RCU_GP_CTR_NEST_MASK) &&
-		 ((v ^ urcu_gp_ctr) & RCU_GP_CTR_BIT);
+		 ((v ^ rcu_gp_ctr) & RCU_GP_CTR_PHASE);
 }
 
 static inline void _rcu_read_lock(void)
 {
 	long tmp;
 
-	tmp = urcu_reader.ctr;
-	/* urcu_gp_ctr = RCU_GP_COUNT | (~RCU_GP_CTR_BIT or RCU_GP_CTR_BIT) */
+	tmp = rcu_reader.ctr;
+	/*
+	 * rcu_gp_ctr is
+	 *   RCU_GP_COUNT | (~RCU_GP_CTR_PHASE or RCU_GP_CTR_PHASE)
+	 */
 	if (likely(!(tmp & RCU_GP_CTR_NEST_MASK))) {
-		_STORE_SHARED(urcu_reader.ctr, _LOAD_SHARED(urcu_gp_ctr));
+		_STORE_SHARED(rcu_reader.ctr, _LOAD_SHARED(rcu_gp_ctr));
 		/*
 		 * Set active readers count for outermost nesting level before
-		 * accessing the pointer. See force_mb_all_threads().
+		 * accessing the pointer. See smp_mb_master().
 		 */
-		reader_barrier();
+		smp_mb_slave(RCU_MB_GROUP);
 	} else {
-		_STORE_SHARED(urcu_reader.ctr, tmp + RCU_GP_COUNT);
+		_STORE_SHARED(rcu_reader.ctr, tmp + RCU_GP_COUNT);
 	}
 }
 
@@ -225,19 +282,19 @@ static inline void _rcu_read_unlock(void)
 {
 	long tmp;
 
-	tmp = urcu_reader.ctr;
+	tmp = rcu_reader.ctr;
 	/*
 	 * Finish using rcu before decrementing the pointer.
-	 * See force_mb_all_threads().
+	 * See smp_mb_master().
 	 */
 	if (likely((tmp & RCU_GP_CTR_NEST_MASK) == RCU_GP_COUNT)) {
-		reader_barrier();
-		_STORE_SHARED(urcu_reader.ctr, urcu_reader.ctr - RCU_GP_COUNT);
-		/* write urcu_reader.ctr before read futex */
-		reader_barrier();
+		smp_mb_slave(RCU_MB_GROUP);
+		_STORE_SHARED(rcu_reader.ctr, rcu_reader.ctr - RCU_GP_COUNT);
+		/* write rcu_reader.ctr before read futex */
+		smp_mb_slave(RCU_MB_GROUP);
 		wake_up_gp();
 	} else {
-		_STORE_SHARED(urcu_reader.ctr, urcu_reader.ctr - RCU_GP_COUNT);
+		_STORE_SHARED(rcu_reader.ctr, rcu_reader.ctr - RCU_GP_COUNT);
 	}
 }
 
