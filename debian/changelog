@@ -1,3 +1,10 @@
+liburcu (0.4.0-1) unstable; urgency=low
+
+  * Imported Upstream version 0.4.0
+  * debian/control: bump Standards-Version to 3.8.4
+
+ -- Jon Bernard <jbernard@debian.org>  Wed, 03 Feb 2010 20:22:13 -0500
+
 liburcu (0.3.4-1) unstable; urgency=low
 
   * New upstream release
