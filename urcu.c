@@ -67,7 +67,7 @@ int gp_futex;
  * Also has a RCU_GP_COUNT of 1, to accelerate the reader fast path.
  * Written to only by writer with mutex taken. Read by both writer and readers.
  */
-long rcu_gp_ctr = RCU_GP_COUNT;
+unsigned long rcu_gp_ctr = RCU_GP_COUNT;
 
 /*
  * Written to only by each individual reader. Read by both the reader and the
@@ -99,9 +99,9 @@ static void mutex_lock(pthread_mutex_t *mutex)
 			perror("Error in pthread mutex lock");
 			exit(-1);
 		}
-		if (rcu_reader.need_mb) {
+		if (LOAD_SHARED(rcu_reader.need_mb)) {
 			smp_mb();
-			rcu_reader.need_mb = 0;
+			_STORE_SHARED(rcu_reader.need_mb, 0);
 			smp_mb();
 		}
 		poll(NULL,0,10);
@@ -155,8 +155,7 @@ static void force_mb_all_readers(void)
 	 * cache flush is enforced.
 	 */
 	list_for_each_entry(index, &registry, head) {
-		index->need_mb = 1;
-		smp_mc();	/* write need_mb before sending the signal */
+		STORE_SHARED(index->need_mb, 1);
 		pthread_kill(index->tid, SIGRCU);
 	}
 	/*
@@ -173,7 +172,7 @@ static void force_mb_all_readers(void)
 	 * the Linux Test Project (LTP).
 	 */
 	list_for_each_entry(index, &registry, head) {
-		while (index->need_mb) {
+		while (LOAD_SHARED(index->need_mb)) {
 			pthread_kill(index->tid, SIGRCU);
 			poll(NULL, 0, 1);
 		}
@@ -234,7 +233,7 @@ void update_counter_and_wait(void)
 		}
 
 		list_for_each_entry_safe(index, tmp, &registry, head) {
-			if (!rcu_old_gp_ongoing(&index->ctr))
+			if (!rcu_gp_ongoing(&index->ctr))
 				list_move(&index->head, &qsreaders);
 		}
 
@@ -382,7 +381,7 @@ static void sigrcu_handler(int signo, siginfo_t *siginfo, void *context)
 	 * executed on.
 	 */
 	smp_mb();
-	rcu_reader.need_mb = 0;
+	_STORE_SHARED(rcu_reader.need_mb, 0);
 	smp_mb();
 }
 
