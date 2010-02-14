@@ -1,3 +1,11 @@
 #!/usr/bin/make -f
+
+CFLAGS = -O2
+DEB_HOST_ARCH_CPU := $(shell dpkg-architecture -qDEB_HOST_ARCH_CPU)
+
+ifeq ($(DEB_HOST_ARCH_CPU), sparc)
+	CFLAGS += -Wa,-Av9a
+endif
+
 %:
 	dh $@
