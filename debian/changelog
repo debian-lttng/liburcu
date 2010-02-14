@@ -1,3 +1,13 @@
+liburcu (0.4.1-1) unstable; urgency=low
+
+  * Imported Upstream version 0.4.1 (Closes: #557027, #568621, #559722)
+  * Set proper CFLAGS for sparc architecture
+  * Restrict architectures to the set currently supported
+  * Override dh_auto_configure to run configure properly
+  * Document changes for 0.4.1-1 release
+
+ -- Jon Bernard <jbernard@debian.org>  Sun, 14 Feb 2010 11:57:59 -0500
+
 liburcu (0.4.0-1) unstable; urgency=low
 
   * Imported Upstream version 0.4.0
