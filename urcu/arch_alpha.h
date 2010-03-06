@@ -1,11 +1,10 @@
-#ifndef _URCU_ARCH_SPARC64_H
-#define _URCU_ARCH_SPARC64_H
+#ifndef _URCU_ARCH_ALPHA_H
+#define _URCU_ARCH_ALPHA_H
 
 /*
- * arch_sparc64.h: trivial definitions for the Sparc64 architecture.
+ * arch_alpha.h: trivial definitions for the Alpha architecture.
  *
- * Copyright (c) 2009 Paul E. McKenney, IBM Corporation.
- * Copyright (c) 2009 Mathieu Desnoyers <mathieu.desnoyers@polymtl.ca>
+ * Copyright (c) 2010 Paolo Bonzini <pbonzini@redhat.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -27,34 +26,23 @@
 
 #ifdef __cplusplus
 extern "C" {
-#endif 
+#endif
 
-#define CACHE_LINE_SIZE	256
-
-/*
- * Inspired from the Linux kernel. Workaround Spitfire bug #51.
- */
-#define membar_safe(type)			\
-__asm__ __volatile__("ba,pt %%xcc, 1f\n\t"	\
-		     "membar " type "\n"	\
-		     "1:\n"			\
-		     : : : "memory")
-
-#define mb()    membar_safe("#LoadLoad | #LoadStore | #StoreStore | #StoreLoad")
-#define rmb()    membar_safe("#LoadLoad")
-#define wmb()    membar_safe("#StoreStore")
+#define mb()			asm volatile("mb":::"memory")
+#define wmb()			asm volatile("wmb":::"memory")
+#define read_barrier_depends()	asm volatile("mb":::"memory")
 
 typedef unsigned long long cycles_t;
 
 static inline cycles_t get_cycles (void)
 {
-	return 0;	/* unimplemented */
+	return 0;	/* not supported */
 }
 
-#ifdef __cplusplus 
+#ifdef __cplusplus
 }
 #endif
 
 #include <urcu/arch_generic.h>
 
-#endif /* _URCU_ARCH_SPARC64_H */
+#endif /* _URCU_ARCH_ALPHA_H */

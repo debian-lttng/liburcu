@@ -27,28 +27,13 @@
 extern "C" {
 #endif 
 
-#ifndef __SIZEOF_LONG__
-#ifdef __powerpc64__
-#define __SIZEOF_LONG__ 8
-#else
-#define __SIZEOF_LONG__ 4
-#endif
-#endif
-
 #ifdef __NO_LWSYNC__
 #define LWSYNC_OPCODE	"sync\n"
 #else
 #define LWSYNC_OPCODE	"lwsync\n"
 #endif
 
-#ifndef BITS_PER_LONG
-#define BITS_PER_LONG	(__SIZEOF_LONG__ * 8)
-#endif
-
 #define ILLEGAL_INSTR	".long	0xd00d00"
-
-#define uatomic_set(addr, v)	STORE_SHARED(*(addr), (v))
-#define uatomic_read(addr)	LOAD_SHARED(*(addr))
 
 /*
  * Using a isync as second barrier for exchange to provide acquire semantic.
@@ -225,20 +210,10 @@ unsigned long _uatomic_add_return(void *addr, unsigned long val,
 						  (unsigned long)(v),	\
 						  sizeof(*(addr))))
 
-/* uatomic_sub_return, uatomic_add, uatomic_sub, uatomic_inc, uatomic_dec */
-
-#define uatomic_sub_return(addr, v)	uatomic_add_return((addr), -(v))
-
-#define uatomic_add(addr, v)		(void)uatomic_add_return((addr), (v))
-#define uatomic_sub(addr, v)		(void)uatomic_sub_return((addr), (v))
-
-#define uatomic_inc(addr)		uatomic_add((addr), 1)
-#define uatomic_dec(addr)		uatomic_add((addr), -1)
-
-#define compat_uatomic_cmpxchg(ptr, old, _new)	uatomic_cmpxchg(ptr, old, _new)
-
 #ifdef __cplusplus 
 }
 #endif
+
+#include <urcu/uatomic_generic.h>
 
 #endif /* _URCU_ARCH_UATOMIC_PPC_H */

@@ -82,6 +82,9 @@ struct reclaim_queue {
 static struct reclaim_queue *pending_reclaims;
 
 
+/* write-side C.S. duration, in loops */
+static unsigned long wduration;
+
 static inline void loop_sleep(unsigned long l)
 {
 	while(l-- != 0)
@@ -284,6 +287,8 @@ void *thr_writer(void *data)
 		new->a = 8;
 		old = _rcu_xchg_pointer(&test_rcu_pointer, new);
 #endif
+		if (unlikely(wduration))
+			loop_sleep(wduration);
 		rcu_gc_reclaim(wtidx, old);
 		nr_writes++;
 		if (unlikely(!test_duration_write()))
@@ -304,8 +309,10 @@ void show_usage(int argc, char **argv)
 #ifdef DEBUG_YIELD
 	printf(" [-r] [-w] (yield reader and/or writer)");
 #endif
+	printf(" [-b batch] (batch reclaim)");
 	printf(" [-d delay] (writer period (us))");
 	printf(" [-c duration] (reader C.S. duration (in loops))");
+	printf(" [-e duration] (writer C.S. duration (in loops))");
 	printf(" [-v] (verbose output)");
 	printf(" [-a cpu#] [-a cpu#]... (affinity)");
 	printf("\n");
@@ -386,6 +393,13 @@ int main(int argc, char **argv)
 			}
 			wdelay = atol(argv[++i]);
 			break;
+		case 'e':
+			if (argc < i + 2) {
+				show_usage(argc, argv);
+				return -1;
+			}
+			wduration = atol(argv[++i]);
+			break;
 		case 'v':
 			verbose_mode = 1;
 			break;
@@ -454,11 +468,11 @@ int main(int argc, char **argv)
 	
 	printf_verbose("total number of reads : %llu, writes %llu\n", tot_reads,
 	       tot_writes);
-	printf("SUMMARY %-25s testdur %4lu nr_readers %3u rdur %6lu "
+	printf("SUMMARY %-25s testdur %4lu nr_readers %3u rdur %6lu wdur %6lu "
 		"nr_writers %3u "
 		"wdelay %6lu nr_reads %12llu nr_writes %12llu nr_ops %12llu "
 		"batch %u\n",
-		argv[0], duration, nr_readers, rduration,
+		argv[0], duration, nr_readers, rduration, wduration,
 		nr_writers, wdelay, tot_reads, tot_writes,
 		tot_reads + tot_writes, reclaim_batch);
 	free(tid_reader);

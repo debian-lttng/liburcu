@@ -64,7 +64,7 @@ am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
 	$(ACLOCAL_M4)
 mkinstalldirs = $(install_sh) -d
 CONFIG_HEADER = $(top_builddir)/config.h $(top_builddir)/urcu/config.h
-CONFIG_CLEAN_FILES =
+CONFIG_CLEAN_FILES = api.h
 PROGRAMS = $(noinst_PROGRAMS)
 am_rcutorture_qsbr_OBJECTS = rcutorture_qsbr-urcutorture.$(OBJEXT)
 rcutorture_qsbr_OBJECTS = $(am_rcutorture_qsbr_OBJECTS)
@@ -725,8 +725,6 @@ URCU_QSBR_LIB = $(top_builddir)/liburcu-qsbr.la
 URCU_MB_LIB = $(top_builddir)/liburcu-mb.la
 URCU_SIGNAL_LIB = $(top_builddir)/liburcu-signal.la
 URCU_BP_LIB = $(top_builddir)/liburcu-bp.la
-@GCC_API_FALSE@APIHEADER = api_@ARCHTYPE@.h
-@GCC_API_TRUE@APIHEADER = api_gcc.h
 EXTRA_DIST = $(top_srcdir)/tests/api_*.h
 test_urcu_SOURCES = test_urcu.c $(URCU)
 test_urcu_dynamic_link_SOURCES = test_urcu.c $(URCU)
@@ -2478,7 +2476,7 @@ maintainer-clean-generic:
 	@echo "it deletes files that may require special tools to rebuild."
 clean: clean-am
 
-clean-am: clean-generic clean-libtool clean-local clean-noinstPROGRAMS \
+clean-am: clean-generic clean-libtool clean-noinstPROGRAMS \
 	mostlyclean-am
 
 distclean: distclean-am
@@ -2538,7 +2536,7 @@ uninstall-am:
 .MAKE: install-am install-strip
 
 .PHONY: CTAGS GTAGS all all-am check check-am clean clean-generic \
-	clean-libtool clean-local clean-noinstPROGRAMS ctags distclean \
+	clean-libtool clean-noinstPROGRAMS ctags distclean \
 	distclean-compile distclean-generic distclean-libtool \
 	distclean-tags distdir dvi dvi-am html html-am info info-am \
 	install install-am install-data install-data-am install-dvi \
@@ -2552,12 +2550,6 @@ uninstall-am:
 
 
 urcutorture.c: api.h
-
-api.h: $(APIHEADER)
-	cp -f $(srcdir)/$(APIHEADER) api.h
-
-clean-local:
-	rm -f api.h
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.
 .NOEXPORT:

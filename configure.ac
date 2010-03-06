@@ -2,11 +2,13 @@
 # Process this file with autoconf to produce a configure script.
 
 
-AC_INIT([userspace-rcu], [0.4.1], [mathieu dot desnoyers at efficios dot com])
+AC_INIT([userspace-rcu], [0.4.2], [mathieu dot desnoyers at efficios dot com])
 AC_CONFIG_AUX_DIR([config])
 AC_CANONICAL_TARGET
 AC_CANONICAL_HOST
 AM_INIT_AUTOMAKE([foreign dist-bzip2 no-dist-gzip])
+m4_ifdef([AM_SILENT_RULES], [AM_SILENT_RULES([yes])])
+
 AC_CONFIG_SRCDIR([urcu.h])
 AM_PROG_MKDIR_P
 
@@ -48,12 +50,23 @@ case $host_cpu in
 	s390) ARCHTYPE="s390" ;;
 	s390x) ARCHTYPE="s390" ;;
 	sparc64) ARCHTYPE="sparc64" ;;
+	alpha*) ARCHTYPE="alpha" ;;
 	*) ARCHTYPE="unknown";;
 esac
 
-if test "$ARCHTYPE" = "unknown"; then
-	AC_MSG_ERROR([Unable to detect the architecture.])
+if test "$ARCHTYPE" != "unknown"; then
+	UATOMICSRC=urcu/uatomic_arch_$ARCHTYPE.h
+	ARCHSRC=urcu/arch_$ARCHTYPE.h
+else
+	UATOMICSRC=urcu/uatomic_generic.h
+	ARCHSRC=urcu/arch_generic.h
 fi
+if test "x$ARCHTYPE" != xx86 -a "x$ARCHTYPE" != xppc; then
+	APISRC=tests/api_gcc.h
+else
+	APISRC=tests/api_$ARCHTYPE.h
+fi
+
 AC_SUBST(ARCHTYPE)
 AC_SUBST(SUBARCHTYPE)
 
@@ -92,8 +105,6 @@ AC_TRY_COMPILE(
 )
 
 AM_CONDITIONAL([COMPAT_FUTEX], [ test "x$compat_futex_test" = "x1" ])
-
-AM_CONDITIONAL([GCC_API], [test "x$ARCHTYPE" != xx86 -a "x$ARCHTYPE" != xppc])
 
 AM_CONDITIONAL([COMPAT_ARCH], [test "x$SUBARCHTYPE" = xx86compat ])
 
@@ -202,6 +213,11 @@ AC_CHECK_FUNCS(
 
 CFLAGS=$saved_CFLAGS
 
+AC_CONFIG_LINKS([
+	urcu/arch.h:$ARCHSRC
+	urcu/uatomic_arch.h:$UATOMICSRC
+	tests/api.h:$APISRC
+])
 AC_CONFIG_FILES([
 	Makefile
 	tests/Makefile

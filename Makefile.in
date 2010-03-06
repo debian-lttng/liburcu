@@ -50,7 +50,7 @@ am__CONFIG_DISTCLEAN_FILES = config.status config.cache config.log \
  configure.lineno config.status.lineno
 mkinstalldirs = $(install_sh) -d
 CONFIG_HEADER = config.h $(top_builddir)/urcu/config.h
-CONFIG_CLEAN_FILES =
+CONFIG_CLEAN_FILES = urcu/arch.h urcu/uatomic_arch.h
 am__vpath_adj_setup = srcdirstrip=`echo "$(srcdir)" | sed 's|.|.|g'`;
 am__vpath_adj = case $$p in \
     $(srcdir)/*) f=`echo "$$p" | sed "s|^$$srcdirstrip/||"`;; \
@@ -285,7 +285,8 @@ AM_LDFLAGS = -lpthread
 SUBDIRS = . tests
 include_HEADERS = urcu.h $(top_srcdir)/urcu-*.h
 nobase_dist_include_HEADERS = urcu/compiler.h urcu/hlist.h urcu/list.h \
-		urcu/rculist.h urcu/system.h urcu/urcu-futex.h
+		urcu/rculist.h urcu/rcuhlist.h urcu/system.h urcu/urcu-futex.h \
+		urcu/uatomic_generic.h urcu/arch_generic.h
 
 nobase_nodist_include_HEADERS = urcu/arch.h urcu/uatomic_arch.h urcu/config.h
 EXTRA_DIST = $(top_srcdir)/urcu/arch_*.h $(top_srcdir)/urcu/uatomic_arch_*.h \
@@ -882,7 +883,7 @@ maintainer-clean-generic:
 	@echo "it deletes files that may require special tools to rebuild."
 clean: clean-recursive
 
-clean-am: clean-generic clean-libLTLIBRARIES clean-libtool clean-local \
+clean-am: clean-generic clean-libLTLIBRARIES clean-libtool \
 	mostlyclean-am
 
 distclean: distclean-recursive
@@ -951,16 +952,16 @@ uninstall-am: uninstall-includeHEADERS uninstall-libLTLIBRARIES \
 
 .PHONY: $(RECURSIVE_CLEAN_TARGETS) $(RECURSIVE_TARGETS) CTAGS GTAGS \
 	all all-am am--refresh check check-am clean clean-generic \
-	clean-libLTLIBRARIES clean-libtool clean-local ctags \
-	ctags-recursive dist dist-all dist-bzip2 dist-gzip dist-lzma \
-	dist-shar dist-tarZ dist-zip distcheck distclean \
-	distclean-compile distclean-generic distclean-hdr \
-	distclean-libtool distclean-tags distcleancheck distdir \
-	distuninstallcheck dvi dvi-am html html-am info info-am \
-	install install-am install-data install-data-am install-dvi \
-	install-dvi-am install-exec install-exec-am install-html \
-	install-html-am install-includeHEADERS install-info \
-	install-info-am install-libLTLIBRARIES install-man \
+	clean-libLTLIBRARIES clean-libtool ctags ctags-recursive dist \
+	dist-all dist-bzip2 dist-gzip dist-lzma dist-shar dist-tarZ \
+	dist-zip distcheck distclean distclean-compile \
+	distclean-generic distclean-hdr distclean-libtool \
+	distclean-tags distcleancheck distdir distuninstallcheck dvi \
+	dvi-am html html-am info info-am install install-am \
+	install-data install-data-am install-dvi install-dvi-am \
+	install-exec install-exec-am install-html install-html-am \
+	install-includeHEADERS install-info install-info-am \
+	install-libLTLIBRARIES install-man \
 	install-nobase_dist_includeHEADERS \
 	install-nobase_nodist_includeHEADERS install-pdf \
 	install-pdf-am install-ps install-ps-am install-strip \
@@ -972,19 +973,6 @@ uninstall-am: uninstall-includeHEADERS uninstall-libLTLIBRARIES \
 	uninstall-nobase_dist_includeHEADERS \
 	uninstall-nobase_nodist_includeHEADERS
 
-
-$(top_srcdir)/*.h $(top_srcdir)/*.c: urcu/arch.h urcu/uatomic_arch.h
-
-urcu/arch.h: $(top_srcdir)/urcu/arch_@ARCHTYPE@.h
-	$(mkdir_p) $(top_builddir)/urcu
-	cp -f $(top_srcdir)/urcu/arch_@ARCHTYPE@.h $(top_builddir)/urcu/arch.h
-
-urcu/uatomic_arch.h: $(top_srcdir)/urcu/uatomic_arch_@ARCHTYPE@.h
-	$(mkdir_p) $(top_builddir)/urcu
-	cp -f $(top_srcdir)/urcu/uatomic_arch_@ARCHTYPE@.h $(top_builddir)/urcu/uatomic_arch.h
-
-clean-local:
-	rm -f urcu/arch.h urcu/uatomic_arch.h
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.
 .NOEXPORT:
