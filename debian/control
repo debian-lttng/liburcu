@@ -21,7 +21,6 @@ Description: a userspace RCU (read-copy-update) library - development files
  userspace RCU library.
 
 Package: liburcu0
-Section: libs
 Architecture: i386 amd64 powerpc ppc64 s390 s390x sparc
 Depends: ${shlibs:Depends}, ${misc:Depends}
 Description: a userspace RCU (read-copy-update) library
