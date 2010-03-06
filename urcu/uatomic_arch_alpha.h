@@ -1,13 +1,10 @@
-#ifndef _URCU_ARCH_S390_H
-#define _URCU_ARCH_S390_H
+#ifndef _URCU_UATOMIC_ARCH_ALPHA_H
+#define _URCU_UATOMIC_ARCH_ALPHA_H
 
 /*
- * Trivial definitions for the S390 architecture based on information from the
- * Principles of Operation "CPU Serialization" (5-91), "BRANCH ON CONDITION"
- * (7-25) and "STORE CLOCK" (7-169).
+ * Atomic exchange operations for the Alpha architecture. Let GCC do it.
  *
- * Copyright (c) 2009 Novell, Inc.
- * Author: Jan Blunck <jblunck@suse.de>
+ * Copyright (c) 2010 Paolo Bonzini <pbonzini@redhat.com>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -29,31 +26,7 @@
  */
 
 #include <urcu/compiler.h>
-#include <urcu/config.h>
+#include <urcu/system.h>
+#include <urcu/uatomic_generic.h>
 
-#ifdef __cplusplus
-extern "C" {
-#endif 
-
-#define CACHE_LINE_SIZE	128
-
-#define mb()    __asm__ __volatile__("bcr 15,0" : : : "memory")
-
-typedef unsigned long long cycles_t;
-
-static inline cycles_t get_cycles (void)
-{
-	cycles_t cycles;
-
-	__asm__ __volatile__("stck %0" : "=m" (cycles) : : "cc", "memory" );
-
-	return cycles;
-}
-
-#ifdef __cplusplus 
-}
-#endif
-
-#include <urcu/arch_generic.h>
-
-#endif /* _URCU_ARCH_S390_H */
+#endif /* _URCU_UATOMIC_ARCH_ALPHA_H */

@@ -28,6 +28,18 @@ Currently, x86 (i386, i486, i586, i686), x86 64-bit, PowerPC 32/64, S390, S390x
 and Sparcv9 32/64 are supported. Only tested on Linux so far, but should
 theoretically work on other operating systems.
 
+Alpha and ia64 architectures are supported, but depend on 4.x gcc with atomic
+builtins support.
+
+The gcc compiler versions 3.3, 3.4, 4.0, 4.1, 4.2, 4.3, 4.4 and 4.5 are
+supported, with the following exceptions:
+
+- gcc 3.3 and 3.4 have a bug that prevents them from generating volatile
+  accesses to offsets in a TLS structure on 32-bit x86. These versions are
+  therefore not compatible with liburcu on x86 32-bit (i386, i486, i586, i686).
+  The problem has been reported to the gcc community:
+    http://www.mail-archive.com/gcc-bugs@gcc.gnu.org/msg281255.html
+
 QUICK START GUIDE
 -----------------
 
@@ -71,7 +83,8 @@ Usage of liburcu-mb
 
 Usage of liburcu-signal
 
-	* #include <urcu-signal.h>
+	* #include <urcu.h>
+	* Compile any _LGPL_SOURCE code using this library with "-DRCU_SIGNAL".
 	* Link the application with "-lurcu-signal".
 	* Version of the library that requires a signal, typically SIGUSR1. Can
 	  be overridden with -DSIGRCU by modifying Makefile.build.inc.

@@ -23,21 +23,12 @@
 #include <urcu/compiler.h>
 #include <urcu/system.h>
 
+#define UATOMIC_HAS_ATOMIC_BYTE
+#define UATOMIC_HAS_ATOMIC_SHORT
+
 #ifdef __cplusplus
 extern "C" {
 #endif 
-
-#ifndef __SIZEOF_LONG__
-#if defined(__x86_64__) || defined(__amd64__)
-#define __SIZEOF_LONG__ 8
-#else
-#define __SIZEOF_LONG__ 4
-#endif
-#endif
-
-#ifndef BITS_PER_LONG
-#define BITS_PER_LONG	(__SIZEOF_LONG__ * 8)
-#endif
 
 /*
  * Derived from AO_compare_and_swap() and AO_test_and_set_full().
@@ -49,7 +40,6 @@ struct __uatomic_dummy {
 #define __hp(x)	((struct __uatomic_dummy *)(x))
 
 #define _uatomic_set(addr, v)	STORE_SHARED(*(addr), (v))
-#define _uatomic_read(addr)	LOAD_SHARED(*(addr))
 
 /* cmpxchg */
 
@@ -176,7 +166,7 @@ unsigned long __uatomic_exchange(void *addr, unsigned long val, int len)
 	((__typeof__(*(addr))) __uatomic_exchange((addr), (unsigned long)(v), \
 						sizeof(*(addr))))
 
-/* uatomic_add_return, uatomic_sub_return */
+/* uatomic_add_return */
 
 static inline __attribute__((always_inline))
 unsigned long __uatomic_add_return(void *addr, unsigned long val,
@@ -241,9 +231,7 @@ unsigned long __uatomic_add_return(void *addr, unsigned long val,
 						  (unsigned long)(v),	\
 						  sizeof(*(addr))))
 
-#define _uatomic_sub_return(addr, v)	_uatomic_add_return((addr), -(v))
-
-/* uatomic_add, uatomic_sub */
+/* uatomic_add */
 
 static inline __attribute__((always_inline))
 void __uatomic_add(void *addr, unsigned long val, int len)
@@ -296,8 +284,6 @@ void __uatomic_add(void *addr, unsigned long val, int len)
 
 #define _uatomic_add(addr, v)						   \
 	(__uatomic_add((addr), (unsigned long)(v), sizeof(*(addr))))
-
-#define _uatomic_sub(addr, v)	_uatomic_add((addr), -(v))
 
 
 /* uatomic_inc */
@@ -449,41 +435,36 @@ extern unsigned long _compat_uatomic_xchg(void *addr,
 						(unsigned long)(v), 	       \
 						sizeof(*(addr))))
 
-#define compat_uatomic_sub_return(addr, v)				       \
-		compat_uatomic_add_return((addr), -(v))
 #define compat_uatomic_add(addr, v)					       \
 		((void)compat_uatomic_add_return((addr), (v)))
-#define compat_uatomic_sub(addr, v)					       \
-		((void)compat_uatomic_sub_return((addr), (v)))
 #define compat_uatomic_inc(addr)					       \
 		(compat_uatomic_add((addr), 1))
 #define compat_uatomic_dec(addr)					       \
-		(compat_uatomic_sub((addr), 1))
+		(compat_uatomic_add((addr), -1))
 
 #else
 #define UATOMIC_COMPAT(insn)	(_uatomic_##insn)
 #endif
 
 /* Read is atomic even in compat mode */
-#define uatomic_read(addr)	_uatomic_read(addr)
-
 #define uatomic_set(addr, v)			\
 		UATOMIC_COMPAT(set(addr, v))
+
 #define uatomic_cmpxchg(addr, old, _new)	\
 		UATOMIC_COMPAT(cmpxchg(addr, old, _new))
 #define uatomic_xchg(addr, v)			\
 		UATOMIC_COMPAT(xchg(addr, v))
 #define uatomic_add_return(addr, v)		\
 		UATOMIC_COMPAT(add_return(addr, v))
-#define uatomic_sub_return(addr, v)		\
-		UATOMIC_COMPAT(sub_return(addr, v))
+
 #define uatomic_add(addr, v)	UATOMIC_COMPAT(add(addr, v))
-#define uatomic_sub(addr, v)	UATOMIC_COMPAT(sub(addr, v))
 #define uatomic_inc(addr)	UATOMIC_COMPAT(inc(addr))
 #define uatomic_dec(addr)	UATOMIC_COMPAT(dec(addr))
 
 #ifdef __cplusplus 
 }
 #endif
+
+#include <urcu/uatomic_generic.h>
 
 #endif /* _URCU_ARCH_UATOMIC_X86_H */

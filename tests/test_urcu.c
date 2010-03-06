@@ -77,6 +77,9 @@ static unsigned long duration;
 /* read-side C.S. duration, in loops */
 static unsigned long rduration;
 
+/* write-side C.S. duration, in loops */
+static unsigned long wduration;
+
 static inline void loop_sleep(unsigned long l)
 {
 	while(l-- != 0)
@@ -246,6 +249,10 @@ void *thr_reader(void *_count)
 
 	rcu_unregister_thread();
 
+	/* test extra thread registration */
+	rcu_register_thread();
+	rcu_unregister_thread();
+
 	*count = nr_reads;
 	printf_verbose("thread_end %s, thread id : %lx, tid %lu\n",
 			"reader", pthread_self(), (unsigned long)gettid());
@@ -272,6 +279,8 @@ void *thr_writer(void *_count)
 		new = test_array_alloc();
 		new->a = 8;
 		old = rcu_xchg_pointer(&test_rcu_pointer, new);
+		if (unlikely(wduration))
+			loop_sleep(wduration);
 		synchronize_rcu();
 		if (old)
 			old->a = 0;
@@ -297,6 +306,7 @@ void show_usage(int argc, char **argv)
 #endif
 	printf(" [-d delay] (writer period (us))");
 	printf(" [-c duration] (reader C.S. duration (in loops))");
+	printf(" [-e duration] (writer C.S. duration (in loops))");
 	printf(" [-v] (verbose output)");
 	printf(" [-a cpu#] [-a cpu#]... (affinity)");
 	printf("\n");
@@ -370,6 +380,13 @@ int main(int argc, char **argv)
 			}
 			wdelay = atol(argv[++i]);
 			break;
+		case 'e':
+			if (argc < i + 2) {
+				show_usage(argc, argv);
+				return -1;
+			}
+			wduration = atol(argv[++i]);
+			break;
 		case 'v':
 			verbose_mode = 1;
 			break;
@@ -427,10 +444,10 @@ int main(int argc, char **argv)
 	
 	printf_verbose("total number of reads : %llu, writes %llu\n", tot_reads,
 	       tot_writes);
-	printf("SUMMARY %-25s testdur %4lu nr_readers %3u rdur %6lu "
+	printf("SUMMARY %-25s testdur %4lu nr_readers %3u rdur %6lu wdur %6lu "
 		"nr_writers %3u "
 		"wdelay %6lu nr_reads %12llu nr_writes %12llu nr_ops %12llu\n",
-		argv[0], duration, nr_readers, rduration,
+		argv[0], duration, nr_readers, rduration, wduration,
 		nr_writers, wdelay, tot_reads, tot_writes,
 		tot_reads + tot_writes);
 	test_array_free(test_rcu_pointer);

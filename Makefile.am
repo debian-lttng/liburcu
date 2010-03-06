@@ -6,7 +6,8 @@ SUBDIRS = . tests
 
 include_HEADERS = urcu.h $(top_srcdir)/urcu-*.h
 nobase_dist_include_HEADERS = urcu/compiler.h urcu/hlist.h urcu/list.h \
-		urcu/rculist.h urcu/system.h urcu/urcu-futex.h
+		urcu/rculist.h urcu/rcuhlist.h urcu/system.h urcu/urcu-futex.h \
+		urcu/uatomic_generic.h urcu/arch_generic.h
 nobase_nodist_include_HEADERS = urcu/arch.h urcu/uatomic_arch.h urcu/config.h
 
 EXTRA_DIST = $(top_srcdir)/urcu/arch_*.h $(top_srcdir)/urcu/uatomic_arch_*.h \
@@ -38,16 +39,3 @@ liburcu_signal_la_CFLAGS = -DRCU_SIGNAL
 liburcu_bp_la_SOURCES = urcu-bp.c urcu-pointer.c $(COMPAT)
 
 liburcu_defer_la_SOURCES = urcu-defer.c $(COMPAT)
-
-$(top_srcdir)/*.h $(top_srcdir)/*.c: urcu/arch.h urcu/uatomic_arch.h
-
-urcu/arch.h: $(top_srcdir)/urcu/arch_@ARCHTYPE@.h
-	$(mkdir_p) $(top_builddir)/urcu
-	cp -f $(top_srcdir)/urcu/arch_@ARCHTYPE@.h $(top_builddir)/urcu/arch.h
-
-urcu/uatomic_arch.h: $(top_srcdir)/urcu/uatomic_arch_@ARCHTYPE@.h
-	$(mkdir_p) $(top_builddir)/urcu
-	cp -f $(top_srcdir)/urcu/uatomic_arch_@ARCHTYPE@.h $(top_builddir)/urcu/uatomic_arch.h
-
-clean-local:
-	rm -f urcu/arch.h urcu/uatomic_arch.h
