@@ -135,7 +135,7 @@ struct rcu_reader {
 	/* Data used by both reader and synchronize_rcu() */
 	unsigned long ctr;
 	/* Data used for registry */
-	struct list_head head __attribute__((aligned(CACHE_LINE_SIZE)));
+	struct list_head node __attribute__((aligned(CACHE_LINE_SIZE)));
 	pthread_t tid;
 };
 
@@ -155,23 +155,13 @@ static inline void wake_up_gp(void)
 	}
 }
 
-#if (BITS_PER_LONG < 64)
 static inline int rcu_gp_ongoing(unsigned long *ctr)
 {
 	unsigned long v;
 
 	v = LOAD_SHARED(*ctr);
-	return v && ((v ^ rcu_gp_ctr) & RCU_GP_CTR);
+	return v && (v != rcu_gp_ctr);
 }
-#else /* !(BITS_PER_LONG < 64) */
-static inline int rcu_gp_ongoing(unsigned long *ctr)
-{
-	unsigned long v;
-
-	v = LOAD_SHARED(*ctr);
-	return v && (v - rcu_gp_ctr > ULONG_MAX / 2);
-}
-#endif  /* !(BITS_PER_LONG < 64) */
 
 static inline void _rcu_read_lock(void)
 {
