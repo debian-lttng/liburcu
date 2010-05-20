@@ -121,6 +121,21 @@ static void update_counter_and_wait(void)
 #endif	/* !(BITS_PER_LONG < 64) */
 
 	/*
+	 * Must commit rcu_gp_ctr update to memory before waiting for quiescent
+	 * state. Failure to do so could result in the writer waiting forever
+	 * while new readers are always accessing data (no progress). Enforce
+	 * compiler-order of store to rcu_gp_ctr before load rcu_reader ctr.
+	 */
+	barrier();
+
+	/*
+	 * Adding a smp_mb() which is _not_ formally required, but makes the
+	 * model easier to understand. It does not have a big performance impact
+	 * anyway, given this is the write-side.
+	 */
+	smp_mb();
+
+	/*
 	 * Wait for each thread rcu_reader_qs_gp count to become 0.
 	 */
 	for (;;) {
@@ -131,9 +146,9 @@ static void update_counter_and_wait(void)
 			smp_mb();
 		}
 
-		list_for_each_entry_safe(index, tmp, &registry, head) {
+		list_for_each_entry_safe(index, tmp, &registry, node) {
 			if (!rcu_gp_ongoing(&index->ctr))
-				list_move(&index->head, &qsreaders);
+				list_move(&index->node, &qsreaders);
 		}
 
 		if (list_empty(&registry)) {
@@ -197,11 +212,12 @@ void synchronize_rcu(void)
 
 	/*
 	 * Must finish waiting for quiescent state for parity 0 before
-	 * committing qparity update to memory. Failure to do so could result in
-	 * the writer waiting forever while new readers are always accessing
-	 * data (no progress).
-	 * Ensured by STORE_SHARED and LOAD_SHARED.
+	 * committing next rcu_gp_ctr update to memory. Failure to do so could
+	 * result in the writer waiting forever while new readers are always
+	 * accessing data (no progress).  Enforce compiler-order of load
+	 * rcu_reader ctr before store to rcu_gp_ctr.
 	 */
+	barrier();
 
 	/*
 	 * Adding a smp_mb() which is _not_ formally required, but makes the
@@ -289,7 +305,7 @@ void rcu_register_thread(void)
 	assert(rcu_reader.ctr == 0);
 
 	mutex_lock(&rcu_gp_lock);
-	list_add(&rcu_reader.head, &registry);
+	list_add(&rcu_reader.node, &registry);
 	mutex_unlock(&rcu_gp_lock);
 	_rcu_thread_online();
 }
@@ -302,7 +318,7 @@ void rcu_unregister_thread(void)
 	 */
 	_rcu_thread_offline();
 	mutex_lock(&rcu_gp_lock);
-	list_del(&rcu_reader.head);
+	list_del(&rcu_reader.node);
 	mutex_unlock(&rcu_gp_lock);
 }
 

@@ -154,7 +154,7 @@ static void force_mb_all_readers(void)
 	 * safe and don't assume anything : we use smp_mc() to make sure the
 	 * cache flush is enforced.
 	 */
-	list_for_each_entry(index, &registry, head) {
+	list_for_each_entry(index, &registry, node) {
 		STORE_SHARED(index->need_mb, 1);
 		pthread_kill(index->tid, SIGRCU);
 	}
@@ -171,7 +171,7 @@ static void force_mb_all_readers(void)
 	 * relevant bug report.  For Linux kernels, we recommend getting
 	 * the Linux Test Project (LTP).
 	 */
-	list_for_each_entry(index, &registry, head) {
+	list_for_each_entry(index, &registry, node) {
 		while (LOAD_SHARED(index->need_mb)) {
 			pthread_kill(index->tid, SIGRCU);
 			poll(NULL, 0, 1);
@@ -208,13 +208,15 @@ void update_counter_and_wait(void)
 	STORE_SHARED(rcu_gp_ctr, rcu_gp_ctr ^ RCU_GP_CTR_PHASE);
 
 	/*
-	 * Must commit qparity update to memory before waiting for other parity
-	 * quiescent state. Failure to do so could result in the writer waiting
-	 * forever while new readers are always accessing data (no progress).
-	 * Ensured by STORE_SHARED and LOAD_SHARED.
+	 * Must commit rcu_gp_ctr update to memory before waiting for quiescent
+	 * state. Failure to do so could result in the writer waiting forever
+	 * while new readers are always accessing data (no progress). Enforce
+	 * compiler-order of store to rcu_gp_ctr before load rcu_reader ctr.
 	 */
+	barrier();
 
 	/*
+	 *
 	 * Adding a smp_mb() which is _not_ formally required, but makes the
 	 * model easier to understand. It does not have a big performance impact
 	 * anyway, given this is the write-side.
@@ -232,9 +234,9 @@ void update_counter_and_wait(void)
 			smp_mb_master(RCU_MB_GROUP);
 		}
 
-		list_for_each_entry_safe(index, tmp, &registry, head) {
+		list_for_each_entry_safe(index, tmp, &registry, node) {
 			if (!rcu_gp_ongoing(&index->ctr))
-				list_move(&index->head, &qsreaders);
+				list_move(&index->node, &qsreaders);
 		}
 
 #ifndef HAS_INCOHERENT_CACHES
@@ -302,11 +304,12 @@ void synchronize_rcu(void)
 
 	/*
 	 * Must finish waiting for quiescent state for parity 0 before
-	 * committing qparity update to memory. Failure to do so could result in
-	 * the writer waiting forever while new readers are always accessing
-	 * data (no progress).
-	 * Ensured by STORE_SHARED and LOAD_SHARED.
+	 * committing next rcu_gp_ctr update to memory. Failure to do so could
+	 * result in the writer waiting forever while new readers are always
+	 * accessing data (no progress).  Enforce compiler-order of load
+	 * rcu_reader ctr before store to rcu_gp_ctr.
 	 */
+	barrier();
 
 	/*
 	 * Adding a smp_mb() which is _not_ formally required, but makes the
@@ -350,14 +353,14 @@ void rcu_register_thread(void)
 
 	mutex_lock(&rcu_gp_lock);
 	rcu_init();	/* In case gcc does not support constructor attribute */
-	list_add(&rcu_reader.head, &registry);
+	list_add(&rcu_reader.node, &registry);
 	mutex_unlock(&rcu_gp_lock);
 }
 
 void rcu_unregister_thread(void)
 {
 	mutex_lock(&rcu_gp_lock);
-	list_del(&rcu_reader.head);
+	list_del(&rcu_reader.node);
 	mutex_unlock(&rcu_gp_lock);
 }
 
