@@ -2,7 +2,7 @@
 # Process this file with autoconf to produce a configure script.
 
 
-AC_INIT([userspace-rcu], [0.4.4], [mathieu dot desnoyers at efficios dot com])
+AC_INIT([userspace-rcu], [0.4.6], [mathieu dot desnoyers at efficios dot com])
 AC_CONFIG_AUX_DIR([config])
 AC_CANONICAL_TARGET
 AC_CANONICAL_HOST
@@ -51,20 +51,20 @@ case $host_cpu in
 	s390x) ARCHTYPE="s390" ;;
 	sparc64) ARCHTYPE="sparc64" ;;
 	alpha*) ARCHTYPE="alpha" ;;
+	ia64) ARCHTYPE="gcc" ;;
+	armv7l) ARCHTYPE="armv7l" ;;
 	*) ARCHTYPE="unknown";;
 esac
 
-if test "$ARCHTYPE" != "unknown"; then
-	UATOMICSRC=urcu/uatomic_arch_$ARCHTYPE.h
-	ARCHSRC=urcu/arch_$ARCHTYPE.h
-else
-	UATOMICSRC=urcu/uatomic_generic.h
-	ARCHSRC=urcu/arch_generic.h
-fi
+UATOMICSRC=urcu/uatomic_arch_$ARCHTYPE.h
+ARCHSRC=urcu/arch_$ARCHTYPE.h
 if test "x$ARCHTYPE" != xx86 -a "x$ARCHTYPE" != xppc; then
 	APISRC=tests/api_gcc.h
 else
 	APISRC=tests/api_$ARCHTYPE.h
+fi
+if test "$ARCHTYPE" == "armv7l"; then
+	CFLAGS="-mcpu=cortex-a9 -mtune=cortex-a9 -O"
 fi
 
 AC_SUBST(ARCHTYPE)
