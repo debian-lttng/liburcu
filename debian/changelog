@@ -1,3 +1,9 @@
+liburcu (0.4.6-1) unstable; urgency=low
+
+  * [f0ccbd] Imported Upstream version 0.4.6
+
+ -- Jon Bernard <jbernard@debian.org>  Fri, 18 Jun 2010 14:05:21 -0400
+
 liburcu (0.4.4-1) unstable; urgency=low
 
   * [8f2038] Add Vcs fields to debian/control
