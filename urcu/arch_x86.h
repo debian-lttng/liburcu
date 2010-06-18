@@ -5,7 +5,7 @@
  * arch_x86.h: trivial definitions for the x86 architecture.
  *
  * Copyright (c) 2009 Paul E. McKenney, IBM Corporation.
- * Copyright (c) 2009 Mathieu Desnoyers <mathieu.desnoyers@polymtl.ca>
+ * Copyright (c) 2009 Mathieu Desnoyers <mathieu.desnoyers@efficios.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -46,20 +46,6 @@ extern "C" {
 #endif
 
 #define cpu_relax()	asm volatile("rep; nop" : : : "memory");
-
-/*
- * Serialize core instruction execution. Also acts as a compiler barrier.
- * On PIC ebx cannot be clobbered
- */
-#ifdef __PIC__
-#define sync_core()							  \
-	asm volatile("push %%ebx; cpuid; pop %%ebx"			  \
-		     : : : "memory", "eax", "ecx", "edx");
-#endif
-#ifndef __PIC__
-#define sync_core()							  \
-	asm volatile("cpuid" : : : "memory", "eax", "ebx", "ecx", "edx");
-#endif
 
 #define rdtscll(val)							  \
 	do {						  		  \

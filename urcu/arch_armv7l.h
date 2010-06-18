@@ -1,17 +1,17 @@
-#ifndef _URCU_ARCH_PPC_H
-#define _URCU_ARCH_PPC_H
+#ifndef _URCU_ARCH_ARMV7L_H
+#define _URCU_ARCH_ARMV7L_H
 
 /*
- * arch_ppc.h: trivial definitions for the powerpc architecture.
+ * arch_armv7l.h: trivial definitions for the ARMv7 architecture.
  *
- * Copyright (c) 2009 Paul E. McKenney, IBM Corporation.
+ * Copyright (c) 2010 Paul E. McKenney, IBM Corporation.
  * Copyright (c) 2009 Mathieu Desnoyers <mathieu.desnoyers@efficios.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
  * version 2.1 of the License, or (at your option) any later version.
-*
+ *
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
@@ -29,39 +29,22 @@
 extern "C" {
 #endif 
 
-/* Include size of POWER5+ L3 cache lines: 256 bytes */
-#define CACHE_LINE_SIZE	256
+#define mb()    asm volatile("dmb":::"memory")
 
-#define mb()    asm volatile("sync":::"memory")
-
-#define mftbl()						\
-	({ 						\
-		unsigned long rval;			\
-		asm volatile("mftbl %0" : "=r" (rval));	\
-		rval;					\
-	})
-
-#define mftbu()						\
-	({						\
-		unsigned long rval;			\
-		asm volatile("mftbu %0" : "=r" (rval));	\
-		rval;					\
-	})
+#include <stdlib.h>
+#include <sys/time.h>
 
 typedef unsigned long long cycles_t;
 
 static inline cycles_t get_cycles (void)
 {
-	long h, l;
+	cycles_t thetime;
+	struct timeval tv;
 
-	for (;;) {
-		h = mftbu();
-		barrier();
-		l = mftbl();
-		barrier();
-		if (mftbu() == h)
-			return (((cycles_t) h) << 32) + l;
-	}
+	if (gettimeofday(&tv, NULL) != 0)
+		return 0;
+	thetime = ((cycles_t)tv.tv_sec) * 1000000ULL + ((cycles_t)tv.tv_usec);
+	return (cycles_t)thetime;
 }
 
 #ifdef __cplusplus 
@@ -70,4 +53,4 @@ static inline cycles_t get_cycles (void)
 
 #include <urcu/arch_generic.h>
 
-#endif /* _URCU_ARCH_PPC_H */
+#endif /* _URCU_ARCH_ARMV7L_H */
