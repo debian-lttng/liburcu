@@ -1,0 +1,12 @@
+# Description: Set architecture to sparc64 if host cpu is detected as sparc.
+# Author: Jon Bernard <jbernard@debian.org>
+--- a/configure
++++ b/configure
+@@ -10948,6 +10948,7 @@ case $host_cpu in
+ 	ppc) ARCHTYPE="ppc" ;;
+ 	s390) ARCHTYPE="s390" ;;
+ 	s390x) ARCHTYPE="s390" ;;
++	sparc) ARCHTYPE="sparc64" ;;
+ 	sparc64) ARCHTYPE="sparc64" ;;
+ 	alpha*) ARCHTYPE="alpha" ;;
+ 	ia64) ARCHTYPE="gcc" ;;
