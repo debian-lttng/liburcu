@@ -1,3 +1,12 @@
+liburcu (0.4.6-2~1.gbp518f07) UNRELEASED; urgency=low
+
+  ** SNAPSHOT build @518f07419c560d909225d80c4b4e8a4c7d971944 **
+
+  * [8d60a0] Set debian source format to 3.0 (quilt)
+  * [518f07] Add patch to fix sparc host cpu detection
+
+ -- Jon Bernard <jbernard@debian.org>  Tue, 10 Aug 2010 13:01:13 -0400
+
 liburcu (0.4.6-1) unstable; urgency=low
 
   * [f0ccbd] Imported Upstream version 0.4.6
