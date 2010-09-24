@@ -1,10 +1,9 @@
-#ifndef _URCU_ARCH_ALPHA_H
-#define _URCU_ARCH_ALPHA_H
-
 /*
- * arch_alpha.h: trivial definitions for the Alpha architecture.
+ * wfstack.c
  *
- * Copyright (c) 2010 Paolo Bonzini <pbonzini@redhat.com>
+ * Userspace RCU library - Stack with Wait-Free push, Blocking pop.
+ *
+ * Copyright 2010 - Mathieu Desnoyers <mathieu.desnoyers@efficios.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -21,28 +20,35 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-#include <urcu/compiler.h>
-#include <urcu/config.h>
+/* Do not #define _LGPL_SOURCE to ensure we can emit the wrapper symbols */
+#include "urcu/wfstack.h"
+#include "urcu/wfstack-static.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+/*
+ * library wrappers to be used by non-LGPL compatible source code.
+ */
 
-#define mb()			asm volatile("mb":::"memory")
-#define wmb()			asm volatile("wmb":::"memory")
-#define read_barrier_depends()	asm volatile("mb":::"memory")
-
-typedef unsigned long long cycles_t;
-
-static inline cycles_t get_cycles (void)
+void wfs_node_init(struct wfs_node *node)
 {
-	return 0;	/* not supported */
+	_wfs_node_init(node);
 }
 
-#ifdef __cplusplus
+void wfs_init(struct wfs_stack *s)
+{
+	_wfs_init(s);
 }
-#endif
 
-#include <urcu/arch_generic.h>
+void wfs_push(struct wfs_stack *s, struct wfs_node *node)
+{
+	_wfs_push(s, node);
+}
 
-#endif /* _URCU_ARCH_ALPHA_H */
+struct wfs_node *__wfs_pop_blocking(struct wfs_stack *s)
+{
+	return ___wfs_pop_blocking(s);
+}
+
+struct wfs_node *wfs_pop_blocking(struct wfs_stack *s)
+{
+	return _wfs_pop_blocking(s);
+}

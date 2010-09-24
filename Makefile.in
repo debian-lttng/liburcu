@@ -78,18 +78,28 @@ am__base_list = \
 am__installdirs = "$(DESTDIR)$(libdir)" "$(DESTDIR)$(includedir)" \
 	"$(DESTDIR)$(includedir)" "$(DESTDIR)$(includedir)"
 LTLIBRARIES = $(lib_LTLIBRARIES)
-liburcu_bp_la_LIBADD =
-am__liburcu_bp_la_SOURCES_DIST = urcu-bp.c urcu-pointer.c \
-	compat_futex.c compat_arch_@ARCHTYPE@.c
+librculfqueue_la_LIBADD =
+am__librculfqueue_la_SOURCES_DIST = rculfqueue.c compat_futex.c \
+	compat_arch_@ARCHTYPE@.c
 @COMPAT_FUTEX_TRUE@am__objects_1 = compat_futex.lo
 @COMPAT_ARCH_FALSE@am__objects_2 = $(am__objects_1)
 @COMPAT_ARCH_TRUE@am__objects_2 = compat_arch_@ARCHTYPE@.lo \
 @COMPAT_ARCH_TRUE@	$(am__objects_1)
-am_liburcu_bp_la_OBJECTS = urcu-bp.lo urcu-pointer.lo $(am__objects_2)
-liburcu_bp_la_OBJECTS = $(am_liburcu_bp_la_OBJECTS)
+am_librculfqueue_la_OBJECTS = rculfqueue.lo $(am__objects_2)
+librculfqueue_la_OBJECTS = $(am_librculfqueue_la_OBJECTS)
 AM_V_lt = $(am__v_lt_$(V))
 am__v_lt_ = $(am__v_lt_$(AM_DEFAULT_VERBOSITY))
 am__v_lt_0 = --silent
+librculfstack_la_LIBADD =
+am__librculfstack_la_SOURCES_DIST = rculfstack.c compat_futex.c \
+	compat_arch_@ARCHTYPE@.c
+am_librculfstack_la_OBJECTS = rculfstack.lo $(am__objects_2)
+librculfstack_la_OBJECTS = $(am_librculfstack_la_OBJECTS)
+liburcu_bp_la_LIBADD =
+am__liburcu_bp_la_SOURCES_DIST = urcu-bp.c urcu-pointer.c \
+	compat_futex.c compat_arch_@ARCHTYPE@.c
+am_liburcu_bp_la_OBJECTS = urcu-bp.lo urcu-pointer.lo $(am__objects_2)
+liburcu_bp_la_OBJECTS = $(am_liburcu_bp_la_OBJECTS)
 liburcu_defer_la_LIBADD =
 am__liburcu_defer_la_SOURCES_DIST = urcu-defer.c compat_futex.c \
 	compat_arch_@ARCHTYPE@.c
@@ -135,6 +145,16 @@ am__liburcu_la_SOURCES_DIST = urcu.c urcu-pointer.c compat_futex.c \
 	compat_arch_@ARCHTYPE@.c
 am_liburcu_la_OBJECTS = urcu.lo urcu-pointer.lo $(am__objects_2)
 liburcu_la_OBJECTS = $(am_liburcu_la_OBJECTS)
+libwfqueue_la_LIBADD =
+am__libwfqueue_la_SOURCES_DIST = wfqueue.c compat_futex.c \
+	compat_arch_@ARCHTYPE@.c
+am_libwfqueue_la_OBJECTS = wfqueue.lo $(am__objects_2)
+libwfqueue_la_OBJECTS = $(am_libwfqueue_la_OBJECTS)
+libwfstack_la_LIBADD =
+am__libwfstack_la_SOURCES_DIST = wfstack.c compat_futex.c \
+	compat_arch_@ARCHTYPE@.c
+am_libwfstack_la_OBJECTS = wfstack.lo $(am__objects_2)
+libwfstack_la_OBJECTS = $(am_libwfstack_la_OBJECTS)
 DEFAULT_INCLUDES = -I.@am__isrc@ -I$(top_builddir)/urcu
 depcomp = $(SHELL) $(top_srcdir)/config/depcomp
 am__depfiles_maybe = depfiles
@@ -161,15 +181,21 @@ am__v_CCLD_0 = @echo "  CCLD  " $@;
 AM_V_GEN = $(am__v_GEN_$(V))
 am__v_GEN_ = $(am__v_GEN_$(AM_DEFAULT_VERBOSITY))
 am__v_GEN_0 = @echo "  GEN   " $@;
-SOURCES = $(liburcu_bp_la_SOURCES) $(liburcu_defer_la_SOURCES) \
+SOURCES = $(librculfqueue_la_SOURCES) $(librculfstack_la_SOURCES) \
+	$(liburcu_bp_la_SOURCES) $(liburcu_defer_la_SOURCES) \
 	$(liburcu_mb_la_SOURCES) $(liburcu_qsbr_la_SOURCES) \
-	$(liburcu_signal_la_SOURCES) $(liburcu_la_SOURCES)
-DIST_SOURCES = $(am__liburcu_bp_la_SOURCES_DIST) \
+	$(liburcu_signal_la_SOURCES) $(liburcu_la_SOURCES) \
+	$(libwfqueue_la_SOURCES) $(libwfstack_la_SOURCES)
+DIST_SOURCES = $(am__librculfqueue_la_SOURCES_DIST) \
+	$(am__librculfstack_la_SOURCES_DIST) \
+	$(am__liburcu_bp_la_SOURCES_DIST) \
 	$(am__liburcu_defer_la_SOURCES_DIST) \
 	$(am__liburcu_mb_la_SOURCES_DIST) \
 	$(am__liburcu_qsbr_la_SOURCES_DIST) \
 	$(am__liburcu_signal_la_SOURCES_DIST) \
-	$(am__liburcu_la_SOURCES_DIST)
+	$(am__liburcu_la_SOURCES_DIST) \
+	$(am__libwfqueue_la_SOURCES_DIST) \
+	$(am__libwfstack_la_SOURCES_DIST)
 RECURSIVE_TARGETS = all-recursive check-recursive dvi-recursive \
 	html-recursive info-recursive install-data-recursive \
 	install-dvi-recursive install-exec-recursive \
@@ -347,7 +373,10 @@ SUBDIRS = . tests
 include_HEADERS = urcu.h $(top_srcdir)/urcu-*.h
 nobase_dist_include_HEADERS = urcu/compiler.h urcu/hlist.h urcu/list.h \
 		urcu/rculist.h urcu/rcuhlist.h urcu/system.h urcu/urcu-futex.h \
-		urcu/uatomic_generic.h urcu/arch_generic.h
+		urcu/uatomic_generic.h urcu/arch_generic.h urcu/wfstack.h \
+		urcu/wfqueue.h urcu/rculfstack.h urcu/rculfqueue.h \
+		urcu/wfqueue-static.h urcu/wfstack-static.h \
+		urcu/rculfqueue-static.h urcu/rculfstack-static.h
 
 nobase_nodist_include_HEADERS = urcu/arch.h urcu/uatomic_arch.h urcu/config.h
 EXTRA_DIST = $(top_srcdir)/urcu/arch_*.h $(top_srcdir)/urcu/uatomic_arch_*.h \
@@ -356,7 +385,10 @@ EXTRA_DIST = $(top_srcdir)/urcu/arch_*.h $(top_srcdir)/urcu/uatomic_arch_*.h \
 
 @COMPAT_ARCH_FALSE@COMPAT = $(am__append_1)
 @COMPAT_ARCH_TRUE@COMPAT = compat_arch_@ARCHTYPE@.c $(am__append_1)
-lib_LTLIBRARIES = liburcu.la liburcu-qsbr.la liburcu-mb.la liburcu-signal.la liburcu-bp.la liburcu-defer.la
+lib_LTLIBRARIES = liburcu.la liburcu-qsbr.la liburcu-mb.la liburcu-signal.la \
+		  liburcu-bp.la liburcu-defer.la libwfqueue.la libwfstack.la \
+		  librculfqueue.la librculfstack.la
+
 liburcu_la_SOURCES = urcu.c urcu-pointer.c $(COMPAT)
 liburcu_qsbr_la_SOURCES = urcu-qsbr.c urcu-pointer.c $(COMPAT)
 liburcu_mb_la_SOURCES = urcu.c urcu-pointer.c $(COMPAT)
@@ -365,6 +397,10 @@ liburcu_signal_la_SOURCES = urcu.c urcu-pointer.c $(COMPAT)
 liburcu_signal_la_CFLAGS = -DRCU_SIGNAL
 liburcu_bp_la_SOURCES = urcu-bp.c urcu-pointer.c $(COMPAT)
 liburcu_defer_la_SOURCES = urcu-defer.c $(COMPAT)
+libwfqueue_la_SOURCES = wfqueue.c $(COMPAT)
+libwfstack_la_SOURCES = wfstack.c $(COMPAT)
+librculfqueue_la_SOURCES = rculfqueue.c $(COMPAT)
+librculfstack_la_SOURCES = rculfstack.c $(COMPAT)
 all: config.h
 	$(MAKE) $(AM_MAKEFLAGS) all-recursive
 
@@ -462,6 +498,10 @@ clean-libLTLIBRARIES:
 	  echo "rm -f \"$${dir}/so_locations\""; \
 	  rm -f "$${dir}/so_locations"; \
 	done
+librculfqueue.la: $(librculfqueue_la_OBJECTS) $(librculfqueue_la_DEPENDENCIES) 
+	$(AM_V_CCLD)$(LINK) -rpath $(libdir) $(librculfqueue_la_OBJECTS) $(librculfqueue_la_LIBADD) $(LIBS)
+librculfstack.la: $(librculfstack_la_OBJECTS) $(librculfstack_la_DEPENDENCIES) 
+	$(AM_V_CCLD)$(LINK) -rpath $(libdir) $(librculfstack_la_OBJECTS) $(librculfstack_la_LIBADD) $(LIBS)
 liburcu-bp.la: $(liburcu_bp_la_OBJECTS) $(liburcu_bp_la_DEPENDENCIES) 
 	$(AM_V_CCLD)$(LINK) -rpath $(libdir) $(liburcu_bp_la_OBJECTS) $(liburcu_bp_la_LIBADD) $(LIBS)
 liburcu-defer.la: $(liburcu_defer_la_OBJECTS) $(liburcu_defer_la_DEPENDENCIES) 
@@ -474,6 +514,10 @@ liburcu-signal.la: $(liburcu_signal_la_OBJECTS) $(liburcu_signal_la_DEPENDENCIES
 	$(AM_V_CCLD)$(liburcu_signal_la_LINK) -rpath $(libdir) $(liburcu_signal_la_OBJECTS) $(liburcu_signal_la_LIBADD) $(LIBS)
 liburcu.la: $(liburcu_la_OBJECTS) $(liburcu_la_DEPENDENCIES) 
 	$(AM_V_CCLD)$(LINK) -rpath $(libdir) $(liburcu_la_OBJECTS) $(liburcu_la_LIBADD) $(LIBS)
+libwfqueue.la: $(libwfqueue_la_OBJECTS) $(libwfqueue_la_DEPENDENCIES) 
+	$(AM_V_CCLD)$(LINK) -rpath $(libdir) $(libwfqueue_la_OBJECTS) $(libwfqueue_la_LIBADD) $(LIBS)
+libwfstack.la: $(libwfstack_la_OBJECTS) $(libwfstack_la_DEPENDENCIES) 
+	$(AM_V_CCLD)$(LINK) -rpath $(libdir) $(libwfstack_la_OBJECTS) $(libwfstack_la_LIBADD) $(LIBS)
 
 mostlyclean-compile:
 	-rm -f *.$(OBJEXT)
@@ -491,11 +535,15 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/liburcu_signal_la-compat_futex.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/liburcu_signal_la-urcu-pointer.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/liburcu_signal_la-urcu.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rculfqueue.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rculfstack.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/urcu-bp.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/urcu-defer.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/urcu-pointer.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/urcu-qsbr.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/urcu.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/wfqueue.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/wfstack.Plo@am__quote@
 
 .c.o:
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(COMPILE) -MT $@ -MD -MP -MF $(DEPDIR)/$*.Tpo -c -o $@ $<
