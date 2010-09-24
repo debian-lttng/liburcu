@@ -56,7 +56,11 @@ noinst_PROGRAMS = test_urcu$(EXEEXT) test_urcu_dynamic_link$(EXEEXT) \
 	test_urcu_assign$(EXEEXT) \
 	test_urcu_assign_dynamic_link$(EXEEXT) test_urcu_bp$(EXEEXT) \
 	test_urcu_bp_dynamic_link$(EXEEXT) \
-	test_cycles_per_loop$(EXEEXT)
+	test_cycles_per_loop$(EXEEXT) test_urcu_lfq$(EXEEXT) \
+	test_urcu_wfq$(EXEEXT) test_urcu_lfs$(EXEEXT) \
+	test_urcu_wfs$(EXEEXT) test_urcu_wfq_dynlink$(EXEEXT) \
+	test_urcu_wfs_dynlink$(EXEEXT) test_urcu_lfq_dynlink$(EXEEXT) \
+	test_urcu_lfs_dynlink$(EXEEXT)
 @COMPAT_FUTEX_TRUE@am__append_1 = $(top_srcdir)/compat_futex.c
 subdir = tests
 DIST_COMMON = $(noinst_HEADERS) $(srcdir)/Makefile.am \
@@ -323,18 +327,72 @@ am__test_urcu_gc_SOURCES_DIST = test_urcu_gc.c $(top_srcdir)/urcu.c \
 am_test_urcu_gc_OBJECTS = test_urcu_gc.$(OBJEXT) $(am__objects_3)
 test_urcu_gc_OBJECTS = $(am_test_urcu_gc_OBJECTS)
 test_urcu_gc_LDADD = $(LDADD)
+am__test_urcu_lfq_SOURCES_DIST = test_urcu_lfq.c $(top_srcdir)/urcu.c \
+	$(top_srcdir)/urcu-defer.c $(top_srcdir)/urcu-pointer.c \
+	$(top_srcdir)/compat_futex.c \
+	$(top_srcdir)/compat_arch_@ARCHTYPE@.c
+am_test_urcu_lfq_OBJECTS = test_urcu_lfq.$(OBJEXT) $(am__objects_18)
+test_urcu_lfq_OBJECTS = $(am_test_urcu_lfq_OBJECTS)
+test_urcu_lfq_LDADD = $(LDADD)
+am__test_urcu_lfq_dynlink_SOURCES_DIST = test_urcu_lfq.c \
+	$(top_srcdir)/urcu.c $(top_srcdir)/urcu-defer.c \
+	$(top_srcdir)/urcu-pointer.c $(top_srcdir)/compat_futex.c \
+	$(top_srcdir)/compat_arch_@ARCHTYPE@.c
+@COMPAT_FUTEX_TRUE@am__objects_22 = test_urcu_lfq_dynlink-compat_futex.$(OBJEXT)
+@COMPAT_ARCH_FALSE@am__objects_23 = $(am__objects_22)
+@COMPAT_ARCH_TRUE@am__objects_23 = test_urcu_lfq_dynlink-compat_arch_@ARCHTYPE@.$(OBJEXT) \
+@COMPAT_ARCH_TRUE@	$(am__objects_22)
+am__objects_24 = test_urcu_lfq_dynlink-urcu.$(OBJEXT) \
+	test_urcu_lfq_dynlink-urcu-defer.$(OBJEXT) \
+	test_urcu_lfq_dynlink-urcu-pointer.$(OBJEXT) $(am__objects_23)
+am_test_urcu_lfq_dynlink_OBJECTS =  \
+	test_urcu_lfq_dynlink-test_urcu_lfq.$(OBJEXT) \
+	$(am__objects_24)
+test_urcu_lfq_dynlink_OBJECTS = $(am_test_urcu_lfq_dynlink_OBJECTS)
+test_urcu_lfq_dynlink_DEPENDENCIES = $(RCULFQUEUE_LIB)
+test_urcu_lfq_dynlink_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC \
+	$(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=link $(CCLD) \
+	$(test_urcu_lfq_dynlink_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) \
+	$(LDFLAGS) -o $@
+am__test_urcu_lfs_SOURCES_DIST = test_urcu_lfs.c $(top_srcdir)/urcu.c \
+	$(top_srcdir)/urcu-defer.c $(top_srcdir)/urcu-pointer.c \
+	$(top_srcdir)/compat_futex.c \
+	$(top_srcdir)/compat_arch_@ARCHTYPE@.c
+am_test_urcu_lfs_OBJECTS = test_urcu_lfs.$(OBJEXT) $(am__objects_18)
+test_urcu_lfs_OBJECTS = $(am_test_urcu_lfs_OBJECTS)
+test_urcu_lfs_LDADD = $(LDADD)
+am__test_urcu_lfs_dynlink_SOURCES_DIST = test_urcu_lfs.c \
+	$(top_srcdir)/urcu.c $(top_srcdir)/urcu-defer.c \
+	$(top_srcdir)/urcu-pointer.c $(top_srcdir)/compat_futex.c \
+	$(top_srcdir)/compat_arch_@ARCHTYPE@.c
+@COMPAT_FUTEX_TRUE@am__objects_25 = test_urcu_lfs_dynlink-compat_futex.$(OBJEXT)
+@COMPAT_ARCH_FALSE@am__objects_26 = $(am__objects_25)
+@COMPAT_ARCH_TRUE@am__objects_26 = test_urcu_lfs_dynlink-compat_arch_@ARCHTYPE@.$(OBJEXT) \
+@COMPAT_ARCH_TRUE@	$(am__objects_25)
+am__objects_27 = test_urcu_lfs_dynlink-urcu.$(OBJEXT) \
+	test_urcu_lfs_dynlink-urcu-defer.$(OBJEXT) \
+	test_urcu_lfs_dynlink-urcu-pointer.$(OBJEXT) $(am__objects_26)
+am_test_urcu_lfs_dynlink_OBJECTS =  \
+	test_urcu_lfs_dynlink-test_urcu_lfs.$(OBJEXT) \
+	$(am__objects_27)
+test_urcu_lfs_dynlink_OBJECTS = $(am_test_urcu_lfs_dynlink_OBJECTS)
+test_urcu_lfs_dynlink_DEPENDENCIES = $(RCULFSTACK_LIB)
+test_urcu_lfs_dynlink_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC \
+	$(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=link $(CCLD) \
+	$(test_urcu_lfs_dynlink_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) \
+	$(LDFLAGS) -o $@
 am__test_urcu_lgc_SOURCES_DIST = test_urcu_gc.c $(top_srcdir)/urcu.c \
 	$(top_srcdir)/urcu-pointer.c $(top_srcdir)/compat_futex.c \
 	$(top_srcdir)/compat_arch_@ARCHTYPE@.c
-@COMPAT_FUTEX_TRUE@am__objects_22 =  \
+@COMPAT_FUTEX_TRUE@am__objects_28 =  \
 @COMPAT_FUTEX_TRUE@	test_urcu_lgc-compat_futex.$(OBJEXT)
-@COMPAT_ARCH_FALSE@am__objects_23 = $(am__objects_22)
-@COMPAT_ARCH_TRUE@am__objects_23 = test_urcu_lgc-compat_arch_@ARCHTYPE@.$(OBJEXT) \
-@COMPAT_ARCH_TRUE@	$(am__objects_22)
-am__objects_24 = test_urcu_lgc-urcu.$(OBJEXT) \
-	test_urcu_lgc-urcu-pointer.$(OBJEXT) $(am__objects_23)
+@COMPAT_ARCH_FALSE@am__objects_29 = $(am__objects_28)
+@COMPAT_ARCH_TRUE@am__objects_29 = test_urcu_lgc-compat_arch_@ARCHTYPE@.$(OBJEXT) \
+@COMPAT_ARCH_TRUE@	$(am__objects_28)
+am__objects_30 = test_urcu_lgc-urcu.$(OBJEXT) \
+	test_urcu_lgc-urcu-pointer.$(OBJEXT) $(am__objects_29)
 am_test_urcu_lgc_OBJECTS = test_urcu_lgc-test_urcu_gc.$(OBJEXT) \
-	$(am__objects_24)
+	$(am__objects_30)
 test_urcu_lgc_OBJECTS = $(am_test_urcu_lgc_OBJECTS)
 test_urcu_lgc_LDADD = $(LDADD)
 test_urcu_lgc_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
@@ -343,15 +401,15 @@ test_urcu_lgc_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
 am__test_urcu_mb_SOURCES_DIST = test_urcu.c $(top_srcdir)/urcu.c \
 	$(top_srcdir)/urcu-pointer.c $(top_srcdir)/compat_futex.c \
 	$(top_srcdir)/compat_arch_@ARCHTYPE@.c
-@COMPAT_FUTEX_TRUE@am__objects_25 =  \
+@COMPAT_FUTEX_TRUE@am__objects_31 =  \
 @COMPAT_FUTEX_TRUE@	test_urcu_mb-compat_futex.$(OBJEXT)
-@COMPAT_ARCH_FALSE@am__objects_26 = $(am__objects_25)
-@COMPAT_ARCH_TRUE@am__objects_26 = test_urcu_mb-compat_arch_@ARCHTYPE@.$(OBJEXT) \
-@COMPAT_ARCH_TRUE@	$(am__objects_25)
-am__objects_27 = test_urcu_mb-urcu.$(OBJEXT) \
-	test_urcu_mb-urcu-pointer.$(OBJEXT) $(am__objects_26)
+@COMPAT_ARCH_FALSE@am__objects_32 = $(am__objects_31)
+@COMPAT_ARCH_TRUE@am__objects_32 = test_urcu_mb-compat_arch_@ARCHTYPE@.$(OBJEXT) \
+@COMPAT_ARCH_TRUE@	$(am__objects_31)
+am__objects_33 = test_urcu_mb-urcu.$(OBJEXT) \
+	test_urcu_mb-urcu-pointer.$(OBJEXT) $(am__objects_32)
 am_test_urcu_mb_OBJECTS = test_urcu_mb-test_urcu.$(OBJEXT) \
-	$(am__objects_27)
+	$(am__objects_33)
 test_urcu_mb_OBJECTS = $(am_test_urcu_mb_OBJECTS)
 test_urcu_mb_LDADD = $(LDADD)
 test_urcu_mb_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
@@ -360,15 +418,15 @@ test_urcu_mb_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
 am__test_urcu_mb_gc_SOURCES_DIST = test_urcu_gc.c $(top_srcdir)/urcu.c \
 	$(top_srcdir)/urcu-pointer.c $(top_srcdir)/compat_futex.c \
 	$(top_srcdir)/compat_arch_@ARCHTYPE@.c
-@COMPAT_FUTEX_TRUE@am__objects_28 =  \
+@COMPAT_FUTEX_TRUE@am__objects_34 =  \
 @COMPAT_FUTEX_TRUE@	test_urcu_mb_gc-compat_futex.$(OBJEXT)
-@COMPAT_ARCH_FALSE@am__objects_29 = $(am__objects_28)
-@COMPAT_ARCH_TRUE@am__objects_29 = test_urcu_mb_gc-compat_arch_@ARCHTYPE@.$(OBJEXT) \
-@COMPAT_ARCH_TRUE@	$(am__objects_28)
-am__objects_30 = test_urcu_mb_gc-urcu.$(OBJEXT) \
-	test_urcu_mb_gc-urcu-pointer.$(OBJEXT) $(am__objects_29)
+@COMPAT_ARCH_FALSE@am__objects_35 = $(am__objects_34)
+@COMPAT_ARCH_TRUE@am__objects_35 = test_urcu_mb_gc-compat_arch_@ARCHTYPE@.$(OBJEXT) \
+@COMPAT_ARCH_TRUE@	$(am__objects_34)
+am__objects_36 = test_urcu_mb_gc-urcu.$(OBJEXT) \
+	test_urcu_mb_gc-urcu-pointer.$(OBJEXT) $(am__objects_35)
 am_test_urcu_mb_gc_OBJECTS = test_urcu_mb_gc-test_urcu_gc.$(OBJEXT) \
-	$(am__objects_30)
+	$(am__objects_36)
 test_urcu_mb_gc_OBJECTS = $(am_test_urcu_mb_gc_OBJECTS)
 test_urcu_mb_gc_LDADD = $(LDADD)
 test_urcu_mb_gc_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC \
@@ -379,15 +437,15 @@ am__test_urcu_mb_lgc_SOURCES_DIST = test_urcu_gc.c \
 	$(top_srcdir)/urcu.c $(top_srcdir)/urcu-pointer.c \
 	$(top_srcdir)/compat_futex.c \
 	$(top_srcdir)/compat_arch_@ARCHTYPE@.c
-@COMPAT_FUTEX_TRUE@am__objects_31 =  \
+@COMPAT_FUTEX_TRUE@am__objects_37 =  \
 @COMPAT_FUTEX_TRUE@	test_urcu_mb_lgc-compat_futex.$(OBJEXT)
-@COMPAT_ARCH_FALSE@am__objects_32 = $(am__objects_31)
-@COMPAT_ARCH_TRUE@am__objects_32 = test_urcu_mb_lgc-compat_arch_@ARCHTYPE@.$(OBJEXT) \
-@COMPAT_ARCH_TRUE@	$(am__objects_31)
-am__objects_33 = test_urcu_mb_lgc-urcu.$(OBJEXT) \
-	test_urcu_mb_lgc-urcu-pointer.$(OBJEXT) $(am__objects_32)
+@COMPAT_ARCH_FALSE@am__objects_38 = $(am__objects_37)
+@COMPAT_ARCH_TRUE@am__objects_38 = test_urcu_mb_lgc-compat_arch_@ARCHTYPE@.$(OBJEXT) \
+@COMPAT_ARCH_TRUE@	$(am__objects_37)
+am__objects_39 = test_urcu_mb_lgc-urcu.$(OBJEXT) \
+	test_urcu_mb_lgc-urcu-pointer.$(OBJEXT) $(am__objects_38)
 am_test_urcu_mb_lgc_OBJECTS = test_urcu_mb_lgc-test_urcu_gc.$(OBJEXT) \
-	$(am__objects_33)
+	$(am__objects_39)
 test_urcu_mb_lgc_OBJECTS = $(am_test_urcu_mb_lgc_OBJECTS)
 test_urcu_mb_lgc_LDADD = $(LDADD)
 test_urcu_mb_lgc_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC \
@@ -397,15 +455,15 @@ test_urcu_mb_lgc_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC \
 am__test_urcu_signal_SOURCES_DIST = test_urcu.c $(top_srcdir)/urcu.c \
 	$(top_srcdir)/urcu-pointer.c $(top_srcdir)/compat_futex.c \
 	$(top_srcdir)/compat_arch_@ARCHTYPE@.c
-@COMPAT_FUTEX_TRUE@am__objects_34 =  \
+@COMPAT_FUTEX_TRUE@am__objects_40 =  \
 @COMPAT_FUTEX_TRUE@	test_urcu_signal-compat_futex.$(OBJEXT)
-@COMPAT_ARCH_FALSE@am__objects_35 = $(am__objects_34)
-@COMPAT_ARCH_TRUE@am__objects_35 = test_urcu_signal-compat_arch_@ARCHTYPE@.$(OBJEXT) \
-@COMPAT_ARCH_TRUE@	$(am__objects_34)
-am__objects_36 = test_urcu_signal-urcu.$(OBJEXT) \
-	test_urcu_signal-urcu-pointer.$(OBJEXT) $(am__objects_35)
+@COMPAT_ARCH_FALSE@am__objects_41 = $(am__objects_40)
+@COMPAT_ARCH_TRUE@am__objects_41 = test_urcu_signal-compat_arch_@ARCHTYPE@.$(OBJEXT) \
+@COMPAT_ARCH_TRUE@	$(am__objects_40)
+am__objects_42 = test_urcu_signal-urcu.$(OBJEXT) \
+	test_urcu_signal-urcu-pointer.$(OBJEXT) $(am__objects_41)
 am_test_urcu_signal_OBJECTS = test_urcu_signal-test_urcu.$(OBJEXT) \
-	$(am__objects_36)
+	$(am__objects_42)
 test_urcu_signal_OBJECTS = $(am_test_urcu_signal_OBJECTS)
 test_urcu_signal_LDADD = $(LDADD)
 test_urcu_signal_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC \
@@ -416,16 +474,16 @@ am__test_urcu_signal_dynamic_link_SOURCES_DIST = test_urcu.c \
 	$(top_srcdir)/urcu.c $(top_srcdir)/urcu-pointer.c \
 	$(top_srcdir)/compat_futex.c \
 	$(top_srcdir)/compat_arch_@ARCHTYPE@.c
-@COMPAT_FUTEX_TRUE@am__objects_37 = test_urcu_signal_dynamic_link-compat_futex.$(OBJEXT)
-@COMPAT_ARCH_FALSE@am__objects_38 = $(am__objects_37)
-@COMPAT_ARCH_TRUE@am__objects_38 = test_urcu_signal_dynamic_link-compat_arch_@ARCHTYPE@.$(OBJEXT) \
-@COMPAT_ARCH_TRUE@	$(am__objects_37)
-am__objects_39 = test_urcu_signal_dynamic_link-urcu.$(OBJEXT) \
+@COMPAT_FUTEX_TRUE@am__objects_43 = test_urcu_signal_dynamic_link-compat_futex.$(OBJEXT)
+@COMPAT_ARCH_FALSE@am__objects_44 = $(am__objects_43)
+@COMPAT_ARCH_TRUE@am__objects_44 = test_urcu_signal_dynamic_link-compat_arch_@ARCHTYPE@.$(OBJEXT) \
+@COMPAT_ARCH_TRUE@	$(am__objects_43)
+am__objects_45 = test_urcu_signal_dynamic_link-urcu.$(OBJEXT) \
 	test_urcu_signal_dynamic_link-urcu-pointer.$(OBJEXT) \
-	$(am__objects_38)
+	$(am__objects_44)
 am_test_urcu_signal_dynamic_link_OBJECTS =  \
 	test_urcu_signal_dynamic_link-test_urcu.$(OBJEXT) \
-	$(am__objects_39)
+	$(am__objects_45)
 test_urcu_signal_dynamic_link_OBJECTS =  \
 	$(am_test_urcu_signal_dynamic_link_OBJECTS)
 test_urcu_signal_dynamic_link_LDADD = $(LDADD)
@@ -437,15 +495,15 @@ am__test_urcu_signal_gc_SOURCES_DIST = test_urcu_gc.c \
 	$(top_srcdir)/urcu.c $(top_srcdir)/urcu-pointer.c \
 	$(top_srcdir)/compat_futex.c \
 	$(top_srcdir)/compat_arch_@ARCHTYPE@.c
-@COMPAT_FUTEX_TRUE@am__objects_40 =  \
+@COMPAT_FUTEX_TRUE@am__objects_46 =  \
 @COMPAT_FUTEX_TRUE@	test_urcu_signal_gc-compat_futex.$(OBJEXT)
-@COMPAT_ARCH_FALSE@am__objects_41 = $(am__objects_40)
-@COMPAT_ARCH_TRUE@am__objects_41 = test_urcu_signal_gc-compat_arch_@ARCHTYPE@.$(OBJEXT) \
-@COMPAT_ARCH_TRUE@	$(am__objects_40)
-am__objects_42 = test_urcu_signal_gc-urcu.$(OBJEXT) \
-	test_urcu_signal_gc-urcu-pointer.$(OBJEXT) $(am__objects_41)
+@COMPAT_ARCH_FALSE@am__objects_47 = $(am__objects_46)
+@COMPAT_ARCH_TRUE@am__objects_47 = test_urcu_signal_gc-compat_arch_@ARCHTYPE@.$(OBJEXT) \
+@COMPAT_ARCH_TRUE@	$(am__objects_46)
+am__objects_48 = test_urcu_signal_gc-urcu.$(OBJEXT) \
+	test_urcu_signal_gc-urcu-pointer.$(OBJEXT) $(am__objects_47)
 am_test_urcu_signal_gc_OBJECTS =  \
-	test_urcu_signal_gc-test_urcu_gc.$(OBJEXT) $(am__objects_42)
+	test_urcu_signal_gc-test_urcu_gc.$(OBJEXT) $(am__objects_48)
 test_urcu_signal_gc_OBJECTS = $(am_test_urcu_signal_gc_OBJECTS)
 test_urcu_signal_gc_LDADD = $(LDADD)
 test_urcu_signal_gc_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC \
@@ -456,14 +514,14 @@ am__test_urcu_signal_lgc_SOURCES_DIST = test_urcu_gc.c \
 	$(top_srcdir)/urcu.c $(top_srcdir)/urcu-pointer.c \
 	$(top_srcdir)/compat_futex.c \
 	$(top_srcdir)/compat_arch_@ARCHTYPE@.c
-@COMPAT_FUTEX_TRUE@am__objects_43 = test_urcu_signal_lgc-compat_futex.$(OBJEXT)
-@COMPAT_ARCH_FALSE@am__objects_44 = $(am__objects_43)
-@COMPAT_ARCH_TRUE@am__objects_44 = test_urcu_signal_lgc-compat_arch_@ARCHTYPE@.$(OBJEXT) \
-@COMPAT_ARCH_TRUE@	$(am__objects_43)
-am__objects_45 = test_urcu_signal_lgc-urcu.$(OBJEXT) \
-	test_urcu_signal_lgc-urcu-pointer.$(OBJEXT) $(am__objects_44)
+@COMPAT_FUTEX_TRUE@am__objects_49 = test_urcu_signal_lgc-compat_futex.$(OBJEXT)
+@COMPAT_ARCH_FALSE@am__objects_50 = $(am__objects_49)
+@COMPAT_ARCH_TRUE@am__objects_50 = test_urcu_signal_lgc-compat_arch_@ARCHTYPE@.$(OBJEXT) \
+@COMPAT_ARCH_TRUE@	$(am__objects_49)
+am__objects_51 = test_urcu_signal_lgc-urcu.$(OBJEXT) \
+	test_urcu_signal_lgc-urcu-pointer.$(OBJEXT) $(am__objects_50)
 am_test_urcu_signal_lgc_OBJECTS =  \
-	test_urcu_signal_lgc-test_urcu_gc.$(OBJEXT) $(am__objects_45)
+	test_urcu_signal_lgc-test_urcu_gc.$(OBJEXT) $(am__objects_51)
 test_urcu_signal_lgc_OBJECTS = $(am_test_urcu_signal_lgc_OBJECTS)
 test_urcu_signal_lgc_LDADD = $(LDADD)
 test_urcu_signal_lgc_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC \
@@ -474,16 +532,16 @@ am__test_urcu_signal_timing_SOURCES_DIST = test_urcu_timing.c \
 	$(top_srcdir)/urcu.c $(top_srcdir)/urcu-pointer.c \
 	$(top_srcdir)/compat_futex.c \
 	$(top_srcdir)/compat_arch_@ARCHTYPE@.c
-@COMPAT_FUTEX_TRUE@am__objects_46 = test_urcu_signal_timing-compat_futex.$(OBJEXT)
-@COMPAT_ARCH_FALSE@am__objects_47 = $(am__objects_46)
-@COMPAT_ARCH_TRUE@am__objects_47 = test_urcu_signal_timing-compat_arch_@ARCHTYPE@.$(OBJEXT) \
-@COMPAT_ARCH_TRUE@	$(am__objects_46)
-am__objects_48 = test_urcu_signal_timing-urcu.$(OBJEXT) \
+@COMPAT_FUTEX_TRUE@am__objects_52 = test_urcu_signal_timing-compat_futex.$(OBJEXT)
+@COMPAT_ARCH_FALSE@am__objects_53 = $(am__objects_52)
+@COMPAT_ARCH_TRUE@am__objects_53 = test_urcu_signal_timing-compat_arch_@ARCHTYPE@.$(OBJEXT) \
+@COMPAT_ARCH_TRUE@	$(am__objects_52)
+am__objects_54 = test_urcu_signal_timing-urcu.$(OBJEXT) \
 	test_urcu_signal_timing-urcu-pointer.$(OBJEXT) \
-	$(am__objects_47)
+	$(am__objects_53)
 am_test_urcu_signal_timing_OBJECTS =  \
 	test_urcu_signal_timing-test_urcu_timing.$(OBJEXT) \
-	$(am__objects_48)
+	$(am__objects_54)
 test_urcu_signal_timing_OBJECTS =  \
 	$(am_test_urcu_signal_timing_OBJECTS)
 test_urcu_signal_timing_LDADD = $(LDADD)
@@ -495,15 +553,15 @@ am__test_urcu_signal_yield_SOURCES_DIST = test_urcu.c \
 	$(top_srcdir)/urcu.c $(top_srcdir)/urcu-pointer.c \
 	$(top_srcdir)/compat_futex.c \
 	$(top_srcdir)/compat_arch_@ARCHTYPE@.c
-@COMPAT_FUTEX_TRUE@am__objects_49 = test_urcu_signal_yield-compat_futex.$(OBJEXT)
-@COMPAT_ARCH_FALSE@am__objects_50 = $(am__objects_49)
-@COMPAT_ARCH_TRUE@am__objects_50 = test_urcu_signal_yield-compat_arch_@ARCHTYPE@.$(OBJEXT) \
-@COMPAT_ARCH_TRUE@	$(am__objects_49)
-am__objects_51 = test_urcu_signal_yield-urcu.$(OBJEXT) \
+@COMPAT_FUTEX_TRUE@am__objects_55 = test_urcu_signal_yield-compat_futex.$(OBJEXT)
+@COMPAT_ARCH_FALSE@am__objects_56 = $(am__objects_55)
+@COMPAT_ARCH_TRUE@am__objects_56 = test_urcu_signal_yield-compat_arch_@ARCHTYPE@.$(OBJEXT) \
+@COMPAT_ARCH_TRUE@	$(am__objects_55)
+am__objects_57 = test_urcu_signal_yield-urcu.$(OBJEXT) \
 	test_urcu_signal_yield-urcu-pointer.$(OBJEXT) \
-	$(am__objects_50)
+	$(am__objects_56)
 am_test_urcu_signal_yield_OBJECTS =  \
-	test_urcu_signal_yield-test_urcu.$(OBJEXT) $(am__objects_51)
+	test_urcu_signal_yield-test_urcu.$(OBJEXT) $(am__objects_57)
 test_urcu_signal_yield_OBJECTS = $(am_test_urcu_signal_yield_OBJECTS)
 test_urcu_signal_yield_LDADD = $(LDADD)
 test_urcu_signal_yield_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC \
@@ -518,18 +576,40 @@ am_test_urcu_timing_OBJECTS = test_urcu_timing.$(OBJEXT) \
 	$(am__objects_3)
 test_urcu_timing_OBJECTS = $(am_test_urcu_timing_OBJECTS)
 test_urcu_timing_LDADD = $(LDADD)
+am_test_urcu_wfq_OBJECTS = test_urcu_wfq.$(OBJEXT)
+test_urcu_wfq_OBJECTS = $(am_test_urcu_wfq_OBJECTS)
+test_urcu_wfq_LDADD = $(LDADD)
+am_test_urcu_wfq_dynlink_OBJECTS =  \
+	test_urcu_wfq_dynlink-test_urcu_wfq.$(OBJEXT)
+test_urcu_wfq_dynlink_OBJECTS = $(am_test_urcu_wfq_dynlink_OBJECTS)
+test_urcu_wfq_dynlink_DEPENDENCIES = $(WFQUEUE_LIB)
+test_urcu_wfq_dynlink_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC \
+	$(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=link $(CCLD) \
+	$(test_urcu_wfq_dynlink_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) \
+	$(LDFLAGS) -o $@
+am_test_urcu_wfs_OBJECTS = test_urcu_wfs.$(OBJEXT)
+test_urcu_wfs_OBJECTS = $(am_test_urcu_wfs_OBJECTS)
+test_urcu_wfs_LDADD = $(LDADD)
+am_test_urcu_wfs_dynlink_OBJECTS =  \
+	test_urcu_wfs_dynlink-test_urcu_wfs.$(OBJEXT)
+test_urcu_wfs_dynlink_OBJECTS = $(am_test_urcu_wfs_dynlink_OBJECTS)
+test_urcu_wfs_dynlink_DEPENDENCIES = $(WFSTACK_LIB)
+test_urcu_wfs_dynlink_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC \
+	$(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=link $(CCLD) \
+	$(test_urcu_wfs_dynlink_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) \
+	$(LDFLAGS) -o $@
 am__test_urcu_yield_SOURCES_DIST = test_urcu.c $(top_srcdir)/urcu.c \
 	$(top_srcdir)/urcu-pointer.c $(top_srcdir)/compat_futex.c \
 	$(top_srcdir)/compat_arch_@ARCHTYPE@.c
-@COMPAT_FUTEX_TRUE@am__objects_52 =  \
+@COMPAT_FUTEX_TRUE@am__objects_58 =  \
 @COMPAT_FUTEX_TRUE@	test_urcu_yield-compat_futex.$(OBJEXT)
-@COMPAT_ARCH_FALSE@am__objects_53 = $(am__objects_52)
-@COMPAT_ARCH_TRUE@am__objects_53 = test_urcu_yield-compat_arch_@ARCHTYPE@.$(OBJEXT) \
-@COMPAT_ARCH_TRUE@	$(am__objects_52)
-am__objects_54 = test_urcu_yield-urcu.$(OBJEXT) \
-	test_urcu_yield-urcu-pointer.$(OBJEXT) $(am__objects_53)
+@COMPAT_ARCH_FALSE@am__objects_59 = $(am__objects_58)
+@COMPAT_ARCH_TRUE@am__objects_59 = test_urcu_yield-compat_arch_@ARCHTYPE@.$(OBJEXT) \
+@COMPAT_ARCH_TRUE@	$(am__objects_58)
+am__objects_60 = test_urcu_yield-urcu.$(OBJEXT) \
+	test_urcu_yield-urcu-pointer.$(OBJEXT) $(am__objects_59)
 am_test_urcu_yield_OBJECTS = test_urcu_yield-test_urcu.$(OBJEXT) \
-	$(am__objects_54)
+	$(am__objects_60)
 test_urcu_yield_OBJECTS = $(am_test_urcu_yield_OBJECTS)
 test_urcu_yield_LDADD = $(LDADD)
 test_urcu_yield_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC \
@@ -576,13 +656,17 @@ SOURCES = $(rcutorture_qsbr_SOURCES) $(rcutorture_urcu_SOURCES) \
 	$(test_urcu_assign_dynamic_link_SOURCES) \
 	$(test_urcu_bp_SOURCES) $(test_urcu_bp_dynamic_link_SOURCES) \
 	$(test_urcu_defer_SOURCES) $(test_urcu_dynamic_link_SOURCES) \
-	$(test_urcu_gc_SOURCES) $(test_urcu_lgc_SOURCES) \
+	$(test_urcu_gc_SOURCES) $(test_urcu_lfq_SOURCES) \
+	$(test_urcu_lfq_dynlink_SOURCES) $(test_urcu_lfs_SOURCES) \
+	$(test_urcu_lfs_dynlink_SOURCES) $(test_urcu_lgc_SOURCES) \
 	$(test_urcu_mb_SOURCES) $(test_urcu_mb_gc_SOURCES) \
 	$(test_urcu_mb_lgc_SOURCES) $(test_urcu_signal_SOURCES) \
 	$(test_urcu_signal_dynamic_link_SOURCES) \
 	$(test_urcu_signal_gc_SOURCES) $(test_urcu_signal_lgc_SOURCES) \
 	$(test_urcu_signal_timing_SOURCES) \
 	$(test_urcu_signal_yield_SOURCES) $(test_urcu_timing_SOURCES) \
+	$(test_urcu_wfq_SOURCES) $(test_urcu_wfq_dynlink_SOURCES) \
+	$(test_urcu_wfs_SOURCES) $(test_urcu_wfs_dynlink_SOURCES) \
 	$(test_urcu_yield_SOURCES)
 DIST_SOURCES = $(rcutorture_qsbr_SOURCES) $(rcutorture_urcu_SOURCES) \
 	$(rcutorture_urcu_bp_SOURCES) $(rcutorture_urcu_mb_SOURCES) \
@@ -606,6 +690,10 @@ DIST_SOURCES = $(rcutorture_qsbr_SOURCES) $(rcutorture_urcu_SOURCES) \
 	$(am__test_urcu_defer_SOURCES_DIST) \
 	$(am__test_urcu_dynamic_link_SOURCES_DIST) \
 	$(am__test_urcu_gc_SOURCES_DIST) \
+	$(am__test_urcu_lfq_SOURCES_DIST) \
+	$(am__test_urcu_lfq_dynlink_SOURCES_DIST) \
+	$(am__test_urcu_lfs_SOURCES_DIST) \
+	$(am__test_urcu_lfs_dynlink_SOURCES_DIST) \
 	$(am__test_urcu_lgc_SOURCES_DIST) \
 	$(am__test_urcu_mb_SOURCES_DIST) \
 	$(am__test_urcu_mb_gc_SOURCES_DIST) \
@@ -616,7 +704,9 @@ DIST_SOURCES = $(rcutorture_qsbr_SOURCES) $(rcutorture_urcu_SOURCES) \
 	$(am__test_urcu_signal_lgc_SOURCES_DIST) \
 	$(am__test_urcu_signal_timing_SOURCES_DIST) \
 	$(am__test_urcu_signal_yield_SOURCES_DIST) \
-	$(am__test_urcu_timing_SOURCES_DIST) \
+	$(am__test_urcu_timing_SOURCES_DIST) $(test_urcu_wfq_SOURCES) \
+	$(test_urcu_wfq_dynlink_SOURCES) $(test_urcu_wfs_SOURCES) \
+	$(test_urcu_wfs_dynlink_SOURCES) \
 	$(am__test_urcu_yield_SOURCES_DIST)
 HEADERS = $(noinst_HEADERS)
 ETAGS = etags
@@ -759,6 +849,10 @@ URCU_QSBR_LIB = $(top_builddir)/liburcu-qsbr.la
 URCU_MB_LIB = $(top_builddir)/liburcu-mb.la
 URCU_SIGNAL_LIB = $(top_builddir)/liburcu-signal.la
 URCU_BP_LIB = $(top_builddir)/liburcu-bp.la
+WFQUEUE_LIB = $(top_builddir)/libwfqueue.la
+WFSTACK_LIB = $(top_builddir)/libwfstack.la
+RCULFQUEUE_LIB = $(top_builddir)/librculfqueue.la
+RCULFSTACK_LIB = $(top_builddir)/librculfstack.la
 EXTRA_DIST = $(top_srcdir)/tests/api_*.h
 test_urcu_SOURCES = test_urcu.c $(URCU)
 test_urcu_dynamic_link_SOURCES = test_urcu.c $(URCU)
@@ -826,6 +920,22 @@ test_urcu_assign_dynamic_link_CFLAGS = -DDYNAMIC_LINK_TEST $(AM_CFLAGS)
 test_urcu_bp_SOURCES = test_urcu_bp.c $(URCU_BP)
 test_urcu_bp_dynamic_link_SOURCES = test_urcu_bp.c $(URCU_BP)
 test_urcu_bp_dynamic_link_CFLAGS = -DDYNAMIC_LINK_TEST $(AM_CFLAGS)
+test_urcu_lfq_SOURCES = test_urcu_lfq.c $(URCU_DEFER)
+test_urcu_lfq_dynlink_SOURCES = test_urcu_lfq.c $(URCU_DEFER)
+test_urcu_lfq_dynlink_CFLAGS = -DDYNAMIC_LINK_TEST $(AM_CFLAGS)
+test_urcu_lfq_dynlink_LDADD = $(RCULFQUEUE_LIB)
+test_urcu_wfq_SOURCES = test_urcu_wfq.c
+test_urcu_wfq_dynlink_SOURCES = test_urcu_wfq.c
+test_urcu_wfq_dynlink_CFLAGS = -DDYNAMIC_LINK_TEST $(AM_CFLAGS)
+test_urcu_wfq_dynlink_LDADD = $(WFQUEUE_LIB)
+test_urcu_lfs_SOURCES = test_urcu_lfs.c $(URCU_DEFER)
+test_urcu_lfs_dynlink_SOURCES = test_urcu_lfs.c $(URCU_DEFER)
+test_urcu_lfs_dynlink_CFLAGS = -DDYNAMIC_LINK_TEST $(AM_CFLAGS)
+test_urcu_lfs_dynlink_LDADD = $(RCULFSTACK_LIB)
+test_urcu_wfs_SOURCES = test_urcu_wfs.c
+test_urcu_wfs_dynlink_SOURCES = test_urcu_wfs.c
+test_urcu_wfs_dynlink_CFLAGS = -DDYNAMIC_LINK_TEST $(AM_CFLAGS)
+test_urcu_wfs_dynlink_LDADD = $(WFSTACK_LIB)
 all: all-am
 
 .SUFFIXES:
@@ -947,6 +1057,18 @@ test_urcu_dynamic_link$(EXEEXT): $(test_urcu_dynamic_link_OBJECTS) $(test_urcu_d
 test_urcu_gc$(EXEEXT): $(test_urcu_gc_OBJECTS) $(test_urcu_gc_DEPENDENCIES) 
 	@rm -f test_urcu_gc$(EXEEXT)
 	$(AM_V_CCLD)$(LINK) $(test_urcu_gc_OBJECTS) $(test_urcu_gc_LDADD) $(LIBS)
+test_urcu_lfq$(EXEEXT): $(test_urcu_lfq_OBJECTS) $(test_urcu_lfq_DEPENDENCIES) 
+	@rm -f test_urcu_lfq$(EXEEXT)
+	$(AM_V_CCLD)$(LINK) $(test_urcu_lfq_OBJECTS) $(test_urcu_lfq_LDADD) $(LIBS)
+test_urcu_lfq_dynlink$(EXEEXT): $(test_urcu_lfq_dynlink_OBJECTS) $(test_urcu_lfq_dynlink_DEPENDENCIES) 
+	@rm -f test_urcu_lfq_dynlink$(EXEEXT)
+	$(AM_V_CCLD)$(test_urcu_lfq_dynlink_LINK) $(test_urcu_lfq_dynlink_OBJECTS) $(test_urcu_lfq_dynlink_LDADD) $(LIBS)
+test_urcu_lfs$(EXEEXT): $(test_urcu_lfs_OBJECTS) $(test_urcu_lfs_DEPENDENCIES) 
+	@rm -f test_urcu_lfs$(EXEEXT)
+	$(AM_V_CCLD)$(LINK) $(test_urcu_lfs_OBJECTS) $(test_urcu_lfs_LDADD) $(LIBS)
+test_urcu_lfs_dynlink$(EXEEXT): $(test_urcu_lfs_dynlink_OBJECTS) $(test_urcu_lfs_dynlink_DEPENDENCIES) 
+	@rm -f test_urcu_lfs_dynlink$(EXEEXT)
+	$(AM_V_CCLD)$(test_urcu_lfs_dynlink_LINK) $(test_urcu_lfs_dynlink_OBJECTS) $(test_urcu_lfs_dynlink_LDADD) $(LIBS)
 test_urcu_lgc$(EXEEXT): $(test_urcu_lgc_OBJECTS) $(test_urcu_lgc_DEPENDENCIES) 
 	@rm -f test_urcu_lgc$(EXEEXT)
 	$(AM_V_CCLD)$(test_urcu_lgc_LINK) $(test_urcu_lgc_OBJECTS) $(test_urcu_lgc_LDADD) $(LIBS)
@@ -980,6 +1102,18 @@ test_urcu_signal_yield$(EXEEXT): $(test_urcu_signal_yield_OBJECTS) $(test_urcu_s
 test_urcu_timing$(EXEEXT): $(test_urcu_timing_OBJECTS) $(test_urcu_timing_DEPENDENCIES) 
 	@rm -f test_urcu_timing$(EXEEXT)
 	$(AM_V_CCLD)$(LINK) $(test_urcu_timing_OBJECTS) $(test_urcu_timing_LDADD) $(LIBS)
+test_urcu_wfq$(EXEEXT): $(test_urcu_wfq_OBJECTS) $(test_urcu_wfq_DEPENDENCIES) 
+	@rm -f test_urcu_wfq$(EXEEXT)
+	$(AM_V_CCLD)$(LINK) $(test_urcu_wfq_OBJECTS) $(test_urcu_wfq_LDADD) $(LIBS)
+test_urcu_wfq_dynlink$(EXEEXT): $(test_urcu_wfq_dynlink_OBJECTS) $(test_urcu_wfq_dynlink_DEPENDENCIES) 
+	@rm -f test_urcu_wfq_dynlink$(EXEEXT)
+	$(AM_V_CCLD)$(test_urcu_wfq_dynlink_LINK) $(test_urcu_wfq_dynlink_OBJECTS) $(test_urcu_wfq_dynlink_LDADD) $(LIBS)
+test_urcu_wfs$(EXEEXT): $(test_urcu_wfs_OBJECTS) $(test_urcu_wfs_DEPENDENCIES) 
+	@rm -f test_urcu_wfs$(EXEEXT)
+	$(AM_V_CCLD)$(LINK) $(test_urcu_wfs_OBJECTS) $(test_urcu_wfs_LDADD) $(LIBS)
+test_urcu_wfs_dynlink$(EXEEXT): $(test_urcu_wfs_dynlink_OBJECTS) $(test_urcu_wfs_dynlink_DEPENDENCIES) 
+	@rm -f test_urcu_wfs_dynlink$(EXEEXT)
+	$(AM_V_CCLD)$(test_urcu_wfs_dynlink_LINK) $(test_urcu_wfs_dynlink_OBJECTS) $(test_urcu_wfs_dynlink_LDADD) $(LIBS)
 test_urcu_yield$(EXEEXT): $(test_urcu_yield_OBJECTS) $(test_urcu_yield_DEPENDENCIES) 
 	@rm -f test_urcu_yield$(EXEEXT)
 	$(AM_V_CCLD)$(test_urcu_yield_LINK) $(test_urcu_yield_OBJECTS) $(test_urcu_yield_LDADD) $(LIBS)
@@ -1038,6 +1172,20 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/test_urcu_dynamic_link-urcu-pointer.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/test_urcu_dynamic_link-urcu.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/test_urcu_gc.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/test_urcu_lfq.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/test_urcu_lfq_dynlink-compat_arch_@ARCHTYPE@.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/test_urcu_lfq_dynlink-compat_futex.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/test_urcu_lfq_dynlink-test_urcu_lfq.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/test_urcu_lfq_dynlink-urcu-defer.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/test_urcu_lfq_dynlink-urcu-pointer.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/test_urcu_lfq_dynlink-urcu.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/test_urcu_lfs.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/test_urcu_lfs_dynlink-compat_arch_@ARCHTYPE@.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/test_urcu_lfs_dynlink-compat_futex.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/test_urcu_lfs_dynlink-test_urcu_lfs.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/test_urcu_lfs_dynlink-urcu-defer.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/test_urcu_lfs_dynlink-urcu-pointer.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/test_urcu_lfs_dynlink-urcu.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/test_urcu_lgc-compat_arch_@ARCHTYPE@.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/test_urcu_lgc-compat_futex.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/test_urcu_lgc-test_urcu_gc.Po@am__quote@
@@ -1089,6 +1237,10 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/test_urcu_signal_yield-urcu-pointer.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/test_urcu_signal_yield-urcu.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/test_urcu_timing.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/test_urcu_wfq.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/test_urcu_wfq_dynlink-test_urcu_wfq.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/test_urcu_wfs.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/test_urcu_wfs_dynlink-test_urcu_wfs.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/test_urcu_yield-compat_arch_@ARCHTYPE@.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/test_urcu_yield-compat_futex.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/test_urcu_yield-test_urcu.Po@am__quote@
@@ -1715,6 +1867,198 @@ test_urcu_dynamic_link-compat_arch_@ARCHTYPE@.obj: $(top_srcdir)/compat_arch_@AR
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	source='$(top_srcdir)/compat_arch_@ARCHTYPE@.c' object='test_urcu_dynamic_link-compat_arch_@ARCHTYPE@.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_urcu_dynamic_link_CFLAGS) $(CFLAGS) -c -o test_urcu_dynamic_link-compat_arch_@ARCHTYPE@.obj `if test -f '$(top_srcdir)/compat_arch_@ARCHTYPE@.c'; then $(CYGPATH_W) '$(top_srcdir)/compat_arch_@ARCHTYPE@.c'; else $(CYGPATH_W) '$(srcdir)/$(top_srcdir)/compat_arch_@ARCHTYPE@.c'; fi`
+
+test_urcu_lfq_dynlink-test_urcu_lfq.o: test_urcu_lfq.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_urcu_lfq_dynlink_CFLAGS) $(CFLAGS) -MT test_urcu_lfq_dynlink-test_urcu_lfq.o -MD -MP -MF $(DEPDIR)/test_urcu_lfq_dynlink-test_urcu_lfq.Tpo -c -o test_urcu_lfq_dynlink-test_urcu_lfq.o `test -f 'test_urcu_lfq.c' || echo '$(srcdir)/'`test_urcu_lfq.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/test_urcu_lfq_dynlink-test_urcu_lfq.Tpo $(DEPDIR)/test_urcu_lfq_dynlink-test_urcu_lfq.Po
+@am__fastdepCC_FALSE@	$(AM_V_CC) @AM_BACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='test_urcu_lfq.c' object='test_urcu_lfq_dynlink-test_urcu_lfq.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_urcu_lfq_dynlink_CFLAGS) $(CFLAGS) -c -o test_urcu_lfq_dynlink-test_urcu_lfq.o `test -f 'test_urcu_lfq.c' || echo '$(srcdir)/'`test_urcu_lfq.c
+
+test_urcu_lfq_dynlink-test_urcu_lfq.obj: test_urcu_lfq.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_urcu_lfq_dynlink_CFLAGS) $(CFLAGS) -MT test_urcu_lfq_dynlink-test_urcu_lfq.obj -MD -MP -MF $(DEPDIR)/test_urcu_lfq_dynlink-test_urcu_lfq.Tpo -c -o test_urcu_lfq_dynlink-test_urcu_lfq.obj `if test -f 'test_urcu_lfq.c'; then $(CYGPATH_W) 'test_urcu_lfq.c'; else $(CYGPATH_W) '$(srcdir)/test_urcu_lfq.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/test_urcu_lfq_dynlink-test_urcu_lfq.Tpo $(DEPDIR)/test_urcu_lfq_dynlink-test_urcu_lfq.Po
+@am__fastdepCC_FALSE@	$(AM_V_CC) @AM_BACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='test_urcu_lfq.c' object='test_urcu_lfq_dynlink-test_urcu_lfq.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_urcu_lfq_dynlink_CFLAGS) $(CFLAGS) -c -o test_urcu_lfq_dynlink-test_urcu_lfq.obj `if test -f 'test_urcu_lfq.c'; then $(CYGPATH_W) 'test_urcu_lfq.c'; else $(CYGPATH_W) '$(srcdir)/test_urcu_lfq.c'; fi`
+
+test_urcu_lfq_dynlink-urcu.o: $(top_srcdir)/urcu.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_urcu_lfq_dynlink_CFLAGS) $(CFLAGS) -MT test_urcu_lfq_dynlink-urcu.o -MD -MP -MF $(DEPDIR)/test_urcu_lfq_dynlink-urcu.Tpo -c -o test_urcu_lfq_dynlink-urcu.o `test -f '$(top_srcdir)/urcu.c' || echo '$(srcdir)/'`$(top_srcdir)/urcu.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/test_urcu_lfq_dynlink-urcu.Tpo $(DEPDIR)/test_urcu_lfq_dynlink-urcu.Po
+@am__fastdepCC_FALSE@	$(AM_V_CC) @AM_BACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='$(top_srcdir)/urcu.c' object='test_urcu_lfq_dynlink-urcu.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_urcu_lfq_dynlink_CFLAGS) $(CFLAGS) -c -o test_urcu_lfq_dynlink-urcu.o `test -f '$(top_srcdir)/urcu.c' || echo '$(srcdir)/'`$(top_srcdir)/urcu.c
+
+test_urcu_lfq_dynlink-urcu.obj: $(top_srcdir)/urcu.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_urcu_lfq_dynlink_CFLAGS) $(CFLAGS) -MT test_urcu_lfq_dynlink-urcu.obj -MD -MP -MF $(DEPDIR)/test_urcu_lfq_dynlink-urcu.Tpo -c -o test_urcu_lfq_dynlink-urcu.obj `if test -f '$(top_srcdir)/urcu.c'; then $(CYGPATH_W) '$(top_srcdir)/urcu.c'; else $(CYGPATH_W) '$(srcdir)/$(top_srcdir)/urcu.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/test_urcu_lfq_dynlink-urcu.Tpo $(DEPDIR)/test_urcu_lfq_dynlink-urcu.Po
+@am__fastdepCC_FALSE@	$(AM_V_CC) @AM_BACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='$(top_srcdir)/urcu.c' object='test_urcu_lfq_dynlink-urcu.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_urcu_lfq_dynlink_CFLAGS) $(CFLAGS) -c -o test_urcu_lfq_dynlink-urcu.obj `if test -f '$(top_srcdir)/urcu.c'; then $(CYGPATH_W) '$(top_srcdir)/urcu.c'; else $(CYGPATH_W) '$(srcdir)/$(top_srcdir)/urcu.c'; fi`
+
+test_urcu_lfq_dynlink-urcu-defer.o: $(top_srcdir)/urcu-defer.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_urcu_lfq_dynlink_CFLAGS) $(CFLAGS) -MT test_urcu_lfq_dynlink-urcu-defer.o -MD -MP -MF $(DEPDIR)/test_urcu_lfq_dynlink-urcu-defer.Tpo -c -o test_urcu_lfq_dynlink-urcu-defer.o `test -f '$(top_srcdir)/urcu-defer.c' || echo '$(srcdir)/'`$(top_srcdir)/urcu-defer.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/test_urcu_lfq_dynlink-urcu-defer.Tpo $(DEPDIR)/test_urcu_lfq_dynlink-urcu-defer.Po
+@am__fastdepCC_FALSE@	$(AM_V_CC) @AM_BACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='$(top_srcdir)/urcu-defer.c' object='test_urcu_lfq_dynlink-urcu-defer.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_urcu_lfq_dynlink_CFLAGS) $(CFLAGS) -c -o test_urcu_lfq_dynlink-urcu-defer.o `test -f '$(top_srcdir)/urcu-defer.c' || echo '$(srcdir)/'`$(top_srcdir)/urcu-defer.c
+
+test_urcu_lfq_dynlink-urcu-defer.obj: $(top_srcdir)/urcu-defer.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_urcu_lfq_dynlink_CFLAGS) $(CFLAGS) -MT test_urcu_lfq_dynlink-urcu-defer.obj -MD -MP -MF $(DEPDIR)/test_urcu_lfq_dynlink-urcu-defer.Tpo -c -o test_urcu_lfq_dynlink-urcu-defer.obj `if test -f '$(top_srcdir)/urcu-defer.c'; then $(CYGPATH_W) '$(top_srcdir)/urcu-defer.c'; else $(CYGPATH_W) '$(srcdir)/$(top_srcdir)/urcu-defer.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/test_urcu_lfq_dynlink-urcu-defer.Tpo $(DEPDIR)/test_urcu_lfq_dynlink-urcu-defer.Po
+@am__fastdepCC_FALSE@	$(AM_V_CC) @AM_BACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='$(top_srcdir)/urcu-defer.c' object='test_urcu_lfq_dynlink-urcu-defer.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_urcu_lfq_dynlink_CFLAGS) $(CFLAGS) -c -o test_urcu_lfq_dynlink-urcu-defer.obj `if test -f '$(top_srcdir)/urcu-defer.c'; then $(CYGPATH_W) '$(top_srcdir)/urcu-defer.c'; else $(CYGPATH_W) '$(srcdir)/$(top_srcdir)/urcu-defer.c'; fi`
+
+test_urcu_lfq_dynlink-urcu-pointer.o: $(top_srcdir)/urcu-pointer.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_urcu_lfq_dynlink_CFLAGS) $(CFLAGS) -MT test_urcu_lfq_dynlink-urcu-pointer.o -MD -MP -MF $(DEPDIR)/test_urcu_lfq_dynlink-urcu-pointer.Tpo -c -o test_urcu_lfq_dynlink-urcu-pointer.o `test -f '$(top_srcdir)/urcu-pointer.c' || echo '$(srcdir)/'`$(top_srcdir)/urcu-pointer.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/test_urcu_lfq_dynlink-urcu-pointer.Tpo $(DEPDIR)/test_urcu_lfq_dynlink-urcu-pointer.Po
+@am__fastdepCC_FALSE@	$(AM_V_CC) @AM_BACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='$(top_srcdir)/urcu-pointer.c' object='test_urcu_lfq_dynlink-urcu-pointer.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_urcu_lfq_dynlink_CFLAGS) $(CFLAGS) -c -o test_urcu_lfq_dynlink-urcu-pointer.o `test -f '$(top_srcdir)/urcu-pointer.c' || echo '$(srcdir)/'`$(top_srcdir)/urcu-pointer.c
+
+test_urcu_lfq_dynlink-urcu-pointer.obj: $(top_srcdir)/urcu-pointer.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_urcu_lfq_dynlink_CFLAGS) $(CFLAGS) -MT test_urcu_lfq_dynlink-urcu-pointer.obj -MD -MP -MF $(DEPDIR)/test_urcu_lfq_dynlink-urcu-pointer.Tpo -c -o test_urcu_lfq_dynlink-urcu-pointer.obj `if test -f '$(top_srcdir)/urcu-pointer.c'; then $(CYGPATH_W) '$(top_srcdir)/urcu-pointer.c'; else $(CYGPATH_W) '$(srcdir)/$(top_srcdir)/urcu-pointer.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/test_urcu_lfq_dynlink-urcu-pointer.Tpo $(DEPDIR)/test_urcu_lfq_dynlink-urcu-pointer.Po
+@am__fastdepCC_FALSE@	$(AM_V_CC) @AM_BACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='$(top_srcdir)/urcu-pointer.c' object='test_urcu_lfq_dynlink-urcu-pointer.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_urcu_lfq_dynlink_CFLAGS) $(CFLAGS) -c -o test_urcu_lfq_dynlink-urcu-pointer.obj `if test -f '$(top_srcdir)/urcu-pointer.c'; then $(CYGPATH_W) '$(top_srcdir)/urcu-pointer.c'; else $(CYGPATH_W) '$(srcdir)/$(top_srcdir)/urcu-pointer.c'; fi`
+
+test_urcu_lfq_dynlink-compat_futex.o: $(top_srcdir)/compat_futex.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_urcu_lfq_dynlink_CFLAGS) $(CFLAGS) -MT test_urcu_lfq_dynlink-compat_futex.o -MD -MP -MF $(DEPDIR)/test_urcu_lfq_dynlink-compat_futex.Tpo -c -o test_urcu_lfq_dynlink-compat_futex.o `test -f '$(top_srcdir)/compat_futex.c' || echo '$(srcdir)/'`$(top_srcdir)/compat_futex.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/test_urcu_lfq_dynlink-compat_futex.Tpo $(DEPDIR)/test_urcu_lfq_dynlink-compat_futex.Po
+@am__fastdepCC_FALSE@	$(AM_V_CC) @AM_BACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='$(top_srcdir)/compat_futex.c' object='test_urcu_lfq_dynlink-compat_futex.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_urcu_lfq_dynlink_CFLAGS) $(CFLAGS) -c -o test_urcu_lfq_dynlink-compat_futex.o `test -f '$(top_srcdir)/compat_futex.c' || echo '$(srcdir)/'`$(top_srcdir)/compat_futex.c
+
+test_urcu_lfq_dynlink-compat_futex.obj: $(top_srcdir)/compat_futex.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_urcu_lfq_dynlink_CFLAGS) $(CFLAGS) -MT test_urcu_lfq_dynlink-compat_futex.obj -MD -MP -MF $(DEPDIR)/test_urcu_lfq_dynlink-compat_futex.Tpo -c -o test_urcu_lfq_dynlink-compat_futex.obj `if test -f '$(top_srcdir)/compat_futex.c'; then $(CYGPATH_W) '$(top_srcdir)/compat_futex.c'; else $(CYGPATH_W) '$(srcdir)/$(top_srcdir)/compat_futex.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/test_urcu_lfq_dynlink-compat_futex.Tpo $(DEPDIR)/test_urcu_lfq_dynlink-compat_futex.Po
+@am__fastdepCC_FALSE@	$(AM_V_CC) @AM_BACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='$(top_srcdir)/compat_futex.c' object='test_urcu_lfq_dynlink-compat_futex.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_urcu_lfq_dynlink_CFLAGS) $(CFLAGS) -c -o test_urcu_lfq_dynlink-compat_futex.obj `if test -f '$(top_srcdir)/compat_futex.c'; then $(CYGPATH_W) '$(top_srcdir)/compat_futex.c'; else $(CYGPATH_W) '$(srcdir)/$(top_srcdir)/compat_futex.c'; fi`
+
+test_urcu_lfq_dynlink-compat_arch_@ARCHTYPE@.o: $(top_srcdir)/compat_arch_@ARCHTYPE@.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_urcu_lfq_dynlink_CFLAGS) $(CFLAGS) -MT test_urcu_lfq_dynlink-compat_arch_@ARCHTYPE@.o -MD -MP -MF $(DEPDIR)/test_urcu_lfq_dynlink-compat_arch_@ARCHTYPE@.Tpo -c -o test_urcu_lfq_dynlink-compat_arch_@ARCHTYPE@.o `test -f '$(top_srcdir)/compat_arch_@ARCHTYPE@.c' || echo '$(srcdir)/'`$(top_srcdir)/compat_arch_@ARCHTYPE@.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/test_urcu_lfq_dynlink-compat_arch_@ARCHTYPE@.Tpo $(DEPDIR)/test_urcu_lfq_dynlink-compat_arch_@ARCHTYPE@.Po
+@am__fastdepCC_FALSE@	$(AM_V_CC) @AM_BACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='$(top_srcdir)/compat_arch_@ARCHTYPE@.c' object='test_urcu_lfq_dynlink-compat_arch_@ARCHTYPE@.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_urcu_lfq_dynlink_CFLAGS) $(CFLAGS) -c -o test_urcu_lfq_dynlink-compat_arch_@ARCHTYPE@.o `test -f '$(top_srcdir)/compat_arch_@ARCHTYPE@.c' || echo '$(srcdir)/'`$(top_srcdir)/compat_arch_@ARCHTYPE@.c
+
+test_urcu_lfq_dynlink-compat_arch_@ARCHTYPE@.obj: $(top_srcdir)/compat_arch_@ARCHTYPE@.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_urcu_lfq_dynlink_CFLAGS) $(CFLAGS) -MT test_urcu_lfq_dynlink-compat_arch_@ARCHTYPE@.obj -MD -MP -MF $(DEPDIR)/test_urcu_lfq_dynlink-compat_arch_@ARCHTYPE@.Tpo -c -o test_urcu_lfq_dynlink-compat_arch_@ARCHTYPE@.obj `if test -f '$(top_srcdir)/compat_arch_@ARCHTYPE@.c'; then $(CYGPATH_W) '$(top_srcdir)/compat_arch_@ARCHTYPE@.c'; else $(CYGPATH_W) '$(srcdir)/$(top_srcdir)/compat_arch_@ARCHTYPE@.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/test_urcu_lfq_dynlink-compat_arch_@ARCHTYPE@.Tpo $(DEPDIR)/test_urcu_lfq_dynlink-compat_arch_@ARCHTYPE@.Po
+@am__fastdepCC_FALSE@	$(AM_V_CC) @AM_BACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='$(top_srcdir)/compat_arch_@ARCHTYPE@.c' object='test_urcu_lfq_dynlink-compat_arch_@ARCHTYPE@.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_urcu_lfq_dynlink_CFLAGS) $(CFLAGS) -c -o test_urcu_lfq_dynlink-compat_arch_@ARCHTYPE@.obj `if test -f '$(top_srcdir)/compat_arch_@ARCHTYPE@.c'; then $(CYGPATH_W) '$(top_srcdir)/compat_arch_@ARCHTYPE@.c'; else $(CYGPATH_W) '$(srcdir)/$(top_srcdir)/compat_arch_@ARCHTYPE@.c'; fi`
+
+test_urcu_lfs_dynlink-test_urcu_lfs.o: test_urcu_lfs.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_urcu_lfs_dynlink_CFLAGS) $(CFLAGS) -MT test_urcu_lfs_dynlink-test_urcu_lfs.o -MD -MP -MF $(DEPDIR)/test_urcu_lfs_dynlink-test_urcu_lfs.Tpo -c -o test_urcu_lfs_dynlink-test_urcu_lfs.o `test -f 'test_urcu_lfs.c' || echo '$(srcdir)/'`test_urcu_lfs.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/test_urcu_lfs_dynlink-test_urcu_lfs.Tpo $(DEPDIR)/test_urcu_lfs_dynlink-test_urcu_lfs.Po
+@am__fastdepCC_FALSE@	$(AM_V_CC) @AM_BACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='test_urcu_lfs.c' object='test_urcu_lfs_dynlink-test_urcu_lfs.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_urcu_lfs_dynlink_CFLAGS) $(CFLAGS) -c -o test_urcu_lfs_dynlink-test_urcu_lfs.o `test -f 'test_urcu_lfs.c' || echo '$(srcdir)/'`test_urcu_lfs.c
+
+test_urcu_lfs_dynlink-test_urcu_lfs.obj: test_urcu_lfs.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_urcu_lfs_dynlink_CFLAGS) $(CFLAGS) -MT test_urcu_lfs_dynlink-test_urcu_lfs.obj -MD -MP -MF $(DEPDIR)/test_urcu_lfs_dynlink-test_urcu_lfs.Tpo -c -o test_urcu_lfs_dynlink-test_urcu_lfs.obj `if test -f 'test_urcu_lfs.c'; then $(CYGPATH_W) 'test_urcu_lfs.c'; else $(CYGPATH_W) '$(srcdir)/test_urcu_lfs.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/test_urcu_lfs_dynlink-test_urcu_lfs.Tpo $(DEPDIR)/test_urcu_lfs_dynlink-test_urcu_lfs.Po
+@am__fastdepCC_FALSE@	$(AM_V_CC) @AM_BACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='test_urcu_lfs.c' object='test_urcu_lfs_dynlink-test_urcu_lfs.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_urcu_lfs_dynlink_CFLAGS) $(CFLAGS) -c -o test_urcu_lfs_dynlink-test_urcu_lfs.obj `if test -f 'test_urcu_lfs.c'; then $(CYGPATH_W) 'test_urcu_lfs.c'; else $(CYGPATH_W) '$(srcdir)/test_urcu_lfs.c'; fi`
+
+test_urcu_lfs_dynlink-urcu.o: $(top_srcdir)/urcu.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_urcu_lfs_dynlink_CFLAGS) $(CFLAGS) -MT test_urcu_lfs_dynlink-urcu.o -MD -MP -MF $(DEPDIR)/test_urcu_lfs_dynlink-urcu.Tpo -c -o test_urcu_lfs_dynlink-urcu.o `test -f '$(top_srcdir)/urcu.c' || echo '$(srcdir)/'`$(top_srcdir)/urcu.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/test_urcu_lfs_dynlink-urcu.Tpo $(DEPDIR)/test_urcu_lfs_dynlink-urcu.Po
+@am__fastdepCC_FALSE@	$(AM_V_CC) @AM_BACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='$(top_srcdir)/urcu.c' object='test_urcu_lfs_dynlink-urcu.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_urcu_lfs_dynlink_CFLAGS) $(CFLAGS) -c -o test_urcu_lfs_dynlink-urcu.o `test -f '$(top_srcdir)/urcu.c' || echo '$(srcdir)/'`$(top_srcdir)/urcu.c
+
+test_urcu_lfs_dynlink-urcu.obj: $(top_srcdir)/urcu.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_urcu_lfs_dynlink_CFLAGS) $(CFLAGS) -MT test_urcu_lfs_dynlink-urcu.obj -MD -MP -MF $(DEPDIR)/test_urcu_lfs_dynlink-urcu.Tpo -c -o test_urcu_lfs_dynlink-urcu.obj `if test -f '$(top_srcdir)/urcu.c'; then $(CYGPATH_W) '$(top_srcdir)/urcu.c'; else $(CYGPATH_W) '$(srcdir)/$(top_srcdir)/urcu.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/test_urcu_lfs_dynlink-urcu.Tpo $(DEPDIR)/test_urcu_lfs_dynlink-urcu.Po
+@am__fastdepCC_FALSE@	$(AM_V_CC) @AM_BACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='$(top_srcdir)/urcu.c' object='test_urcu_lfs_dynlink-urcu.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_urcu_lfs_dynlink_CFLAGS) $(CFLAGS) -c -o test_urcu_lfs_dynlink-urcu.obj `if test -f '$(top_srcdir)/urcu.c'; then $(CYGPATH_W) '$(top_srcdir)/urcu.c'; else $(CYGPATH_W) '$(srcdir)/$(top_srcdir)/urcu.c'; fi`
+
+test_urcu_lfs_dynlink-urcu-defer.o: $(top_srcdir)/urcu-defer.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_urcu_lfs_dynlink_CFLAGS) $(CFLAGS) -MT test_urcu_lfs_dynlink-urcu-defer.o -MD -MP -MF $(DEPDIR)/test_urcu_lfs_dynlink-urcu-defer.Tpo -c -o test_urcu_lfs_dynlink-urcu-defer.o `test -f '$(top_srcdir)/urcu-defer.c' || echo '$(srcdir)/'`$(top_srcdir)/urcu-defer.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/test_urcu_lfs_dynlink-urcu-defer.Tpo $(DEPDIR)/test_urcu_lfs_dynlink-urcu-defer.Po
+@am__fastdepCC_FALSE@	$(AM_V_CC) @AM_BACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='$(top_srcdir)/urcu-defer.c' object='test_urcu_lfs_dynlink-urcu-defer.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_urcu_lfs_dynlink_CFLAGS) $(CFLAGS) -c -o test_urcu_lfs_dynlink-urcu-defer.o `test -f '$(top_srcdir)/urcu-defer.c' || echo '$(srcdir)/'`$(top_srcdir)/urcu-defer.c
+
+test_urcu_lfs_dynlink-urcu-defer.obj: $(top_srcdir)/urcu-defer.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_urcu_lfs_dynlink_CFLAGS) $(CFLAGS) -MT test_urcu_lfs_dynlink-urcu-defer.obj -MD -MP -MF $(DEPDIR)/test_urcu_lfs_dynlink-urcu-defer.Tpo -c -o test_urcu_lfs_dynlink-urcu-defer.obj `if test -f '$(top_srcdir)/urcu-defer.c'; then $(CYGPATH_W) '$(top_srcdir)/urcu-defer.c'; else $(CYGPATH_W) '$(srcdir)/$(top_srcdir)/urcu-defer.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/test_urcu_lfs_dynlink-urcu-defer.Tpo $(DEPDIR)/test_urcu_lfs_dynlink-urcu-defer.Po
+@am__fastdepCC_FALSE@	$(AM_V_CC) @AM_BACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='$(top_srcdir)/urcu-defer.c' object='test_urcu_lfs_dynlink-urcu-defer.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_urcu_lfs_dynlink_CFLAGS) $(CFLAGS) -c -o test_urcu_lfs_dynlink-urcu-defer.obj `if test -f '$(top_srcdir)/urcu-defer.c'; then $(CYGPATH_W) '$(top_srcdir)/urcu-defer.c'; else $(CYGPATH_W) '$(srcdir)/$(top_srcdir)/urcu-defer.c'; fi`
+
+test_urcu_lfs_dynlink-urcu-pointer.o: $(top_srcdir)/urcu-pointer.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_urcu_lfs_dynlink_CFLAGS) $(CFLAGS) -MT test_urcu_lfs_dynlink-urcu-pointer.o -MD -MP -MF $(DEPDIR)/test_urcu_lfs_dynlink-urcu-pointer.Tpo -c -o test_urcu_lfs_dynlink-urcu-pointer.o `test -f '$(top_srcdir)/urcu-pointer.c' || echo '$(srcdir)/'`$(top_srcdir)/urcu-pointer.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/test_urcu_lfs_dynlink-urcu-pointer.Tpo $(DEPDIR)/test_urcu_lfs_dynlink-urcu-pointer.Po
+@am__fastdepCC_FALSE@	$(AM_V_CC) @AM_BACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='$(top_srcdir)/urcu-pointer.c' object='test_urcu_lfs_dynlink-urcu-pointer.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_urcu_lfs_dynlink_CFLAGS) $(CFLAGS) -c -o test_urcu_lfs_dynlink-urcu-pointer.o `test -f '$(top_srcdir)/urcu-pointer.c' || echo '$(srcdir)/'`$(top_srcdir)/urcu-pointer.c
+
+test_urcu_lfs_dynlink-urcu-pointer.obj: $(top_srcdir)/urcu-pointer.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_urcu_lfs_dynlink_CFLAGS) $(CFLAGS) -MT test_urcu_lfs_dynlink-urcu-pointer.obj -MD -MP -MF $(DEPDIR)/test_urcu_lfs_dynlink-urcu-pointer.Tpo -c -o test_urcu_lfs_dynlink-urcu-pointer.obj `if test -f '$(top_srcdir)/urcu-pointer.c'; then $(CYGPATH_W) '$(top_srcdir)/urcu-pointer.c'; else $(CYGPATH_W) '$(srcdir)/$(top_srcdir)/urcu-pointer.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/test_urcu_lfs_dynlink-urcu-pointer.Tpo $(DEPDIR)/test_urcu_lfs_dynlink-urcu-pointer.Po
+@am__fastdepCC_FALSE@	$(AM_V_CC) @AM_BACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='$(top_srcdir)/urcu-pointer.c' object='test_urcu_lfs_dynlink-urcu-pointer.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_urcu_lfs_dynlink_CFLAGS) $(CFLAGS) -c -o test_urcu_lfs_dynlink-urcu-pointer.obj `if test -f '$(top_srcdir)/urcu-pointer.c'; then $(CYGPATH_W) '$(top_srcdir)/urcu-pointer.c'; else $(CYGPATH_W) '$(srcdir)/$(top_srcdir)/urcu-pointer.c'; fi`
+
+test_urcu_lfs_dynlink-compat_futex.o: $(top_srcdir)/compat_futex.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_urcu_lfs_dynlink_CFLAGS) $(CFLAGS) -MT test_urcu_lfs_dynlink-compat_futex.o -MD -MP -MF $(DEPDIR)/test_urcu_lfs_dynlink-compat_futex.Tpo -c -o test_urcu_lfs_dynlink-compat_futex.o `test -f '$(top_srcdir)/compat_futex.c' || echo '$(srcdir)/'`$(top_srcdir)/compat_futex.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/test_urcu_lfs_dynlink-compat_futex.Tpo $(DEPDIR)/test_urcu_lfs_dynlink-compat_futex.Po
+@am__fastdepCC_FALSE@	$(AM_V_CC) @AM_BACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='$(top_srcdir)/compat_futex.c' object='test_urcu_lfs_dynlink-compat_futex.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_urcu_lfs_dynlink_CFLAGS) $(CFLAGS) -c -o test_urcu_lfs_dynlink-compat_futex.o `test -f '$(top_srcdir)/compat_futex.c' || echo '$(srcdir)/'`$(top_srcdir)/compat_futex.c
+
+test_urcu_lfs_dynlink-compat_futex.obj: $(top_srcdir)/compat_futex.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_urcu_lfs_dynlink_CFLAGS) $(CFLAGS) -MT test_urcu_lfs_dynlink-compat_futex.obj -MD -MP -MF $(DEPDIR)/test_urcu_lfs_dynlink-compat_futex.Tpo -c -o test_urcu_lfs_dynlink-compat_futex.obj `if test -f '$(top_srcdir)/compat_futex.c'; then $(CYGPATH_W) '$(top_srcdir)/compat_futex.c'; else $(CYGPATH_W) '$(srcdir)/$(top_srcdir)/compat_futex.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/test_urcu_lfs_dynlink-compat_futex.Tpo $(DEPDIR)/test_urcu_lfs_dynlink-compat_futex.Po
+@am__fastdepCC_FALSE@	$(AM_V_CC) @AM_BACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='$(top_srcdir)/compat_futex.c' object='test_urcu_lfs_dynlink-compat_futex.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_urcu_lfs_dynlink_CFLAGS) $(CFLAGS) -c -o test_urcu_lfs_dynlink-compat_futex.obj `if test -f '$(top_srcdir)/compat_futex.c'; then $(CYGPATH_W) '$(top_srcdir)/compat_futex.c'; else $(CYGPATH_W) '$(srcdir)/$(top_srcdir)/compat_futex.c'; fi`
+
+test_urcu_lfs_dynlink-compat_arch_@ARCHTYPE@.o: $(top_srcdir)/compat_arch_@ARCHTYPE@.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_urcu_lfs_dynlink_CFLAGS) $(CFLAGS) -MT test_urcu_lfs_dynlink-compat_arch_@ARCHTYPE@.o -MD -MP -MF $(DEPDIR)/test_urcu_lfs_dynlink-compat_arch_@ARCHTYPE@.Tpo -c -o test_urcu_lfs_dynlink-compat_arch_@ARCHTYPE@.o `test -f '$(top_srcdir)/compat_arch_@ARCHTYPE@.c' || echo '$(srcdir)/'`$(top_srcdir)/compat_arch_@ARCHTYPE@.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/test_urcu_lfs_dynlink-compat_arch_@ARCHTYPE@.Tpo $(DEPDIR)/test_urcu_lfs_dynlink-compat_arch_@ARCHTYPE@.Po
+@am__fastdepCC_FALSE@	$(AM_V_CC) @AM_BACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='$(top_srcdir)/compat_arch_@ARCHTYPE@.c' object='test_urcu_lfs_dynlink-compat_arch_@ARCHTYPE@.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_urcu_lfs_dynlink_CFLAGS) $(CFLAGS) -c -o test_urcu_lfs_dynlink-compat_arch_@ARCHTYPE@.o `test -f '$(top_srcdir)/compat_arch_@ARCHTYPE@.c' || echo '$(srcdir)/'`$(top_srcdir)/compat_arch_@ARCHTYPE@.c
+
+test_urcu_lfs_dynlink-compat_arch_@ARCHTYPE@.obj: $(top_srcdir)/compat_arch_@ARCHTYPE@.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_urcu_lfs_dynlink_CFLAGS) $(CFLAGS) -MT test_urcu_lfs_dynlink-compat_arch_@ARCHTYPE@.obj -MD -MP -MF $(DEPDIR)/test_urcu_lfs_dynlink-compat_arch_@ARCHTYPE@.Tpo -c -o test_urcu_lfs_dynlink-compat_arch_@ARCHTYPE@.obj `if test -f '$(top_srcdir)/compat_arch_@ARCHTYPE@.c'; then $(CYGPATH_W) '$(top_srcdir)/compat_arch_@ARCHTYPE@.c'; else $(CYGPATH_W) '$(srcdir)/$(top_srcdir)/compat_arch_@ARCHTYPE@.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/test_urcu_lfs_dynlink-compat_arch_@ARCHTYPE@.Tpo $(DEPDIR)/test_urcu_lfs_dynlink-compat_arch_@ARCHTYPE@.Po
+@am__fastdepCC_FALSE@	$(AM_V_CC) @AM_BACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='$(top_srcdir)/compat_arch_@ARCHTYPE@.c' object='test_urcu_lfs_dynlink-compat_arch_@ARCHTYPE@.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_urcu_lfs_dynlink_CFLAGS) $(CFLAGS) -c -o test_urcu_lfs_dynlink-compat_arch_@ARCHTYPE@.obj `if test -f '$(top_srcdir)/compat_arch_@ARCHTYPE@.c'; then $(CYGPATH_W) '$(top_srcdir)/compat_arch_@ARCHTYPE@.c'; else $(CYGPATH_W) '$(srcdir)/$(top_srcdir)/compat_arch_@ARCHTYPE@.c'; fi`
 
 test_urcu_lgc-test_urcu_gc.o: test_urcu_gc.c
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_urcu_lgc_CFLAGS) $(CFLAGS) -MT test_urcu_lgc-test_urcu_gc.o -MD -MP -MF $(DEPDIR)/test_urcu_lgc-test_urcu_gc.Tpo -c -o test_urcu_lgc-test_urcu_gc.o `test -f 'test_urcu_gc.c' || echo '$(srcdir)/'`test_urcu_gc.c
@@ -2515,6 +2859,38 @@ test_urcu_signal_yield-compat_arch_@ARCHTYPE@.obj: $(top_srcdir)/compat_arch_@AR
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	source='$(top_srcdir)/compat_arch_@ARCHTYPE@.c' object='test_urcu_signal_yield-compat_arch_@ARCHTYPE@.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_urcu_signal_yield_CFLAGS) $(CFLAGS) -c -o test_urcu_signal_yield-compat_arch_@ARCHTYPE@.obj `if test -f '$(top_srcdir)/compat_arch_@ARCHTYPE@.c'; then $(CYGPATH_W) '$(top_srcdir)/compat_arch_@ARCHTYPE@.c'; else $(CYGPATH_W) '$(srcdir)/$(top_srcdir)/compat_arch_@ARCHTYPE@.c'; fi`
+
+test_urcu_wfq_dynlink-test_urcu_wfq.o: test_urcu_wfq.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_urcu_wfq_dynlink_CFLAGS) $(CFLAGS) -MT test_urcu_wfq_dynlink-test_urcu_wfq.o -MD -MP -MF $(DEPDIR)/test_urcu_wfq_dynlink-test_urcu_wfq.Tpo -c -o test_urcu_wfq_dynlink-test_urcu_wfq.o `test -f 'test_urcu_wfq.c' || echo '$(srcdir)/'`test_urcu_wfq.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/test_urcu_wfq_dynlink-test_urcu_wfq.Tpo $(DEPDIR)/test_urcu_wfq_dynlink-test_urcu_wfq.Po
+@am__fastdepCC_FALSE@	$(AM_V_CC) @AM_BACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='test_urcu_wfq.c' object='test_urcu_wfq_dynlink-test_urcu_wfq.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_urcu_wfq_dynlink_CFLAGS) $(CFLAGS) -c -o test_urcu_wfq_dynlink-test_urcu_wfq.o `test -f 'test_urcu_wfq.c' || echo '$(srcdir)/'`test_urcu_wfq.c
+
+test_urcu_wfq_dynlink-test_urcu_wfq.obj: test_urcu_wfq.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_urcu_wfq_dynlink_CFLAGS) $(CFLAGS) -MT test_urcu_wfq_dynlink-test_urcu_wfq.obj -MD -MP -MF $(DEPDIR)/test_urcu_wfq_dynlink-test_urcu_wfq.Tpo -c -o test_urcu_wfq_dynlink-test_urcu_wfq.obj `if test -f 'test_urcu_wfq.c'; then $(CYGPATH_W) 'test_urcu_wfq.c'; else $(CYGPATH_W) '$(srcdir)/test_urcu_wfq.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/test_urcu_wfq_dynlink-test_urcu_wfq.Tpo $(DEPDIR)/test_urcu_wfq_dynlink-test_urcu_wfq.Po
+@am__fastdepCC_FALSE@	$(AM_V_CC) @AM_BACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='test_urcu_wfq.c' object='test_urcu_wfq_dynlink-test_urcu_wfq.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_urcu_wfq_dynlink_CFLAGS) $(CFLAGS) -c -o test_urcu_wfq_dynlink-test_urcu_wfq.obj `if test -f 'test_urcu_wfq.c'; then $(CYGPATH_W) 'test_urcu_wfq.c'; else $(CYGPATH_W) '$(srcdir)/test_urcu_wfq.c'; fi`
+
+test_urcu_wfs_dynlink-test_urcu_wfs.o: test_urcu_wfs.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_urcu_wfs_dynlink_CFLAGS) $(CFLAGS) -MT test_urcu_wfs_dynlink-test_urcu_wfs.o -MD -MP -MF $(DEPDIR)/test_urcu_wfs_dynlink-test_urcu_wfs.Tpo -c -o test_urcu_wfs_dynlink-test_urcu_wfs.o `test -f 'test_urcu_wfs.c' || echo '$(srcdir)/'`test_urcu_wfs.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/test_urcu_wfs_dynlink-test_urcu_wfs.Tpo $(DEPDIR)/test_urcu_wfs_dynlink-test_urcu_wfs.Po
+@am__fastdepCC_FALSE@	$(AM_V_CC) @AM_BACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='test_urcu_wfs.c' object='test_urcu_wfs_dynlink-test_urcu_wfs.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_urcu_wfs_dynlink_CFLAGS) $(CFLAGS) -c -o test_urcu_wfs_dynlink-test_urcu_wfs.o `test -f 'test_urcu_wfs.c' || echo '$(srcdir)/'`test_urcu_wfs.c
+
+test_urcu_wfs_dynlink-test_urcu_wfs.obj: test_urcu_wfs.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_urcu_wfs_dynlink_CFLAGS) $(CFLAGS) -MT test_urcu_wfs_dynlink-test_urcu_wfs.obj -MD -MP -MF $(DEPDIR)/test_urcu_wfs_dynlink-test_urcu_wfs.Tpo -c -o test_urcu_wfs_dynlink-test_urcu_wfs.obj `if test -f 'test_urcu_wfs.c'; then $(CYGPATH_W) 'test_urcu_wfs.c'; else $(CYGPATH_W) '$(srcdir)/test_urcu_wfs.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/test_urcu_wfs_dynlink-test_urcu_wfs.Tpo $(DEPDIR)/test_urcu_wfs_dynlink-test_urcu_wfs.Po
+@am__fastdepCC_FALSE@	$(AM_V_CC) @AM_BACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='test_urcu_wfs.c' object='test_urcu_wfs_dynlink-test_urcu_wfs.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_urcu_wfs_dynlink_CFLAGS) $(CFLAGS) -c -o test_urcu_wfs_dynlink-test_urcu_wfs.obj `if test -f 'test_urcu_wfs.c'; then $(CYGPATH_W) 'test_urcu_wfs.c'; else $(CYGPATH_W) '$(srcdir)/test_urcu_wfs.c'; fi`
 
 test_urcu_yield-test_urcu.o: test_urcu.c
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(test_urcu_yield_CFLAGS) $(CFLAGS) -MT test_urcu_yield-test_urcu.o -MD -MP -MF $(DEPDIR)/test_urcu_yield-test_urcu.Tpo -c -o test_urcu_yield-test_urcu.o `test -f 'test_urcu.c' || echo '$(srcdir)/'`test_urcu.c

@@ -12,7 +12,10 @@ noinst_PROGRAMS = test_urcu test_urcu_dynamic_link test_urcu_timing \
         test_urcu_mb_gc test_qsbr_gc test_qsbr_lgc test_urcu_signal_lgc \
         test_urcu_mb_lgc test_qsbr_dynamic_link test_urcu_defer \
         test_uatomic test_urcu_assign test_urcu_assign_dynamic_link \
-        test_urcu_bp test_urcu_bp_dynamic_link test_cycles_per_loop
+        test_urcu_bp test_urcu_bp_dynamic_link test_cycles_per_loop \
+	test_urcu_lfq test_urcu_wfq test_urcu_lfs test_urcu_wfs \
+	test_urcu_wfq_dynlink test_urcu_wfs_dynlink \
+	test_urcu_lfq_dynlink test_urcu_lfs_dynlink
 noinst_HEADERS = rcutorture.h
 
 if COMPAT_ARCH
@@ -39,6 +42,10 @@ URCU_QSBR_LIB=$(top_builddir)/liburcu-qsbr.la
 URCU_MB_LIB=$(top_builddir)/liburcu-mb.la
 URCU_SIGNAL_LIB=$(top_builddir)/liburcu-signal.la
 URCU_BP_LIB=$(top_builddir)/liburcu-bp.la
+WFQUEUE_LIB=$(top_builddir)/libwfqueue.la
+WFSTACK_LIB=$(top_builddir)/libwfstack.la
+RCULFQUEUE_LIB=$(top_builddir)/librculfqueue.la
+RCULFSTACK_LIB=$(top_builddir)/librculfstack.la
 
 EXTRA_DIST = $(top_srcdir)/tests/api_*.h
 
@@ -150,6 +157,26 @@ test_urcu_bp_SOURCES = test_urcu_bp.c $(URCU_BP)
 
 test_urcu_bp_dynamic_link_SOURCES = test_urcu_bp.c $(URCU_BP)
 test_urcu_bp_dynamic_link_CFLAGS = -DDYNAMIC_LINK_TEST $(AM_CFLAGS)
+
+test_urcu_lfq_SOURCES = test_urcu_lfq.c $(URCU_DEFER)
+test_urcu_lfq_dynlink_SOURCES = test_urcu_lfq.c $(URCU_DEFER)
+test_urcu_lfq_dynlink_CFLAGS = -DDYNAMIC_LINK_TEST $(AM_CFLAGS)
+test_urcu_lfq_dynlink_LDADD = $(RCULFQUEUE_LIB)
+
+test_urcu_wfq_SOURCES = test_urcu_wfq.c
+test_urcu_wfq_dynlink_SOURCES = test_urcu_wfq.c
+test_urcu_wfq_dynlink_CFLAGS = -DDYNAMIC_LINK_TEST $(AM_CFLAGS)
+test_urcu_wfq_dynlink_LDADD = $(WFQUEUE_LIB)
+
+test_urcu_lfs_SOURCES = test_urcu_lfs.c $(URCU_DEFER)
+test_urcu_lfs_dynlink_SOURCES = test_urcu_lfs.c $(URCU_DEFER)
+test_urcu_lfs_dynlink_CFLAGS = -DDYNAMIC_LINK_TEST $(AM_CFLAGS)
+test_urcu_lfs_dynlink_LDADD = $(RCULFSTACK_LIB)
+
+test_urcu_wfs_SOURCES = test_urcu_wfs.c
+test_urcu_wfs_dynlink_SOURCES = test_urcu_wfs.c
+test_urcu_wfs_dynlink_CFLAGS = -DDYNAMIC_LINK_TEST $(AM_CFLAGS)
+test_urcu_wfs_dynlink_LDADD = $(WFSTACK_LIB)
 
 urcutorture.c: api.h
 
