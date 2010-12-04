@@ -77,7 +77,7 @@ char argsbuf[64];
 #define GOFLAG_RUN  1
 #define GOFLAG_STOP 2
 
-int goflag __attribute__((__aligned__(CACHE_LINE_SIZE))) = GOFLAG_INIT;
+int goflag __attribute__((__aligned__(CAA_CACHE_LINE_SIZE))) = GOFLAG_INIT;
 
 #define RCU_READ_RUN 1000
 
@@ -170,15 +170,15 @@ void perftestrun(int nthreads, int nreaders, int nupdaters)
 	int t;
 	int duration = 1;
 
-	smp_mb();
+	cmm_smp_mb();
 	while (uatomic_read(&nthreadsrunning) < nthreads)
 		poll(NULL, 0, 1);
 	goflag = GOFLAG_RUN;
-	smp_mb();
+	cmm_smp_mb();
 	sleep(duration);
-	smp_mb();
+	cmm_smp_mb();
 	goflag = GOFLAG_STOP;
-	smp_mb();
+	cmm_smp_mb();
 	wait_all_threads();
 	for_each_thread(t) {
 		n_reads += per_thread(n_reads_pt, t);
@@ -309,7 +309,7 @@ void *rcu_update_stress_test(void *arg)
 			i = 0;
 		p = &rcu_stress_array[i];
 		p->mbtest = 0;
-		smp_mb();
+		cmm_smp_mb();
 		p->pipe_count = 0;
 		p->mbtest = 1;
 		rcu_assign_pointer(rcu_stress_current, p);
@@ -355,13 +355,13 @@ void stresstest(int nreaders)
 	create_thread(rcu_update_stress_test, NULL);
 	for (i = 0; i < 5; i++)
 		create_thread(rcu_fake_update_stress_test, NULL);
-	smp_mb();
+	cmm_smp_mb();
 	goflag = GOFLAG_RUN;
-	smp_mb();
+	cmm_smp_mb();
 	sleep(10);
-	smp_mb();
+	cmm_smp_mb();
 	goflag = GOFLAG_STOP;
-	smp_mb();
+	cmm_smp_mb();
 	wait_all_threads();
 	for_each_thread(t)
 		n_reads += per_thread(n_reads_pt, t);

@@ -54,7 +54,7 @@ static int defer_thread_futex;
  * the reclamation tread.
  */
 static struct defer_queue __thread defer_queue;
-static LIST_HEAD(registry);
+static CDS_LIST_HEAD(registry);
 static pthread_t tid_defer;
 
 static void mutex_lock(pthread_mutex_t *mutex)
@@ -109,8 +109,8 @@ static unsigned long rcu_defer_num_callbacks(void)
 	struct defer_queue *index;
 
 	mutex_lock(&rcu_defer_mutex);
-	list_for_each_entry(index, &registry, list) {
-		head = LOAD_SHARED(index->head);
+	cds_list_for_each_entry(index, &registry, list) {
+		head = CMM_LOAD_SHARED(index->head);
 		num_items += head - index->tail;
 	}
 	mutex_unlock(&rcu_defer_mutex);
@@ -123,13 +123,13 @@ static unsigned long rcu_defer_num_callbacks(void)
 static void wait_defer(void)
 {
 	uatomic_dec(&defer_thread_futex);
-	smp_mb();	/* Write futex before read queue */
+	cmm_smp_mb();	/* Write futex before read queue */
 	if (rcu_defer_num_callbacks()) {
-		smp_mb();	/* Read queue before write futex */
+		cmm_smp_mb();	/* Read queue before write futex */
 		/* Callbacks are queued, don't wait. */
 		uatomic_set(&defer_thread_futex, 0);
 	} else {
-		smp_rmb();	/* Read queue before read futex */
+		cmm_smp_rmb();	/* Read queue before read futex */
 		if (uatomic_read(&defer_thread_futex) == -1)
 			futex_noasync(&defer_thread_futex, FUTEX_WAIT, -1,
 			      NULL, NULL, 0);
@@ -152,22 +152,22 @@ static void rcu_defer_barrier_queue(struct defer_queue *queue,
 	 */
 
 	for (i = queue->tail; i != head;) {
-		smp_rmb();       /* read head before q[]. */
-		p = LOAD_SHARED(queue->q[i++ & DEFER_QUEUE_MASK]);
+		cmm_smp_rmb();       /* read head before q[]. */
+		p = CMM_LOAD_SHARED(queue->q[i++ & DEFER_QUEUE_MASK]);
 		if (unlikely(DQ_IS_FCT_BIT(p))) {
 			DQ_CLEAR_FCT_BIT(p);
 			queue->last_fct_out = p;
-			p = LOAD_SHARED(queue->q[i++ & DEFER_QUEUE_MASK]);
+			p = CMM_LOAD_SHARED(queue->q[i++ & DEFER_QUEUE_MASK]);
 		} else if (unlikely(p == DQ_FCT_MARK)) {
-			p = LOAD_SHARED(queue->q[i++ & DEFER_QUEUE_MASK]);
+			p = CMM_LOAD_SHARED(queue->q[i++ & DEFER_QUEUE_MASK]);
 			queue->last_fct_out = p;
-			p = LOAD_SHARED(queue->q[i++ & DEFER_QUEUE_MASK]);
+			p = CMM_LOAD_SHARED(queue->q[i++ & DEFER_QUEUE_MASK]);
 		}
 		fct = queue->last_fct_out;
 		fct(p);
 	}
-	smp_mb();	/* push tail after having used q[] */
-	STORE_SHARED(queue->tail, i);
+	cmm_smp_mb();	/* push tail after having used q[] */
+	CMM_STORE_SHARED(queue->tail, i);
 }
 
 static void _rcu_defer_barrier_thread(void)
@@ -207,12 +207,12 @@ void rcu_defer_barrier(void)
 	struct defer_queue *index;
 	unsigned long num_items = 0;
 
-	if (list_empty(&registry))
+	if (cds_list_empty(&registry))
 		return;
 
 	mutex_lock(&rcu_defer_mutex);
-	list_for_each_entry(index, &registry, list) {
-		index->last_head = LOAD_SHARED(index->head);
+	cds_list_for_each_entry(index, &registry, list) {
+		index->last_head = CMM_LOAD_SHARED(index->head);
 		num_items += index->last_head - index->tail;
 	}
 	if (likely(!num_items)) {
@@ -223,7 +223,7 @@ void rcu_defer_barrier(void)
 		goto end;
 	}
 	synchronize_rcu();
-	list_for_each_entry(index, &registry, list)
+	cds_list_for_each_entry(index, &registry, list)
 		rcu_defer_barrier_queue(index, index->last_head);
 end:
 	mutex_unlock(&rcu_defer_mutex);
@@ -241,7 +241,7 @@ void _defer_rcu(void (*fct)(void *p), void *p)
 	 * thread.
 	 */
 	head = defer_queue.head;
-	tail = LOAD_SHARED(defer_queue.tail);
+	tail = CMM_LOAD_SHARED(defer_queue.tail);
 
 	/*
 	 * If queue is full, or reached threshold. Empty queue ourself.
@@ -250,7 +250,7 @@ void _defer_rcu(void (*fct)(void *p), void *p)
 	if (unlikely(head - tail >= DEFER_QUEUE_SIZE - 2)) {
 		assert(head - tail <= DEFER_QUEUE_SIZE);
 		rcu_defer_barrier_thread();
-		assert(head - LOAD_SHARED(defer_queue.tail) == 0);
+		assert(head - CMM_LOAD_SHARED(defer_queue.tail) == 0);
 	}
 
 	if (unlikely(defer_queue.last_fct_in != fct)) {
@@ -261,13 +261,13 @@ void _defer_rcu(void (*fct)(void *p), void *p)
 			 * marker, write DQ_FCT_MARK followed by the function
 			 * pointer.
 			 */
-			_STORE_SHARED(defer_queue.q[head++ & DEFER_QUEUE_MASK],
+			_CMM_STORE_SHARED(defer_queue.q[head++ & DEFER_QUEUE_MASK],
 				      DQ_FCT_MARK);
-			_STORE_SHARED(defer_queue.q[head++ & DEFER_QUEUE_MASK],
+			_CMM_STORE_SHARED(defer_queue.q[head++ & DEFER_QUEUE_MASK],
 				      fct);
 		} else {
 			DQ_SET_FCT_BIT(fct);
-			_STORE_SHARED(defer_queue.q[head++ & DEFER_QUEUE_MASK],
+			_CMM_STORE_SHARED(defer_queue.q[head++ & DEFER_QUEUE_MASK],
 				      fct);
 		}
 	} else {
@@ -276,17 +276,17 @@ void _defer_rcu(void (*fct)(void *p), void *p)
 			 * If the data to encode is not aligned or the marker,
 			 * write DQ_FCT_MARK followed by the function pointer.
 			 */
-			_STORE_SHARED(defer_queue.q[head++ & DEFER_QUEUE_MASK],
+			_CMM_STORE_SHARED(defer_queue.q[head++ & DEFER_QUEUE_MASK],
 				      DQ_FCT_MARK);
-			_STORE_SHARED(defer_queue.q[head++ & DEFER_QUEUE_MASK],
+			_CMM_STORE_SHARED(defer_queue.q[head++ & DEFER_QUEUE_MASK],
 				      fct);
 		}
 	}
-	_STORE_SHARED(defer_queue.q[head++ & DEFER_QUEUE_MASK], p);
-	smp_wmb();	/* Publish new pointer before head */
+	_CMM_STORE_SHARED(defer_queue.q[head++ & DEFER_QUEUE_MASK], p);
+	cmm_smp_wmb();	/* Publish new pointer before head */
 			/* Write q[] before head. */
-	STORE_SHARED(defer_queue.head, head);
-	smp_mb();	/* Write queue head before read futex */
+	CMM_STORE_SHARED(defer_queue.head, head);
+	cmm_smp_mb();	/* Write queue head before read futex */
 	/*
 	 * Wake-up any waiting defer thread.
 	 */
@@ -349,8 +349,8 @@ void rcu_defer_register_thread(void)
 
 	mutex_lock(&defer_thread_mutex);
 	mutex_lock(&rcu_defer_mutex);
-	was_empty = list_empty(&registry);
-	list_add(&defer_queue.list, &registry);
+	was_empty = cds_list_empty(&registry);
+	cds_list_add(&defer_queue.list, &registry);
 	mutex_unlock(&rcu_defer_mutex);
 
 	if (was_empty)
@@ -364,11 +364,11 @@ void rcu_defer_unregister_thread(void)
 
 	mutex_lock(&defer_thread_mutex);
 	mutex_lock(&rcu_defer_mutex);
-	list_del(&defer_queue.list);
+	cds_list_del(&defer_queue.list);
 	_rcu_defer_barrier_thread();
 	free(defer_queue.q);
 	defer_queue.q = NULL;
-	is_empty = list_empty(&registry);
+	is_empty = cds_list_empty(&registry);
 	mutex_unlock(&rcu_defer_mutex);
 
 	if (is_empty)
@@ -378,5 +378,5 @@ void rcu_defer_unregister_thread(void)
 
 void rcu_defer_exit(void)
 {
-	assert(list_empty(&registry));
+	assert(cds_list_empty(&registry));
 }

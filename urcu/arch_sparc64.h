@@ -29,7 +29,7 @@
 extern "C" {
 #endif 
 
-#define CACHE_LINE_SIZE	256
+#define CAA_CACHE_LINE_SIZE	256
 
 /*
  * Inspired from the Linux kernel. Workaround Spitfire bug #51.
@@ -40,13 +40,13 @@ __asm__ __volatile__("ba,pt %%xcc, 1f\n\t"	\
 		     "1:\n"			\
 		     : : : "memory")
 
-#define mb()    membar_safe("#LoadLoad | #LoadStore | #StoreStore | #StoreLoad")
-#define rmb()    membar_safe("#LoadLoad")
-#define wmb()    membar_safe("#StoreStore")
+#define cmm_mb()	membar_safe("#LoadLoad | #LoadStore | #StoreStore | #StoreLoad")
+#define cmm_rmb()	membar_safe("#LoadLoad")
+#define cmm_wmb()	membar_safe("#StoreStore")
 
 typedef unsigned long long cycles_t;
 
-static inline cycles_t get_cycles (void)
+static inline cycles_t caa_get_cycles (void)
 {
 	return 0;	/* unimplemented */
 }

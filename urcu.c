@@ -80,7 +80,7 @@ unsigned int yield_active;
 unsigned int __thread rand_yield;
 #endif
 
-static LIST_HEAD(registry);
+static CDS_LIST_HEAD(registry);
 
 static void mutex_lock(pthread_mutex_t *mutex)
 {
@@ -99,10 +99,10 @@ static void mutex_lock(pthread_mutex_t *mutex)
 			perror("Error in pthread mutex lock");
 			exit(-1);
 		}
-		if (LOAD_SHARED(rcu_reader.need_mb)) {
-			smp_mb();
-			_STORE_SHARED(rcu_reader.need_mb, 0);
-			smp_mb();
+		if (CMM_LOAD_SHARED(rcu_reader.need_mb)) {
+			cmm_smp_mb();
+			_CMM_STORE_SHARED(rcu_reader.need_mb, 0);
+			cmm_smp_mb();
 		}
 		poll(NULL,0,10);
 	}
@@ -126,14 +126,14 @@ static void smp_mb_master(int group)
 	if (likely(has_sys_membarrier))
 		membarrier(MEMBARRIER_EXPEDITED);
 	else
-		smp_mb();
+		cmm_smp_mb();
 }
 #endif
 
 #ifdef RCU_MB
 static void smp_mb_master(int group)
 {
-	smp_mb();
+	cmm_smp_mb();
 }
 #endif
 
@@ -143,19 +143,19 @@ static void force_mb_all_readers(void)
 	struct rcu_reader *index;
 
 	/*
-	 * Ask for each threads to execute a smp_mb() so we can consider the
+	 * Ask for each threads to execute a cmm_smp_mb() so we can consider the
 	 * compiler barriers around rcu read lock as real memory barriers.
 	 */
-	if (list_empty(&registry))
+	if (cds_list_empty(&registry))
 		return;
 	/*
-	 * pthread_kill has a smp_mb(). But beware, we assume it performs
+	 * pthread_kill has a cmm_smp_mb(). But beware, we assume it performs
 	 * a cache flush on architectures with non-coherent cache. Let's play
-	 * safe and don't assume anything : we use smp_mc() to make sure the
+	 * safe and don't assume anything : we use cmm_smp_mc() to make sure the
 	 * cache flush is enforced.
 	 */
-	list_for_each_entry(index, &registry, node) {
-		STORE_SHARED(index->need_mb, 1);
+	cds_list_for_each_entry(index, &registry, node) {
+		CMM_STORE_SHARED(index->need_mb, 1);
 		pthread_kill(index->tid, SIGRCU);
 	}
 	/*
@@ -171,13 +171,13 @@ static void force_mb_all_readers(void)
 	 * relevant bug report.  For Linux kernels, we recommend getting
 	 * the Linux Test Project (LTP).
 	 */
-	list_for_each_entry(index, &registry, node) {
-		while (LOAD_SHARED(index->need_mb)) {
+	cds_list_for_each_entry(index, &registry, node) {
+		while (CMM_LOAD_SHARED(index->need_mb)) {
 			pthread_kill(index->tid, SIGRCU);
 			poll(NULL, 0, 1);
 		}
 	}
-	smp_mb();	/* read ->need_mb before ending the barrier */
+	cmm_smp_mb();	/* read ->need_mb before ending the barrier */
 }
 
 static void smp_mb_master(int group)
@@ -200,12 +200,12 @@ static void wait_gp(void)
 
 void update_counter_and_wait(void)
 {
-	LIST_HEAD(qsreaders);
+	CDS_LIST_HEAD(qsreaders);
 	int wait_loops = 0;
 	struct rcu_reader *index, *tmp;
 
 	/* Switch parity: 0 -> 1, 1 -> 0 */
-	STORE_SHARED(rcu_gp_ctr, rcu_gp_ctr ^ RCU_GP_CTR_PHASE);
+	CMM_STORE_SHARED(rcu_gp_ctr, rcu_gp_ctr ^ RCU_GP_CTR_PHASE);
 
 	/*
 	 * Must commit rcu_gp_ctr update to memory before waiting for quiescent
@@ -213,15 +213,15 @@ void update_counter_and_wait(void)
 	 * while new readers are always accessing data (no progress). Enforce
 	 * compiler-order of store to rcu_gp_ctr before load rcu_reader ctr.
 	 */
-	barrier();
+	cmm_barrier();
 
 	/*
 	 *
-	 * Adding a smp_mb() which is _not_ formally required, but makes the
+	 * Adding a cmm_smp_mb() which is _not_ formally required, but makes the
 	 * model easier to understand. It does not have a big performance impact
 	 * anyway, given this is the write-side.
 	 */
-	smp_mb();
+	cmm_smp_mb();
 
 	/*
 	 * Wait for each thread rcu_reader.ctr count to become 0.
@@ -234,13 +234,13 @@ void update_counter_and_wait(void)
 			smp_mb_master(RCU_MB_GROUP);
 		}
 
-		list_for_each_entry_safe(index, tmp, &registry, node) {
+		cds_list_for_each_entry_safe(index, tmp, &registry, node) {
 			if (!rcu_gp_ongoing(&index->ctr))
-				list_move(&index->node, &qsreaders);
+				cds_list_move(&index->node, &qsreaders);
 		}
 
 #ifndef HAS_INCOHERENT_CACHES
-		if (list_empty(&registry)) {
+		if (cds_list_empty(&registry)) {
 			if (wait_loops == RCU_QS_ACTIVE_ATTEMPTS) {
 				/* Read reader_gp before write futex */
 				smp_mb_master(RCU_MB_GROUP);
@@ -251,14 +251,14 @@ void update_counter_and_wait(void)
 			if (wait_loops == RCU_QS_ACTIVE_ATTEMPTS)
 				wait_gp();
 			else
-				cpu_relax();
+				caa_cpu_relax();
 		}
 #else /* #ifndef HAS_INCOHERENT_CACHES */
 		/*
 		 * BUSY-LOOP. Force the reader thread to commit its
 		 * rcu_reader.ctr update to memory if we wait for too long.
 		 */
-		if (list_empty(&registry)) {
+		if (cds_list_empty(&registry)) {
 			if (wait_loops == RCU_QS_ACTIVE_ATTEMPTS) {
 				/* Read reader_gp before write futex */
 				smp_mb_master(RCU_MB_GROUP);
@@ -275,20 +275,20 @@ void update_counter_and_wait(void)
 				wait_loops = 0;
 				break; /* only escape switch */
 			default:
-				cpu_relax();
+				caa_cpu_relax();
 			}
 		}
 #endif /* #else #ifndef HAS_INCOHERENT_CACHES */
 	}
 	/* put back the reader list in the registry */
-	list_splice(&qsreaders, &registry);
+	cds_list_splice(&qsreaders, &registry);
 }
 
 void synchronize_rcu(void)
 {
 	mutex_lock(&rcu_gp_lock);
 
-	if (list_empty(&registry))
+	if (cds_list_empty(&registry))
 		goto out;
 
 	/* All threads should read qparity before accessing data structure
@@ -309,14 +309,14 @@ void synchronize_rcu(void)
 	 * accessing data (no progress).  Enforce compiler-order of load
 	 * rcu_reader ctr before store to rcu_gp_ctr.
 	 */
-	barrier();
+	cmm_barrier();
 
 	/*
-	 * Adding a smp_mb() which is _not_ formally required, but makes the
+	 * Adding a cmm_smp_mb() which is _not_ formally required, but makes the
 	 * model easier to understand. It does not have a big performance impact
 	 * anyway, given this is the write-side.
 	 */
-	smp_mb();
+	cmm_smp_mb();
 
 	/*
 	 * Wait for previous parity to be empty of readers.
@@ -353,14 +353,14 @@ void rcu_register_thread(void)
 
 	mutex_lock(&rcu_gp_lock);
 	rcu_init();	/* In case gcc does not support constructor attribute */
-	list_add(&rcu_reader.node, &registry);
+	cds_list_add(&rcu_reader.node, &registry);
 	mutex_unlock(&rcu_gp_lock);
 }
 
 void rcu_unregister_thread(void)
 {
 	mutex_lock(&rcu_gp_lock);
-	list_del(&rcu_reader.node);
+	cds_list_del(&rcu_reader.node);
 	mutex_unlock(&rcu_gp_lock);
 }
 
@@ -379,13 +379,13 @@ void rcu_init(void)
 static void sigrcu_handler(int signo, siginfo_t *siginfo, void *context)
 {
 	/*
-	 * Executing this smp_mb() is the only purpose of this signal handler.
-	 * It punctually promotes barrier() into smp_mb() on every thread it is
+	 * Executing this cmm_smp_mb() is the only purpose of this signal handler.
+	 * It punctually promotes cmm_barrier() into cmm_smp_mb() on every thread it is
 	 * executed on.
 	 */
-	smp_mb();
-	_STORE_SHARED(rcu_reader.need_mb, 0);
-	smp_mb();
+	cmm_smp_mb();
+	_CMM_STORE_SHARED(rcu_reader.need_mb, 0);
+	cmm_smp_mb();
 }
 
 /*
@@ -426,6 +426,6 @@ void rcu_exit(void)
 		exit(-1);
 	}
 	assert(act.sa_sigaction == sigrcu_handler);
-	assert(list_empty(&registry));
+	assert(cds_list_empty(&registry));
 }
 #endif /* #ifdef RCU_SIGNAL */

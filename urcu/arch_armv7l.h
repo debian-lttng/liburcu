@@ -29,14 +29,14 @@
 extern "C" {
 #endif 
 
-#define mb()    asm volatile("dmb":::"memory")
+#define cmm_mb()    asm volatile("dmb":::"memory")
 
 #include <stdlib.h>
 #include <sys/time.h>
 
 typedef unsigned long long cycles_t;
 
-static inline cycles_t get_cycles (void)
+static inline cycles_t caa_get_cycles (void)
 {
 	cycles_t thetime;
 	struct timeval tv;

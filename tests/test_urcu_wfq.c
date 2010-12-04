@@ -76,7 +76,7 @@ static unsigned long wdelay;
 static inline void loop_sleep(unsigned long l)
 {
 	while(l-- != 0)
-		cpu_relax();
+		caa_cpu_relax();
 }
 
 static int verbose_mode;
@@ -153,7 +153,7 @@ static unsigned long long __thread nr_successful_enqueues;
 static unsigned int nr_enqueuers;
 static unsigned int nr_dequeuers;
 
-static struct wfq_queue q;
+static struct cds_wfq_queue q;
 
 void *thr_enqueuer(void *_count)
 {
@@ -167,14 +167,14 @@ void *thr_enqueuer(void *_count)
 	while (!test_go)
 	{
 	}
-	smp_mb();
+	cmm_smp_mb();
 
 	for (;;) {
-		struct wfq_node *node = malloc(sizeof(*node));
+		struct cds_wfq_node *node = malloc(sizeof(*node));
 		if (!node)
 			goto fail;
-		wfq_node_init(node);
-		wfq_enqueue(&q, node);
+		cds_wfq_node_init(node);
+		cds_wfq_enqueue(&q, node);
 		nr_successful_enqueues++;
 
 		if (unlikely(wdelay))
@@ -207,10 +207,10 @@ void *thr_dequeuer(void *_count)
 	while (!test_go)
 	{
 	}
-	smp_mb();
+	cmm_smp_mb();
 
 	for (;;) {
-		struct wfq_node *node = wfq_dequeue_blocking(&q);
+		struct cds_wfq_node *node = cds_wfq_dequeue_blocking(&q);
 
 		if (node) {
 			free(node);
@@ -233,12 +233,12 @@ void *thr_dequeuer(void *_count)
 	return ((void*)2);
 }
 
-void test_end(struct wfq_queue *q, unsigned long long *nr_dequeues)
+void test_end(struct cds_wfq_queue *q, unsigned long long *nr_dequeues)
 {
-	struct wfq_node *node;
+	struct cds_wfq_node *node;
 
 	do {
-		node = wfq_dequeue_blocking(q);
+		node = cds_wfq_dequeue_blocking(q);
 		if (node) {
 			free(node);
 			(*nr_dequeues)++;
@@ -337,7 +337,7 @@ int main(int argc, char **argv)
 	tid_dequeuer = malloc(sizeof(*tid_dequeuer) * nr_dequeuers);
 	count_enqueuer = malloc(2 * sizeof(*count_enqueuer) * nr_enqueuers);
 	count_dequeuer = malloc(2 * sizeof(*count_dequeuer) * nr_dequeuers);
-	wfq_init(&q);
+	cds_wfq_init(&q);
 
 	next_aff = 0;
 
@@ -354,7 +354,7 @@ int main(int argc, char **argv)
 			exit(1);
 	}
 
-	smp_mb();
+	cmm_smp_mb();
 
 	test_go = 1;
 

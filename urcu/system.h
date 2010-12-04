@@ -22,32 +22,32 @@
 #include <urcu/arch.h>
 
 /*
- * Identify a shared load. A smp_rmc() or smp_mc() should come before the load.
+ * Identify a shared load. A cmm_smp_rmc() or cmm_smp_mc() should come before the load.
  */
-#define _LOAD_SHARED(p)	       ACCESS_ONCE(p)
+#define _CMM_LOAD_SHARED(p)	       CMM_ACCESS_ONCE(p)
 
 /*
  * Load a data from shared memory, doing a cache flush if required.
  */
-#define LOAD_SHARED(p)			\
+#define CMM_LOAD_SHARED(p)			\
 	({				\
-		smp_rmc();		\
-		_LOAD_SHARED(p);	\
+		cmm_smp_rmc();		\
+		_CMM_LOAD_SHARED(p);	\
 	})
 
 /*
- * Identify a shared store. A smp_wmc() or smp_mc() should follow the store.
+ * Identify a shared store. A cmm_smp_wmc() or cmm_smp_mc() should follow the store.
  */
-#define _STORE_SHARED(x, v)	({ ACCESS_ONCE(x) = (v); })
+#define _CMM_STORE_SHARED(x, v)	({ CMM_ACCESS_ONCE(x) = (v); })
 
 /*
  * Store v into x, where x is located in shared memory. Performs the required
  * cache flush after writing. Returns v.
  */
-#define STORE_SHARED(x, v)		\
+#define CMM_STORE_SHARED(x, v)		\
 	({				\
-		typeof(x) _v = _STORE_SHARED(x, v);	\
-		smp_wmc();		\
+		typeof(x) _v = _CMM_STORE_SHARED(x, v);	\
+		cmm_smp_wmc();		\
 		_v;			\
 	})
 
