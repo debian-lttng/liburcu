@@ -77,7 +77,7 @@ static unsigned long wdelay;
 static inline void loop_sleep(unsigned long l)
 {
 	while(l-- != 0)
-		cpu_relax();
+		caa_cpu_relax();
 }
 
 static int verbose_mode;
@@ -154,7 +154,7 @@ static unsigned long long __thread nr_successful_enqueues;
 static unsigned int nr_enqueuers;
 static unsigned int nr_dequeuers;
 
-static struct rcu_lfs_stack s;
+static struct cds_lfs_stack_rcu s;
 
 void *thr_enqueuer(void *_count)
 {
@@ -170,14 +170,14 @@ void *thr_enqueuer(void *_count)
 	while (!test_go)
 	{
 	}
-	smp_mb();
+	cmm_smp_mb();
 
 	for (;;) {
-		struct rcu_lfs_node *node = malloc(sizeof(*node));
+		struct cds_lfs_node_rcu *node = malloc(sizeof(*node));
 		if (!node)
 			goto fail;
-		rcu_lfs_node_init(node);
-		rcu_lfs_push(&s, node);
+		cds_lfs_node_init_rcu(node);
+		cds_lfs_push_rcu(&s, node);
 		nr_successful_enqueues++;
 
 		if (unlikely(wdelay))
@@ -215,10 +215,10 @@ void *thr_dequeuer(void *_count)
 	while (!test_go)
 	{
 	}
-	smp_mb();
+	cmm_smp_mb();
 
 	for (;;) {
-		struct rcu_lfs_node *node = rcu_lfs_pop(&s);
+		struct cds_lfs_node_rcu *node = cds_lfs_pop_rcu(&s);
 
 		if (node) {
 			defer_rcu(free, node);
@@ -244,12 +244,12 @@ void *thr_dequeuer(void *_count)
 	return ((void*)2);
 }
 
-void test_end(struct rcu_lfs_stack *s, unsigned long long *nr_dequeues)
+void test_end(struct cds_lfs_stack_rcu *s, unsigned long long *nr_dequeues)
 {
-	struct rcu_lfs_node *node;
+	struct cds_lfs_node_rcu *node;
 
 	do {
-		node = rcu_lfs_pop(s);
+		node = cds_lfs_pop_rcu(s);
 		if (node) {
 			free(node);
 			(*nr_dequeues)++;
@@ -348,7 +348,7 @@ int main(int argc, char **argv)
 	tid_dequeuer = malloc(sizeof(*tid_dequeuer) * nr_dequeuers);
 	count_enqueuer = malloc(2 * sizeof(*count_enqueuer) * nr_enqueuers);
 	count_dequeuer = malloc(2 * sizeof(*count_dequeuer) * nr_dequeuers);
-	rcu_lfs_init(&s);
+	cds_lfs_init_rcu(&s);
 
 	next_aff = 0;
 
@@ -365,7 +365,7 @@ int main(int argc, char **argv)
 			exit(1);
 	}
 
-	smp_mb();
+	cmm_smp_mb();
 
 	test_go = 1;
 

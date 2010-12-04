@@ -66,7 +66,7 @@ long rcu_gp_ctr = RCU_GP_COUNT;
  */
 struct rcu_reader __thread *rcu_reader;
 
-static LIST_HEAD(registry);
+static CDS_LIST_HEAD(registry);
 
 struct registry_arena {
 	void *p;
@@ -96,9 +96,9 @@ static void mutex_lock(pthread_mutex_t *mutex)
 			exit(-1);
 		}
 		if (rcu_reader.need_mb) {
-			smp_mb();
+			cmm_smp_mb();
 			rcu_reader.need_mb = 0;
-			smp_mb();
+			cmm_smp_mb();
 		}
 		poll(NULL,0,10);
 	}
@@ -118,48 +118,48 @@ static void mutex_unlock(pthread_mutex_t *mutex)
 
 void update_counter_and_wait(void)
 {
-	LIST_HEAD(qsreaders);
+	CDS_LIST_HEAD(qsreaders);
 	int wait_loops = 0;
 	struct rcu_reader *index, *tmp;
 
 	/* Switch parity: 0 -> 1, 1 -> 0 */
-	STORE_SHARED(rcu_gp_ctr, rcu_gp_ctr ^ RCU_GP_CTR_PHASE);
+	CMM_STORE_SHARED(rcu_gp_ctr, rcu_gp_ctr ^ RCU_GP_CTR_PHASE);
 
 	/*
 	 * Must commit qparity update to memory before waiting for other parity
 	 * quiescent state. Failure to do so could result in the writer waiting
 	 * forever while new readers are always accessing data (no progress).
-	 * Ensured by STORE_SHARED and LOAD_SHARED.
+	 * Ensured by CMM_STORE_SHARED and CMM_LOAD_SHARED.
 	 */
 
 	/*
-	 * Adding a smp_mb() which is _not_ formally required, but makes the
+	 * Adding a cmm_smp_mb() which is _not_ formally required, but makes the
 	 * model easier to understand. It does not have a big performance impact
 	 * anyway, given this is the write-side.
 	 */
-	smp_mb();
+	cmm_smp_mb();
 
 	/*
 	 * Wait for each thread rcu_reader.ctr count to become 0.
 	 */
 	for (;;) {
 		wait_loops++;
-		list_for_each_entry_safe(index, tmp, &registry, node) {
+		cds_list_for_each_entry_safe(index, tmp, &registry, node) {
 			if (!rcu_old_gp_ongoing(&index->ctr))
-				list_move(&index->node, &qsreaders);
+				cds_list_move(&index->node, &qsreaders);
 		}
 
-		if (list_empty(&registry)) {
+		if (cds_list_empty(&registry)) {
 			break;
 		} else {
 			if (wait_loops == RCU_QS_ACTIVE_ATTEMPTS)
 				usleep(RCU_SLEEP_DELAY);
 			else
-				cpu_relax();
+				caa_cpu_relax();
 		}
 	}
 	/* put back the reader list in the registry */
-	list_splice(&qsreaders, &registry);
+	cds_list_splice(&qsreaders, &registry);
 }
 
 void synchronize_rcu(void)
@@ -174,13 +174,13 @@ void synchronize_rcu(void)
 
 	mutex_lock(&rcu_gp_lock);
 
-	if (list_empty(&registry))
+	if (cds_list_empty(&registry))
 		goto out;
 
 	/* All threads should read qparity before accessing data structure
 	 * where new ptr points to. */
 	/* Write new ptr before changing the qparity */
-	smp_mb();
+	cmm_smp_mb();
 
 	/* Remove old registry elements */
 	rcu_gc_registry();
@@ -191,11 +191,11 @@ void synchronize_rcu(void)
 	update_counter_and_wait();	/* 0 -> 1, wait readers in parity 0 */
 
 	/*
-	 * Adding a smp_mb() which is _not_ formally required, but makes the
+	 * Adding a cmm_smp_mb() which is _not_ formally required, but makes the
 	 * model easier to understand. It does not have a big performance impact
 	 * anyway, given this is the write-side.
 	 */
-	smp_mb();
+	cmm_smp_mb();
 
 	/*
 	 * Wait for previous parity to be empty of readers.
@@ -206,7 +206,7 @@ void synchronize_rcu(void)
 	 * Finish waiting for reader threads before letting the old ptr being
 	 * freed.
 	 */
-	smp_mb();
+	cmm_smp_mb();
 out:
 	mutex_unlock(&rcu_gp_lock);
 	ret = pthread_sigmask(SIG_SETMASK, &oldmask, NULL);
@@ -279,7 +279,7 @@ static void add_thread(void)
 	/* Add to registry */
 	rcu_reader_reg->tid = pthread_self();
 	assert(rcu_reader_reg->ctr == 0);
-	list_add(&rcu_reader_reg->node, &registry);
+	cds_list_add(&rcu_reader_reg->node, &registry);
 	rcu_reader = rcu_reader_reg;
 }
 
@@ -299,7 +299,7 @@ static void rcu_gc_registry(void)
 		ret = pthread_kill(tid, 0);
 		assert(ret != EINVAL);
 		if (ret == ESRCH) {
-			list_del(&rcu_reader_reg->node);
+			cds_list_del(&rcu_reader_reg->node);
 			rcu_reader_reg->ctr = 0;
 			rcu_reader_reg->alloc = 0;
 			registry_arena.used -= sizeof(struct rcu_reader);

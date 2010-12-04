@@ -30,9 +30,9 @@ extern "C" {
 #endif 
 
 /* Include size of POWER5+ L3 cache lines: 256 bytes */
-#define CACHE_LINE_SIZE	256
+#define CAA_CACHE_LINE_SIZE	256
 
-#define mb()    asm volatile("sync":::"memory")
+#define cmm_mb()    asm volatile("sync":::"memory")
 
 #define mftbl()						\
 	({ 						\
@@ -50,15 +50,15 @@ extern "C" {
 
 typedef unsigned long long cycles_t;
 
-static inline cycles_t get_cycles (void)
+static inline cycles_t caa_get_cycles (void)
 {
 	long h, l;
 
 	for (;;) {
 		h = mftbu();
-		barrier();
+		cmm_barrier();
 		l = mftbl();
-		barrier();
+		cmm_barrier();
 		if (mftbu() == h)
 			return (((cycles_t) h) << 32) + l;
 	}

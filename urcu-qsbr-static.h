@@ -135,7 +135,7 @@ struct rcu_reader {
 	/* Data used by both reader and synchronize_rcu() */
 	unsigned long ctr;
 	/* Data used for registry */
-	struct list_head node __attribute__((aligned(CACHE_LINE_SIZE)));
+	struct cds_list_head node __attribute__((aligned(CAA_CACHE_LINE_SIZE)));
 	pthread_t tid;
 };
 
@@ -159,7 +159,7 @@ static inline int rcu_gp_ongoing(unsigned long *ctr)
 {
 	unsigned long v;
 
-	v = LOAD_SHARED(*ctr);
+	v = CMM_LOAD_SHARED(*ctr);
 	return v && (v != rcu_gp_ctr);
 }
 
@@ -174,25 +174,27 @@ static inline void _rcu_read_unlock(void)
 
 static inline void _rcu_quiescent_state(void)
 {
-	smp_mb();	
-	_STORE_SHARED(rcu_reader.ctr, _LOAD_SHARED(rcu_gp_ctr));
-	smp_mb();	/* write rcu_reader.ctr before read futex */
+	cmm_smp_mb();
+	_CMM_STORE_SHARED(rcu_reader.ctr, _CMM_LOAD_SHARED(rcu_gp_ctr));
+	cmm_smp_mb();	/* write rcu_reader.ctr before read futex */
 	wake_up_gp();
-	smp_mb();
+	cmm_smp_mb();
 }
 
 static inline void _rcu_thread_offline(void)
 {
-	smp_mb();
-	STORE_SHARED(rcu_reader.ctr, 0);
-	smp_mb();	/* write rcu_reader.ctr before read futex */
+	cmm_smp_mb();
+	CMM_STORE_SHARED(rcu_reader.ctr, 0);
+	cmm_smp_mb();	/* write rcu_reader.ctr before read futex */
 	wake_up_gp();
+	cmm_barrier();	/* Ensure the compiler does not reorder us with mutex */
 }
 
 static inline void _rcu_thread_online(void)
 {
-	_STORE_SHARED(rcu_reader.ctr, LOAD_SHARED(rcu_gp_ctr));
-	smp_mb();
+	cmm_barrier();	/* Ensure the compiler does not reorder us with mutex */
+	_CMM_STORE_SHARED(rcu_reader.ctr, CMM_LOAD_SHARED(rcu_gp_ctr));
+	cmm_smp_mb();
 }
 
 #ifdef __cplusplus 
