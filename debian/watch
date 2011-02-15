@@ -1,2 +1,2 @@
 version=3
-http://www.lttng.org/files/urcu/userspace-rcu-(.*)\.tar\.(?:gz|bz2)
+http://lttng.org/files/urcu/userspace-rcu-(.*)\.tar\.(?:gz|bz2)
