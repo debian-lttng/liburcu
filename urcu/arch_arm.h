@@ -1,8 +1,8 @@
-#ifndef _URCU_ARCH_ARMV7L_H
-#define _URCU_ARCH_ARMV7L_H
+#ifndef _URCU_ARCH_ARM_H
+#define _URCU_ARCH_ARM_H
 
 /*
- * arch_armv7l.h: trivial definitions for the ARMv7 architecture.
+ * arch_arm.h: trivial definitions for the ARM architecture.
  *
  * Copyright (c) 2010 Paul E. McKenney, IBM Corporation.
  * Copyright (c) 2009 Mathieu Desnoyers <mathieu.desnoyers@efficios.com>
@@ -29,7 +29,11 @@
 extern "C" {
 #endif 
 
-#define cmm_mb()    asm volatile("dmb":::"memory")
+#ifdef CONFIG_ARM_HAVE_DMB
+#define cmm_mb()	asm volatile("dmb":::"memory")
+#define cmm_rmb()	asm volatile("dmb":::"memory")
+#define cmm_wmb()	asm volatile("dmb":::"memory")
+#endif /* CONFIG_ARM_HAVE_DMB */
 
 #include <stdlib.h>
 #include <sys/time.h>
@@ -53,4 +57,4 @@ static inline cycles_t caa_get_cycles (void)
 
 #include <urcu/arch_generic.h>
 
-#endif /* _URCU_ARCH_ARMV7L_H */
+#endif /* _URCU_ARCH_ARM_H */

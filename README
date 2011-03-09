@@ -24,11 +24,11 @@ BUILDING
 ARCHITECTURES SUPPORTED
 -----------------------
 
-Currently, x86 (i386, i486, i586, i686), x86 64-bit, PowerPC 32/64, S390, S390x
-ARMv7l, Alpha, ia64 and Sparcv9 32/64 are supported. Only tested on Linux so
+Currently, x86 (i386, i486, i586, i686), x86 64-bit, PowerPC 32/64, S390, S390x,
+ARM, Alpha, ia64 and Sparcv9 32/64 are supported. Only tested on Linux so
 far, but should theoretically work on other operating systems.
 
-ARMv7l depends on running a Linux kernel 2.6.15 or better.
+ARM depends on running a Linux kernel 2.6.15 or better.
 
 The gcc compiler versions 3.3, 3.4, 4.0, 4.1, 4.2, 4.3, 4.4 and 4.5 are
 supported, with the following exceptions:
@@ -38,7 +38,7 @@ supported, with the following exceptions:
   therefore not compatible with liburcu on x86 32-bit (i386, i486, i586, i686).
   The problem has been reported to the gcc community:
     http://www.mail-archive.com/gcc-bugs@gcc.gnu.org/msg281255.html
-- Alpha, ia64 and ARMv7l architectures depend on 4.x gcc with atomic builtins
+- Alpha, ia64 and ARM architectures depend on 4.x gcc with atomic builtins
   support.
 
 
@@ -190,3 +190,17 @@ SMP support
 		./configure --disable-smp-support
 
 	theoretically yielding slightly better performance.
+
+Interaction with fork()
+
+	Special care must be taken for applications performing fork() without
+	any following exec(). This is caused by the fact that Linux only clones
+	the thread calling fork(), and thus never replicates any of the other
+	parent thread into the child process. Most liburcu implementations
+	require that all registrations (as reader, defer_rcu and call_rcu
+	threads) should be released before a fork() is performed, except for the
+	rather common scenario where fork() is immediately followed by exec() in
+	the child process. The only implementation not subject to that rule is
+	liburcu-bp, which is designed to handle this case by requiring a call to
+	synchronize_rcu() following the fork() in the child before any new
+	thread is created.
