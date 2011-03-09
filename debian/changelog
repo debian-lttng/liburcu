@@ -1,3 +1,10 @@
+liburcu (0.5.4-1) unstable; urgency=low
+
+  * [4262c6c] Update watchfile url
+  * [6c28711] New upstream version 0.5.4
+
+ -- Jon Bernard <jbernard@debian.org>  Tue, 08 Mar 2011 20:27:34 -0500
+
 liburcu (0.5.2-1) unstable; urgency=low
 
   * [5810af] New upstream version 0.5.2
