@@ -1,5 +1,8 @@
 /* config.h.in.  Generated from configure.ac by autoheader.  */
 
+/* Use the dmb instruction is available for use on ARM. */
+#undef CONFIG_ARM_HAVE_DMB
+
 /* Compatibility mode for i386 which lacks cmpxchg instruction. */
 #undef CONFIG_RCU_COMPAT_ARCH
 
