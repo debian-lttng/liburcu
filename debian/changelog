@@ -1,3 +1,12 @@
+liburcu (0.6.2-1) unstable; urgency=low
+
+  * [7844d8b] New upstream version 0.6.2
+  * [3268e44] Bump standards version to 3.9.2, no changes necessary
+  * [22c74d6] Remove article from start of description synopses
+  * [6878138] Bump soname so the package name matches the library name
+
+ -- Jon Bernard <jbernard@debian.org>  Sun, 19 Jun 2011 09:14:32 -0400
+
 liburcu (0.5.4-1) unstable; urgency=low
 
   * [4262c6c] Update watchfile url
