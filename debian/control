@@ -11,7 +11,7 @@ Homepage: http://lttng.org/urcu
 Package: liburcu-dev
 Section: libdevel
 Architecture: i386 amd64 powerpc ppc64 powerpcspe s390 s390x sparc alpha
-Depends: ${misc:Depends}, liburcu0 (= ${binary:Version})
+Depends: ${misc:Depends}, liburcu1 (= ${binary:Version})
 Description: userspace RCU (read-copy-update) library - development files
  This data synchronization library provides read-side access which scales
  linearly with the number of cores. It does so by allowing multiples copies of
@@ -22,7 +22,7 @@ Description: userspace RCU (read-copy-update) library - development files
  Install this package if you wish to develop your own programs using the
  userspace RCU library.
 
-Package: liburcu0
+Package: liburcu1
 Architecture: i386 amd64 powerpc ppc64 powerpcspe s390 s390x sparc alpha
 Depends: ${shlibs:Depends}, ${misc:Depends}
 Description: userspace RCU (read-copy-update) library
