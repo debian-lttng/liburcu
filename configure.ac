@@ -2,7 +2,12 @@
 # Process this file with autoconf to produce a configure script.
 
 
-AC_INIT([userspace-rcu], [0.5.4], [mathieu dot desnoyers at efficios dot com])
+AC_INIT([userspace-rcu], [0.6.2], [mathieu dot desnoyers at efficios dot com])
+
+# Following the numbering scheme proposed by libtool for the library version
+# http://www.gnu.org/software/libtool/manual/html_node/Updating-version-info.html
+AC_SUBST([URCU_LIBRARY_VERSION], [1:0:0])
+
 AC_CONFIG_AUX_DIR([config])
 AC_CANONICAL_TARGET
 AC_CANONICAL_HOST
@@ -20,7 +25,7 @@ AH_TEMPLATE([CONFIG_RCU_HAVE_FENCE], [Defined when on a system that has memory f
 AH_TEMPLATE([CONFIG_RCU_HAVE_FUTEX], [Defined when on a system with futex support.])
 AH_TEMPLATE([CONFIG_RCU_COMPAT_ARCH], [Compatibility mode for i386 which lacks
 cmpxchg instruction.])
-AH_TEMPLATE([CONFIG_ARM_HAVE_DMB], [Use the dmb instruction is available for use on ARM.])
+AH_TEMPLATE([CONFIG_RCU_ARM_HAVE_DMB], [Use the dmb instruction is available for use on ARM.])
 
 # Checks for programs.
 AC_PROG_CC
@@ -35,7 +40,7 @@ AC_TYPE_SIZE_T
 # Checks for library functions.
 AC_FUNC_MALLOC
 AC_FUNC_MMAP
-AC_CHECK_FUNCS([bzero gettimeofday munmap strtoul])
+AC_CHECK_FUNCS([bzero gettimeofday munmap sched_getcpu strtoul sysconf])
 
 # Find arch type
 case $host_cpu in
@@ -67,7 +72,7 @@ asm volatile("dmb":::"memory");
 ],
 [
 	AC_MSG_RESULT([yes])
-	AC_DEFINE([CONFIG_ARM_HAVE_DMB], [1])
+	AC_DEFINE([CONFIG_RCU_ARM_HAVE_DMB], [1])
 ]
 ,
 [
@@ -76,8 +81,8 @@ asm volatile("dmb":::"memory");
 )
 fi
 
-UATOMICSRC=urcu/uatomic_arch_$ARCHTYPE.h
-ARCHSRC=urcu/arch_$ARCHTYPE.h
+UATOMICSRC=urcu/uatomic/$ARCHTYPE.h
+ARCHSRC=urcu/arch/$ARCHTYPE.h
 if test "x$ARCHTYPE" != xx86 -a "x$ARCHTYPE" != xppc; then
 	APISRC=tests/api_gcc.h
 else
@@ -235,11 +240,17 @@ CFLAGS=$saved_CFLAGS
 
 AC_CONFIG_LINKS([
 	urcu/arch.h:$ARCHSRC
-	urcu/uatomic_arch.h:$UATOMICSRC
+	urcu/uatomic.h:$UATOMICSRC
 	tests/api.h:$APISRC
 ])
 AC_CONFIG_FILES([
 	Makefile
 	tests/Makefile
+	liburcu-cds.pc
+	liburcu.pc
+	liburcu-bp.pc
+	liburcu-qsbr.pc
+	liburcu-mb.pc
+	liburcu-signal.pc
 ])
 AC_OUTPUT

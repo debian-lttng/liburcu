@@ -1,22 +1,26 @@
 INCLUDES = -I$(top_builddir)/urcu
 
-AM_LDFLAGS=-lpthread
+#Add the -version-info directly here since we are only building
+# library that use the version-info
+AM_LDFLAGS=-lpthread -version-info $(URCU_LIBRARY_VERSION)
+AM_CFLAGS=-Wall
 
 SUBDIRS = . tests
 
-include_HEADERS = urcu.h $(top_srcdir)/urcu-*.h
+include_HEADERS = urcu.h urcu-bp.h urcu-call-rcu.h urcu-defer.h \
+		urcu-pointer.h urcu-qsbr.h
 nobase_dist_include_HEADERS = urcu/compiler.h urcu/hlist.h urcu/list.h \
-		urcu/rculist.h urcu/rcuhlist.h urcu/system.h urcu/urcu-futex.h \
-		urcu/uatomic_generic.h urcu/arch_generic.h urcu/wfstack.h \
+		urcu/rculist.h urcu/rcuhlist.h urcu/system.h urcu/futex.h \
+		urcu/uatomic/generic.h urcu/arch/generic.h urcu/wfstack.h \
 		urcu/wfqueue.h urcu/rculfstack.h urcu/rculfqueue.h \
-		urcu/wfqueue-static.h urcu/wfstack-static.h \
-		urcu/rculfqueue-static.h urcu/rculfstack-static.h \
-		urcu/urcu_ref.h
-nobase_nodist_include_HEADERS = urcu/arch.h urcu/uatomic_arch.h urcu/config.h
+		urcu/ref.h urcu/map/*.h urcu/static/*.h urcu/cds.h \
+		urcu/urcu_ref.h urcu/urcu-futex.h urcu/uatomic_arch.h
+nobase_nodist_include_HEADERS = urcu/arch.h urcu/uatomic.h urcu/config.h
 
-EXTRA_DIST = $(top_srcdir)/urcu/arch_*.h $(top_srcdir)/urcu/uatomic_arch_*.h \
+EXTRA_DIST = $(top_srcdir)/urcu/arch/*.h $(top_srcdir)/urcu/uatomic/*.h \
 		gpl-2.0.txt lgpl-2.1.txt lgpl-relicensing.txt \
-		README LICENSE compat_arch_x86.c
+		README LICENSE compat_arch_x86.c \
+		urcu-call-rcu-impl.h urcu-defer-impl.h
 
 if COMPAT_ARCH
 COMPAT=compat_arch_@ARCHTYPE@.c
@@ -28,25 +32,29 @@ if COMPAT_FUTEX
 COMPAT+=compat_futex.c
 endif
 
-lib_LTLIBRARIES = liburcu.la liburcu-qsbr.la liburcu-mb.la liburcu-signal.la \
-		  liburcu-bp.la liburcu-defer.la libwfqueue.la libwfstack.la \
-		  librculfqueue.la librculfstack.la
+lib_LTLIBRARIES = liburcu-cds.la liburcu.la liburcu-qsbr.la \
+		liburcu-mb.la liburcu-signal.la liburcu-bp.la
+
+liburcu_cds_la_SOURCES = wfqueue.c wfstack.c rculfqueue.c rculfstack.c \
+			$(COMPAT)
 
 liburcu_la_SOURCES = urcu.c urcu-pointer.c $(COMPAT)
+liburcu_la_LIBADD = liburcu-cds.la
 
 liburcu_qsbr_la_SOURCES = urcu-qsbr.c urcu-pointer.c $(COMPAT)
+liburcu_qsbr_la_LIBADD = liburcu-cds.la
 
 liburcu_mb_la_SOURCES = urcu.c urcu-pointer.c $(COMPAT)
 liburcu_mb_la_CFLAGS = -DRCU_MB
+liburcu_mb_la_LIBADD = liburcu-cds.la
 
 liburcu_signal_la_SOURCES = urcu.c urcu-pointer.c $(COMPAT)
 liburcu_signal_la_CFLAGS = -DRCU_SIGNAL
+liburcu_signal_la_LIBADD = liburcu-cds.la
 
 liburcu_bp_la_SOURCES = urcu-bp.c urcu-pointer.c $(COMPAT)
+liburcu_bp_la_LIBADD = liburcu-cds.la
 
-liburcu_defer_la_SOURCES = urcu-defer.c $(COMPAT)
-
-libwfqueue_la_SOURCES = wfqueue.c $(COMPAT)
-libwfstack_la_SOURCES = wfstack.c $(COMPAT)
-librculfqueue_la_SOURCES = rculfqueue.c $(COMPAT)
-librculfstack_la_SOURCES = rculfstack.c $(COMPAT)
+pkgconfigdir = $(libdir)/pkgconfig
+pkgconfig_DATA = liburcu-cds.pc liburcu.pc liburcu-bp.pc liburcu-qsbr.pc \
+	liburcu-signal.pc liburcu-mb.pc

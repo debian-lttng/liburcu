@@ -65,6 +65,8 @@
  * Test variables.
  */
 
+#include <stdlib.h>
+
 DEFINE_PER_THREAD(long long, n_reads_pt);
 DEFINE_PER_THREAD(long long, n_updates_pt);
 
@@ -77,7 +79,8 @@ char argsbuf[64];
 #define GOFLAG_RUN  1
 #define GOFLAG_STOP 2
 
-int goflag __attribute__((__aligned__(CAA_CACHE_LINE_SIZE))) = GOFLAG_INIT;
+volatile int goflag __attribute__((__aligned__(CAA_CACHE_LINE_SIZE)))
+        = GOFLAG_INIT;
 
 #define RCU_READ_RUN 1000
 
@@ -116,6 +119,7 @@ int goflag __attribute__((__aligned__(CAA_CACHE_LINE_SIZE))) = GOFLAG_INIT;
 
 void *rcu_read_perf_test(void *arg)
 {
+	struct call_rcu_data *crdp;
 	int i;
 	int me = (long)arg;
 	long long n_reads_local = 0;
@@ -138,6 +142,9 @@ void *rcu_read_perf_test(void *arg)
 	}
 	__get_thread_var(n_reads_pt) += n_reads_local;
 	put_thread_offline();
+	crdp = get_thread_call_rcu_data();
+	set_thread_call_rcu_data(NULL);
+	call_rcu_data_free(crdp);
 	rcu_unregister_thread();
 
 	return (NULL);
@@ -147,6 +154,16 @@ void *rcu_update_perf_test(void *arg)
 {
 	long long n_updates_local = 0;
 
+	if ((random() & 0xf00) == 0) {
+		struct call_rcu_data *crdp;
+
+		crdp = create_call_rcu_data(0, -1);
+		if (crdp != NULL) {
+			fprintf(stderr,
+				"Using per-thread call_rcu() worker.\n");
+			set_thread_call_rcu_data(crdp);
+		}
+	}
 	uatomic_inc(&nthreadsrunning);
 	while (goflag == GOFLAG_INIT)
 		poll(NULL, 0, 1);
@@ -191,6 +208,10 @@ void perftestrun(int nthreads, int nreaders, int nupdaters)
 	        (double)n_reads),
 	       ((duration * 1000*1000*1000.*(double)nupdaters) /
 	        (double)n_updates));
+	if (get_cpu_call_rcu_data(0)) {
+		fprintf(stderr, "Deallocating per-CPU call_rcu threads.\n");
+		free_all_cpu_call_rcu_data();
+	}
 	exit(0);
 }
 
@@ -296,10 +317,30 @@ void *rcu_read_stress_test(void *arg)
 	return (NULL);
 }
 
+static pthread_mutex_t call_rcu_test_mutex = PTHREAD_MUTEX_INITIALIZER;
+static pthread_cond_t call_rcu_test_cond = PTHREAD_COND_INITIALIZER;
+
+void rcu_update_stress_test_rcu(struct rcu_head *head)
+{
+	if (pthread_mutex_lock(&call_rcu_test_mutex) != 0) {
+		perror("pthread_mutex_lock");
+		exit(-1);
+	}
+	if (pthread_cond_signal(&call_rcu_test_cond) != 0) {
+		perror("pthread_cond_signal");
+		exit(-1);
+	}
+	if (pthread_mutex_unlock(&call_rcu_test_mutex) != 0) {
+		perror("pthread_mutex_unlock");
+		exit(-1);
+	}
+}
+
 void *rcu_update_stress_test(void *arg)
 {
 	int i;
 	struct rcu_stress *p;
+	struct rcu_head rh;
 
 	while (goflag == GOFLAG_INIT)
 		poll(NULL, 0, 1);
@@ -317,7 +358,24 @@ void *rcu_update_stress_test(void *arg)
 		for (i = 0; i < RCU_STRESS_PIPE_LEN; i++)
 			if (i != rcu_stress_idx)
 				rcu_stress_array[i].pipe_count++;
-		synchronize_rcu();
+		if (n_updates & 0x1)
+			synchronize_rcu();
+		else {
+			if (pthread_mutex_lock(&call_rcu_test_mutex) != 0) {
+				perror("pthread_mutex_lock");
+				exit(-1);
+			}
+			call_rcu(&rh, rcu_update_stress_test_rcu);
+			if (pthread_cond_wait(&call_rcu_test_cond,
+					      &call_rcu_test_mutex) != 0) {
+				perror("pthread_cond_wait");
+				exit(-1);
+			}
+			if (pthread_mutex_unlock(&call_rcu_test_mutex) != 0) {
+				perror("pthread_mutex_unlock");
+				exit(-1);
+			}
+		}
 		n_updates++;
 	}
 	return NULL;
@@ -325,6 +383,16 @@ void *rcu_update_stress_test(void *arg)
 
 void *rcu_fake_update_stress_test(void *arg)
 {
+	if ((random() & 0xf00) == 0) {
+		struct call_rcu_data *crdp;
+
+		crdp = create_call_rcu_data(0, -1);
+		if (crdp != NULL) {
+			fprintf(stderr,
+				"Using per-thread call_rcu() worker.\n");
+			set_thread_call_rcu_data(crdp);
+		}
+	}
 	while (goflag == GOFLAG_INIT)
 		poll(NULL, 0, 1);
 	while (goflag == GOFLAG_RUN) {
@@ -376,6 +444,10 @@ void stresstest(int nreaders)
 		printf(" %lld", sum);
 	}
 	printf("\n");
+	if (get_cpu_call_rcu_data(0)) {
+		fprintf(stderr, "Deallocating per-CPU call_rcu threads.\n");
+		free_all_cpu_call_rcu_data();
+	}
 	exit(0);
 }
 
@@ -396,6 +468,12 @@ int main(int argc, char *argv[])
 
 	smp_init();
 	//rcu_init();
+	srandom(time(NULL));
+	if (random() & 0x100) {
+		fprintf(stderr, "Allocating per-CPU call_rcu threads.\n");
+		if (create_all_cpu_call_rcu_data(0))
+			perror("create_all_cpu_call_rcu_data");
+	}
 
 #ifdef DEBUG_YIELD
 	yield_active |= YIELD_READ;

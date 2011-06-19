@@ -35,7 +35,9 @@
 #include <unistd.h>
 #include <sys/mman.h>
 
-#include "urcu-bp-static.h"
+#include "urcu/map/urcu-bp.h"
+
+#include "urcu/static/urcu-bp.h"
 /* Do not #define _LGPL_SOURCE to ensure we can emit the wrapper symbols */
 #include "urcu-bp.h"
 
@@ -375,3 +377,6 @@ void rcu_bp_after_fork_child(void)
 	ret = pthread_sigmask(SIG_SETMASK, &oldmask, NULL);
 	assert(!ret);
 }
+
+#include "urcu-call-rcu-impl.h"
+#include "urcu-defer-impl.h"

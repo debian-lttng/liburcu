@@ -53,14 +53,6 @@ extern "C" {
 extern void defer_rcu(void (*fct)(void *p), void *p);
 
 /*
- * call_rcu will eventually be implemented with an API similar to the Linux
- * kernel call_rcu(), which will allow its use within RCU read-side C.S.
- * Generate an error if used for now.
- */
-
-#define call_rcu	__error_call_rcu_not_implemented_please_use_defer_rcu
-
-/*
  * Thread registration for reclamation.
  */
 extern int rcu_defer_register_thread(void);

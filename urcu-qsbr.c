@@ -23,17 +23,21 @@
  * IBM's contributions to this file may be relicensed under LGPLv2 or later.
  */
 
+#define _GNU_SOURCE
 #include <stdio.h>
 #include <pthread.h>
 #include <signal.h>
 #include <assert.h>
 #include <stdlib.h>
+#include <stdint.h>
 #include <string.h>
 #include <errno.h>
 #include <poll.h>
 
+#include "urcu/map/urcu-qsbr.h"
+
 #define BUILD_QSBR_LIB
-#include "urcu-qsbr-static.h"
+#include "urcu/static/urcu-qsbr.h"
 /* Do not #define _LGPL_SOURCE to ensure we can emit the wrapper symbols */
 #include "urcu-qsbr.h"
 
@@ -41,7 +45,7 @@ void __attribute__((destructor)) rcu_exit(void);
 
 static pthread_mutex_t rcu_gp_lock = PTHREAD_MUTEX_INITIALIZER;
 
-int gp_futex;
+int32_t gp_futex;
 
 /*
  * Global grace period counter.
@@ -121,10 +125,11 @@ static void update_counter_and_wait(void)
 #endif	/* !(CAA_BITS_PER_LONG < 64) */
 
 	/*
-	 * Must commit rcu_gp_ctr update to memory before waiting for quiescent
-	 * state. Failure to do so could result in the writer waiting forever
-	 * while new readers are always accessing data (no progress). Enforce
-	 * compiler-order of store to rcu_gp_ctr before load rcu_reader ctr.
+	 * Must commit rcu_gp_ctr update to memory before waiting for
+	 * quiescent state. Failure to do so could result in the writer
+	 * waiting forever while new readers are always accessing data
+	 * (no progress). Enforce compiler-order of store to rcu_gp_ctr
+	 * before load rcu_reader ctr.
 	 */
 	cmm_barrier();
 
@@ -194,8 +199,8 @@ void synchronize_rcu(void)
 
 	/*
 	 * Mark the writer thread offline to make sure we don't wait for
-	 * our own quiescent state. This allows using synchronize_rcu() in
-	 * threads registered as readers.
+	 * our own quiescent state. This allows using synchronize_rcu()
+	 * in threads registered as readers.
 	 */
 	if (was_online)
 		CMM_STORE_SHARED(rcu_reader.ctr, 0);
@@ -212,10 +217,11 @@ void synchronize_rcu(void)
 
 	/*
 	 * Must finish waiting for quiescent state for parity 0 before
-	 * committing next rcu_gp_ctr update to memory. Failure to do so could
-	 * result in the writer waiting forever while new readers are always
-	 * accessing data (no progress).  Enforce compiler-order of load
-	 * rcu_reader ctr before store to rcu_gp_ctr.
+	 * committing next rcu_gp_ctr update to memory. Failure to
+	 * do so could result in the writer waiting forever while new
+	 * readers are always accessing data (no progress).  Enforce
+	 * compiler-order of load rcu_reader ctr before store to
+	 * rcu_gp_ctr.
 	 */
 	cmm_barrier();
 
@@ -238,7 +244,8 @@ out:
 	 * freed.
 	 */
 	if (was_online)
-		_CMM_STORE_SHARED(rcu_reader.ctr, CMM_LOAD_SHARED(rcu_gp_ctr));
+		_CMM_STORE_SHARED(rcu_reader.ctr,
+				  CMM_LOAD_SHARED(rcu_gp_ctr));
 	cmm_smp_mb();
 }
 #else /* !(CAA_BITS_PER_LONG < 64) */
@@ -250,8 +257,8 @@ void synchronize_rcu(void)
 
 	/*
 	 * Mark the writer thread offline to make sure we don't wait for
-	 * our own quiescent state. This allows using synchronize_rcu() in
-	 * threads registered as readers.
+	 * our own quiescent state. This allows using synchronize_rcu()
+	 * in threads registered as readers.
 	 */
 	cmm_smp_mb();
 	if (was_online)
@@ -265,7 +272,8 @@ out:
 	mutex_unlock(&rcu_gp_lock);
 
 	if (was_online)
-		_CMM_STORE_SHARED(rcu_reader.ctr, CMM_LOAD_SHARED(rcu_gp_ctr));
+		_CMM_STORE_SHARED(rcu_reader.ctr,
+				  CMM_LOAD_SHARED(rcu_gp_ctr));
 	cmm_smp_mb();
 }
 #endif  /* !(CAA_BITS_PER_LONG < 64) */
@@ -326,3 +334,6 @@ void rcu_exit(void)
 {
 	assert(cds_list_empty(&registry));
 }
+
+#include "urcu-call-rcu-impl.h"
+#include "urcu-defer-impl.h"

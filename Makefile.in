@@ -16,6 +16,7 @@
 @SET_MAKE@
 
 
+
 VPATH = @srcdir@
 pkgdatadir = $(datadir)/@PACKAGE@
 pkgincludedir = $(includedir)/@PACKAGE@
@@ -41,9 +42,13 @@ subdir = .
 DIST_COMMON = README $(am__configure_deps) $(include_HEADERS) \
 	$(nobase_dist_include_HEADERS) $(srcdir)/Makefile.am \
 	$(srcdir)/Makefile.in $(srcdir)/config.h.in \
+	$(srcdir)/liburcu-bp.pc.in $(srcdir)/liburcu-cds.pc.in \
+	$(srcdir)/liburcu-mb.pc.in $(srcdir)/liburcu-qsbr.pc.in \
+	$(srcdir)/liburcu-signal.pc.in $(srcdir)/liburcu.pc.in \
 	$(top_srcdir)/configure $(top_srcdir)/urcu/config.h.in \
-	config/config.guess config/config.sub config/depcomp \
-	config/install-sh config/ltmain.sh config/missing
+	config/compile config/config.guess config/config.sub \
+	config/depcomp config/install-sh config/ltmain.sh \
+	config/missing
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/configure.ac
 am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
@@ -52,7 +57,9 @@ am__CONFIG_DISTCLEAN_FILES = config.status config.cache config.log \
  configure.lineno config.status.lineno
 mkinstalldirs = $(install_sh) -d
 CONFIG_HEADER = config.h $(top_builddir)/urcu/config.h
-CONFIG_CLEAN_FILES = urcu/arch.h urcu/uatomic_arch.h
+CONFIG_CLEAN_FILES = liburcu-cds.pc liburcu.pc liburcu-bp.pc \
+	liburcu-qsbr.pc liburcu-mb.pc liburcu-signal.pc urcu/arch.h \
+	urcu/uatomic.h
 CONFIG_CLEAN_VPATH_FILES =
 am__vpath_adj_setup = srcdirstrip=`echo "$(srcdir)" | sed 's|.|.|g'`;
 am__vpath_adj = case $$p in \
@@ -75,37 +82,29 @@ am__nobase_list = $(am__nobase_strip_setup); \
 am__base_list = \
   sed '$$!N;$$!N;$$!N;$$!N;$$!N;$$!N;$$!N;s/\n/ /g' | \
   sed '$$!N;$$!N;$$!N;$$!N;s/\n/ /g'
-am__installdirs = "$(DESTDIR)$(libdir)" "$(DESTDIR)$(includedir)" \
-	"$(DESTDIR)$(includedir)" "$(DESTDIR)$(includedir)"
+am__installdirs = "$(DESTDIR)$(libdir)" "$(DESTDIR)$(pkgconfigdir)" \
+	"$(DESTDIR)$(includedir)" "$(DESTDIR)$(includedir)" \
+	"$(DESTDIR)$(includedir)"
 LTLIBRARIES = $(lib_LTLIBRARIES)
-librculfqueue_la_LIBADD =
-am__librculfqueue_la_SOURCES_DIST = rculfqueue.c compat_futex.c \
-	compat_arch_@ARCHTYPE@.c
+liburcu_bp_la_DEPENDENCIES = liburcu-cds.la
+am__liburcu_bp_la_SOURCES_DIST = urcu-bp.c urcu-pointer.c \
+	compat_futex.c compat_arch_@ARCHTYPE@.c
 @COMPAT_FUTEX_TRUE@am__objects_1 = compat_futex.lo
 @COMPAT_ARCH_FALSE@am__objects_2 = $(am__objects_1)
 @COMPAT_ARCH_TRUE@am__objects_2 = compat_arch_@ARCHTYPE@.lo \
 @COMPAT_ARCH_TRUE@	$(am__objects_1)
-am_librculfqueue_la_OBJECTS = rculfqueue.lo $(am__objects_2)
-librculfqueue_la_OBJECTS = $(am_librculfqueue_la_OBJECTS)
+am_liburcu_bp_la_OBJECTS = urcu-bp.lo urcu-pointer.lo $(am__objects_2)
+liburcu_bp_la_OBJECTS = $(am_liburcu_bp_la_OBJECTS)
 AM_V_lt = $(am__v_lt_$(V))
 am__v_lt_ = $(am__v_lt_$(AM_DEFAULT_VERBOSITY))
 am__v_lt_0 = --silent
-librculfstack_la_LIBADD =
-am__librculfstack_la_SOURCES_DIST = rculfstack.c compat_futex.c \
-	compat_arch_@ARCHTYPE@.c
-am_librculfstack_la_OBJECTS = rculfstack.lo $(am__objects_2)
-librculfstack_la_OBJECTS = $(am_librculfstack_la_OBJECTS)
-liburcu_bp_la_LIBADD =
-am__liburcu_bp_la_SOURCES_DIST = urcu-bp.c urcu-pointer.c \
-	compat_futex.c compat_arch_@ARCHTYPE@.c
-am_liburcu_bp_la_OBJECTS = urcu-bp.lo urcu-pointer.lo $(am__objects_2)
-liburcu_bp_la_OBJECTS = $(am_liburcu_bp_la_OBJECTS)
-liburcu_defer_la_LIBADD =
-am__liburcu_defer_la_SOURCES_DIST = urcu-defer.c compat_futex.c \
-	compat_arch_@ARCHTYPE@.c
-am_liburcu_defer_la_OBJECTS = urcu-defer.lo $(am__objects_2)
-liburcu_defer_la_OBJECTS = $(am_liburcu_defer_la_OBJECTS)
-liburcu_mb_la_LIBADD =
+liburcu_cds_la_LIBADD =
+am__liburcu_cds_la_SOURCES_DIST = wfqueue.c wfstack.c rculfqueue.c \
+	rculfstack.c compat_futex.c compat_arch_@ARCHTYPE@.c
+am_liburcu_cds_la_OBJECTS = wfqueue.lo wfstack.lo rculfqueue.lo \
+	rculfstack.lo $(am__objects_2)
+liburcu_cds_la_OBJECTS = $(am_liburcu_cds_la_OBJECTS)
+liburcu_mb_la_DEPENDENCIES = liburcu-cds.la
 am__liburcu_mb_la_SOURCES_DIST = urcu.c urcu-pointer.c compat_futex.c \
 	compat_arch_@ARCHTYPE@.c
 @COMPAT_FUTEX_TRUE@am__objects_3 = liburcu_mb_la-compat_futex.lo
@@ -119,13 +118,13 @@ liburcu_mb_la_OBJECTS = $(am_liburcu_mb_la_OBJECTS)
 liburcu_mb_la_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(liburcu_mb_la_CFLAGS) \
 	$(CFLAGS) $(AM_LDFLAGS) $(LDFLAGS) -o $@
-liburcu_qsbr_la_LIBADD =
+liburcu_qsbr_la_DEPENDENCIES = liburcu-cds.la
 am__liburcu_qsbr_la_SOURCES_DIST = urcu-qsbr.c urcu-pointer.c \
 	compat_futex.c compat_arch_@ARCHTYPE@.c
 am_liburcu_qsbr_la_OBJECTS = urcu-qsbr.lo urcu-pointer.lo \
 	$(am__objects_2)
 liburcu_qsbr_la_OBJECTS = $(am_liburcu_qsbr_la_OBJECTS)
-liburcu_signal_la_LIBADD =
+liburcu_signal_la_DEPENDENCIES = liburcu-cds.la
 am__liburcu_signal_la_SOURCES_DIST = urcu.c urcu-pointer.c \
 	compat_futex.c compat_arch_@ARCHTYPE@.c
 @COMPAT_FUTEX_TRUE@am__objects_5 = liburcu_signal_la-compat_futex.lo
@@ -140,21 +139,11 @@ liburcu_signal_la_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC \
 	$(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=link $(CCLD) \
 	$(liburcu_signal_la_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) $(LDFLAGS) \
 	-o $@
-liburcu_la_LIBADD =
+liburcu_la_DEPENDENCIES = liburcu-cds.la
 am__liburcu_la_SOURCES_DIST = urcu.c urcu-pointer.c compat_futex.c \
 	compat_arch_@ARCHTYPE@.c
 am_liburcu_la_OBJECTS = urcu.lo urcu-pointer.lo $(am__objects_2)
 liburcu_la_OBJECTS = $(am_liburcu_la_OBJECTS)
-libwfqueue_la_LIBADD =
-am__libwfqueue_la_SOURCES_DIST = wfqueue.c compat_futex.c \
-	compat_arch_@ARCHTYPE@.c
-am_libwfqueue_la_OBJECTS = wfqueue.lo $(am__objects_2)
-libwfqueue_la_OBJECTS = $(am_libwfqueue_la_OBJECTS)
-libwfstack_la_LIBADD =
-am__libwfstack_la_SOURCES_DIST = wfstack.c compat_futex.c \
-	compat_arch_@ARCHTYPE@.c
-am_libwfstack_la_OBJECTS = wfstack.lo $(am__objects_2)
-libwfstack_la_OBJECTS = $(am_libwfstack_la_OBJECTS)
 DEFAULT_INCLUDES = -I.@am__isrc@ -I$(top_builddir)/urcu
 depcomp = $(SHELL) $(top_srcdir)/config/depcomp
 am__depfiles_maybe = depfiles
@@ -181,21 +170,15 @@ am__v_CCLD_0 = @echo "  CCLD  " $@;
 AM_V_GEN = $(am__v_GEN_$(V))
 am__v_GEN_ = $(am__v_GEN_$(AM_DEFAULT_VERBOSITY))
 am__v_GEN_0 = @echo "  GEN   " $@;
-SOURCES = $(librculfqueue_la_SOURCES) $(librculfstack_la_SOURCES) \
-	$(liburcu_bp_la_SOURCES) $(liburcu_defer_la_SOURCES) \
+SOURCES = $(liburcu_bp_la_SOURCES) $(liburcu_cds_la_SOURCES) \
 	$(liburcu_mb_la_SOURCES) $(liburcu_qsbr_la_SOURCES) \
-	$(liburcu_signal_la_SOURCES) $(liburcu_la_SOURCES) \
-	$(libwfqueue_la_SOURCES) $(libwfstack_la_SOURCES)
-DIST_SOURCES = $(am__librculfqueue_la_SOURCES_DIST) \
-	$(am__librculfstack_la_SOURCES_DIST) \
-	$(am__liburcu_bp_la_SOURCES_DIST) \
-	$(am__liburcu_defer_la_SOURCES_DIST) \
+	$(liburcu_signal_la_SOURCES) $(liburcu_la_SOURCES)
+DIST_SOURCES = $(am__liburcu_bp_la_SOURCES_DIST) \
+	$(am__liburcu_cds_la_SOURCES_DIST) \
 	$(am__liburcu_mb_la_SOURCES_DIST) \
 	$(am__liburcu_qsbr_la_SOURCES_DIST) \
 	$(am__liburcu_signal_la_SOURCES_DIST) \
-	$(am__liburcu_la_SOURCES_DIST) \
-	$(am__libwfqueue_la_SOURCES_DIST) \
-	$(am__libwfstack_la_SOURCES_DIST)
+	$(am__liburcu_la_SOURCES_DIST)
 RECURSIVE_TARGETS = all-recursive check-recursive dvi-recursive \
 	html-recursive info-recursive install-data-recursive \
 	install-dvi-recursive install-exec-recursive \
@@ -203,6 +186,7 @@ RECURSIVE_TARGETS = all-recursive check-recursive dvi-recursive \
 	install-pdf-recursive install-ps-recursive install-recursive \
 	installcheck-recursive installdirs-recursive pdf-recursive \
 	ps-recursive uninstall-recursive
+DATA = $(pkgconfig_DATA)
 HEADERS = $(include_HEADERS) $(nobase_dist_include_HEADERS) \
 	$(nobase_nodist_include_HEADERS)
 RECURSIVE_CLEAN_TARGETS = mostlyclean-recursive clean-recursive	\
@@ -310,6 +294,7 @@ SET_MAKE = @SET_MAKE@
 SHELL = @SHELL@
 STRIP = @STRIP@
 SUBARCHTYPE = @SUBARCHTYPE@
+URCU_LIBRARY_VERSION = @URCU_LIBRARY_VERSION@
 VERSION = @VERSION@
 abs_builddir = @abs_builddir@
 abs_srcdir = @abs_srcdir@
@@ -368,40 +353,52 @@ top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 INCLUDES = -I$(top_builddir)/urcu
-AM_LDFLAGS = -lpthread
-SUBDIRS = . tests
-include_HEADERS = urcu.h $(top_srcdir)/urcu-*.h
-nobase_dist_include_HEADERS = urcu/compiler.h urcu/hlist.h urcu/list.h \
-		urcu/rculist.h urcu/rcuhlist.h urcu/system.h urcu/urcu-futex.h \
-		urcu/uatomic_generic.h urcu/arch_generic.h urcu/wfstack.h \
-		urcu/wfqueue.h urcu/rculfstack.h urcu/rculfqueue.h \
-		urcu/wfqueue-static.h urcu/wfstack-static.h \
-		urcu/rculfqueue-static.h urcu/rculfstack-static.h \
-		urcu/urcu_ref.h
 
-nobase_nodist_include_HEADERS = urcu/arch.h urcu/uatomic_arch.h urcu/config.h
-EXTRA_DIST = $(top_srcdir)/urcu/arch_*.h $(top_srcdir)/urcu/uatomic_arch_*.h \
+#Add the -version-info directly here since we are only building
+# library that use the version-info
+AM_LDFLAGS = -lpthread -version-info $(URCU_LIBRARY_VERSION)
+AM_CFLAGS = -Wall
+SUBDIRS = . tests
+include_HEADERS = urcu.h urcu-bp.h urcu-call-rcu.h urcu-defer.h \
+		urcu-pointer.h urcu-qsbr.h
+
+nobase_dist_include_HEADERS = urcu/compiler.h urcu/hlist.h urcu/list.h \
+		urcu/rculist.h urcu/rcuhlist.h urcu/system.h urcu/futex.h \
+		urcu/uatomic/generic.h urcu/arch/generic.h urcu/wfstack.h \
+		urcu/wfqueue.h urcu/rculfstack.h urcu/rculfqueue.h \
+		urcu/ref.h urcu/map/*.h urcu/static/*.h urcu/cds.h \
+		urcu/urcu_ref.h urcu/urcu-futex.h urcu/uatomic_arch.h
+
+nobase_nodist_include_HEADERS = urcu/arch.h urcu/uatomic.h urcu/config.h
+EXTRA_DIST = $(top_srcdir)/urcu/arch/*.h $(top_srcdir)/urcu/uatomic/*.h \
 		gpl-2.0.txt lgpl-2.1.txt lgpl-relicensing.txt \
-		README LICENSE compat_arch_x86.c
+		README LICENSE compat_arch_x86.c \
+		urcu-call-rcu-impl.h urcu-defer-impl.h
 
 @COMPAT_ARCH_FALSE@COMPAT = $(am__append_1)
 @COMPAT_ARCH_TRUE@COMPAT = compat_arch_@ARCHTYPE@.c $(am__append_1)
-lib_LTLIBRARIES = liburcu.la liburcu-qsbr.la liburcu-mb.la liburcu-signal.la \
-		  liburcu-bp.la liburcu-defer.la libwfqueue.la libwfstack.la \
-		  librculfqueue.la librculfstack.la
+lib_LTLIBRARIES = liburcu-cds.la liburcu.la liburcu-qsbr.la \
+		liburcu-mb.la liburcu-signal.la liburcu-bp.la
+
+liburcu_cds_la_SOURCES = wfqueue.c wfstack.c rculfqueue.c rculfstack.c \
+			$(COMPAT)
 
 liburcu_la_SOURCES = urcu.c urcu-pointer.c $(COMPAT)
+liburcu_la_LIBADD = liburcu-cds.la
 liburcu_qsbr_la_SOURCES = urcu-qsbr.c urcu-pointer.c $(COMPAT)
+liburcu_qsbr_la_LIBADD = liburcu-cds.la
 liburcu_mb_la_SOURCES = urcu.c urcu-pointer.c $(COMPAT)
 liburcu_mb_la_CFLAGS = -DRCU_MB
+liburcu_mb_la_LIBADD = liburcu-cds.la
 liburcu_signal_la_SOURCES = urcu.c urcu-pointer.c $(COMPAT)
 liburcu_signal_la_CFLAGS = -DRCU_SIGNAL
+liburcu_signal_la_LIBADD = liburcu-cds.la
 liburcu_bp_la_SOURCES = urcu-bp.c urcu-pointer.c $(COMPAT)
-liburcu_defer_la_SOURCES = urcu-defer.c $(COMPAT)
-libwfqueue_la_SOURCES = wfqueue.c $(COMPAT)
-libwfstack_la_SOURCES = wfstack.c $(COMPAT)
-librculfqueue_la_SOURCES = rculfqueue.c $(COMPAT)
-librculfstack_la_SOURCES = rculfstack.c $(COMPAT)
+liburcu_bp_la_LIBADD = liburcu-cds.la
+pkgconfigdir = $(libdir)/pkgconfig
+pkgconfig_DATA = liburcu-cds.pc liburcu.pc liburcu-bp.pc liburcu-qsbr.pc \
+	liburcu-signal.pc liburcu-mb.pc
+
 all: config.h
 	$(MAKE) $(AM_MAKEFLAGS) all-recursive
 
@@ -468,6 +465,18 @@ urcu/stamp-h2: $(top_srcdir)/urcu/config.h.in $(top_builddir)/config.status
 
 distclean-hdr:
 	-rm -f config.h stamp-h1 urcu/config.h urcu/stamp-h2
+liburcu-cds.pc: $(top_builddir)/config.status $(srcdir)/liburcu-cds.pc.in
+	cd $(top_builddir) && $(SHELL) ./config.status $@
+liburcu.pc: $(top_builddir)/config.status $(srcdir)/liburcu.pc.in
+	cd $(top_builddir) && $(SHELL) ./config.status $@
+liburcu-bp.pc: $(top_builddir)/config.status $(srcdir)/liburcu-bp.pc.in
+	cd $(top_builddir) && $(SHELL) ./config.status $@
+liburcu-qsbr.pc: $(top_builddir)/config.status $(srcdir)/liburcu-qsbr.pc.in
+	cd $(top_builddir) && $(SHELL) ./config.status $@
+liburcu-mb.pc: $(top_builddir)/config.status $(srcdir)/liburcu-mb.pc.in
+	cd $(top_builddir) && $(SHELL) ./config.status $@
+liburcu-signal.pc: $(top_builddir)/config.status $(srcdir)/liburcu-signal.pc.in
+	cd $(top_builddir) && $(SHELL) ./config.status $@
 install-libLTLIBRARIES: $(lib_LTLIBRARIES)
 	@$(NORMAL_INSTALL)
 	test -z "$(libdir)" || $(MKDIR_P) "$(DESTDIR)$(libdir)"
@@ -499,14 +508,10 @@ clean-libLTLIBRARIES:
 	  echo "rm -f \"$${dir}/so_locations\""; \
 	  rm -f "$${dir}/so_locations"; \
 	done
-librculfqueue.la: $(librculfqueue_la_OBJECTS) $(librculfqueue_la_DEPENDENCIES) 
-	$(AM_V_CCLD)$(LINK) -rpath $(libdir) $(librculfqueue_la_OBJECTS) $(librculfqueue_la_LIBADD) $(LIBS)
-librculfstack.la: $(librculfstack_la_OBJECTS) $(librculfstack_la_DEPENDENCIES) 
-	$(AM_V_CCLD)$(LINK) -rpath $(libdir) $(librculfstack_la_OBJECTS) $(librculfstack_la_LIBADD) $(LIBS)
 liburcu-bp.la: $(liburcu_bp_la_OBJECTS) $(liburcu_bp_la_DEPENDENCIES) 
 	$(AM_V_CCLD)$(LINK) -rpath $(libdir) $(liburcu_bp_la_OBJECTS) $(liburcu_bp_la_LIBADD) $(LIBS)
-liburcu-defer.la: $(liburcu_defer_la_OBJECTS) $(liburcu_defer_la_DEPENDENCIES) 
-	$(AM_V_CCLD)$(LINK) -rpath $(libdir) $(liburcu_defer_la_OBJECTS) $(liburcu_defer_la_LIBADD) $(LIBS)
+liburcu-cds.la: $(liburcu_cds_la_OBJECTS) $(liburcu_cds_la_DEPENDENCIES) 
+	$(AM_V_CCLD)$(LINK) -rpath $(libdir) $(liburcu_cds_la_OBJECTS) $(liburcu_cds_la_LIBADD) $(LIBS)
 liburcu-mb.la: $(liburcu_mb_la_OBJECTS) $(liburcu_mb_la_DEPENDENCIES) 
 	$(AM_V_CCLD)$(liburcu_mb_la_LINK) -rpath $(libdir) $(liburcu_mb_la_OBJECTS) $(liburcu_mb_la_LIBADD) $(LIBS)
 liburcu-qsbr.la: $(liburcu_qsbr_la_OBJECTS) $(liburcu_qsbr_la_DEPENDENCIES) 
@@ -515,10 +520,6 @@ liburcu-signal.la: $(liburcu_signal_la_OBJECTS) $(liburcu_signal_la_DEPENDENCIES
 	$(AM_V_CCLD)$(liburcu_signal_la_LINK) -rpath $(libdir) $(liburcu_signal_la_OBJECTS) $(liburcu_signal_la_LIBADD) $(LIBS)
 liburcu.la: $(liburcu_la_OBJECTS) $(liburcu_la_DEPENDENCIES) 
 	$(AM_V_CCLD)$(LINK) -rpath $(libdir) $(liburcu_la_OBJECTS) $(liburcu_la_LIBADD) $(LIBS)
-libwfqueue.la: $(libwfqueue_la_OBJECTS) $(libwfqueue_la_DEPENDENCIES) 
-	$(AM_V_CCLD)$(LINK) -rpath $(libdir) $(libwfqueue_la_OBJECTS) $(libwfqueue_la_LIBADD) $(LIBS)
-libwfstack.la: $(libwfstack_la_OBJECTS) $(libwfstack_la_DEPENDENCIES) 
-	$(AM_V_CCLD)$(LINK) -rpath $(libdir) $(libwfstack_la_OBJECTS) $(libwfstack_la_LIBADD) $(LIBS)
 
 mostlyclean-compile:
 	-rm -f *.$(OBJEXT)
@@ -539,7 +540,6 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rculfqueue.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rculfstack.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/urcu-bp.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/urcu-defer.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/urcu-pointer.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/urcu-qsbr.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/urcu.Plo@am__quote@
@@ -642,6 +642,26 @@ clean-libtool:
 
 distclean-libtool:
 	-rm -f libtool config.lt
+install-pkgconfigDATA: $(pkgconfig_DATA)
+	@$(NORMAL_INSTALL)
+	test -z "$(pkgconfigdir)" || $(MKDIR_P) "$(DESTDIR)$(pkgconfigdir)"
+	@list='$(pkgconfig_DATA)'; test -n "$(pkgconfigdir)" || list=; \
+	for p in $$list; do \
+	  if test -f "$$p"; then d=; else d="$(srcdir)/"; fi; \
+	  echo "$$d$$p"; \
+	done | $(am__base_list) | \
+	while read files; do \
+	  echo " $(INSTALL_DATA) $$files '$(DESTDIR)$(pkgconfigdir)'"; \
+	  $(INSTALL_DATA) $$files "$(DESTDIR)$(pkgconfigdir)" || exit $$?; \
+	done
+
+uninstall-pkgconfigDATA:
+	@$(NORMAL_UNINSTALL)
+	@list='$(pkgconfig_DATA)'; test -n "$(pkgconfigdir)" || list=; \
+	files=`for p in $$list; do echo $$p; done | sed -e 's|^.*/||'`; \
+	test -n "$$files" || exit 0; \
+	echo " ( cd '$(DESTDIR)$(pkgconfigdir)' && rm -f" $$files ")"; \
+	cd "$(DESTDIR)$(pkgconfigdir)" && rm -f $$files
 install-includeHEADERS: $(include_HEADERS)
 	@$(NORMAL_INSTALL)
 	test -z "$(includedir)" || $(MKDIR_P) "$(DESTDIR)$(includedir)"
@@ -1020,10 +1040,10 @@ distcleancheck: distclean
 	       exit 1; } >&2
 check-am: all-am
 check: check-recursive
-all-am: Makefile $(LTLIBRARIES) $(HEADERS) config.h
+all-am: Makefile $(LTLIBRARIES) $(DATA) $(HEADERS) config.h
 installdirs: installdirs-recursive
 installdirs-am:
-	for dir in "$(DESTDIR)$(libdir)" "$(DESTDIR)$(includedir)" "$(DESTDIR)$(includedir)" "$(DESTDIR)$(includedir)"; do \
+	for dir in "$(DESTDIR)$(libdir)" "$(DESTDIR)$(pkgconfigdir)" "$(DESTDIR)$(includedir)" "$(DESTDIR)$(includedir)" "$(DESTDIR)$(includedir)"; do \
 	  test -z "$$dir" || $(MKDIR_P) "$$dir"; \
 	done
 install: install-recursive
@@ -1077,7 +1097,7 @@ info-am:
 
 install-data-am: install-includeHEADERS \
 	install-nobase_dist_includeHEADERS \
-	install-nobase_nodist_includeHEADERS
+	install-nobase_nodist_includeHEADERS install-pkgconfigDATA
 
 install-dvi: install-dvi-recursive
 
@@ -1127,7 +1147,7 @@ ps-am:
 
 uninstall-am: uninstall-includeHEADERS uninstall-libLTLIBRARIES \
 	uninstall-nobase_dist_includeHEADERS \
-	uninstall-nobase_nodist_includeHEADERS
+	uninstall-nobase_nodist_includeHEADERS uninstall-pkgconfigDATA
 
 .MAKE: $(RECURSIVE_CLEAN_TARGETS) $(RECURSIVE_TARGETS) all \
 	ctags-recursive install-am install-strip tags-recursive
@@ -1146,14 +1166,14 @@ uninstall-am: uninstall-includeHEADERS uninstall-libLTLIBRARIES \
 	install-libLTLIBRARIES install-man \
 	install-nobase_dist_includeHEADERS \
 	install-nobase_nodist_includeHEADERS install-pdf \
-	install-pdf-am install-ps install-ps-am install-strip \
-	installcheck installcheck-am installdirs installdirs-am \
-	maintainer-clean maintainer-clean-generic mostlyclean \
-	mostlyclean-compile mostlyclean-generic mostlyclean-libtool \
-	pdf pdf-am ps ps-am tags tags-recursive uninstall uninstall-am \
-	uninstall-includeHEADERS uninstall-libLTLIBRARIES \
-	uninstall-nobase_dist_includeHEADERS \
-	uninstall-nobase_nodist_includeHEADERS
+	install-pdf-am install-pkgconfigDATA install-ps install-ps-am \
+	install-strip installcheck installcheck-am installdirs \
+	installdirs-am maintainer-clean maintainer-clean-generic \
+	mostlyclean mostlyclean-compile mostlyclean-generic \
+	mostlyclean-libtool pdf pdf-am ps ps-am tags tags-recursive \
+	uninstall uninstall-am uninstall-includeHEADERS \
+	uninstall-libLTLIBRARIES uninstall-nobase_dist_includeHEADERS \
+	uninstall-nobase_nodist_includeHEADERS uninstall-pkgconfigDATA
 
 
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
