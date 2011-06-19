@@ -62,7 +62,7 @@ static inline pid_t gettid(void)
 #define _LGPL_SOURCE
 #endif
 #include <urcu.h>
-#include <urcu/rculfstack.h>
+#include <urcu/cds.h>
 #include <urcu-defer.h>
 
 static volatile int test_go, test_stop;
@@ -177,6 +177,7 @@ void *thr_enqueuer(void *_count)
 		if (!node)
 			goto fail;
 		cds_lfs_node_init_rcu(node);
+		/* No rcu read-side is needed for push */
 		cds_lfs_push_rcu(&s, node);
 		nr_successful_enqueues++;
 
@@ -223,13 +224,15 @@ void *thr_dequeuer(void *_count)
 	cmm_smp_mb();
 
 	for (;;) {
-		struct cds_lfs_node_rcu *node = cds_lfs_pop_rcu(&s);
+		struct cds_lfs_node_rcu *node;
 
+		rcu_read_lock();
+		node = cds_lfs_pop_rcu(&s);
+		rcu_read_unlock();
 		if (node) {
 			defer_rcu(free, node);
 			nr_successful_dequeues++;
 		}
-
 		nr_dequeues++;
 		if (unlikely(!test_duration_dequeue()))
 			break;

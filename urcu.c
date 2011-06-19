@@ -24,16 +24,20 @@
  */
 
 #define _BSD_SOURCE
+#define _GNU_SOURCE
 #include <stdio.h>
 #include <pthread.h>
 #include <signal.h>
 #include <assert.h>
 #include <stdlib.h>
+#include <stdint.h>
 #include <string.h>
 #include <errno.h>
 #include <poll.h>
 
-#include "urcu-static.h"
+#include "urcu/map/urcu.h"
+
+#include "urcu/static/urcu.h"
 /* Do not #define _LGPL_SOURCE to ensure we can emit the wrapper symbols */
 #include "urcu.h"
 
@@ -59,7 +63,7 @@ void __attribute__((destructor)) rcu_exit(void);
 
 static pthread_mutex_t rcu_gp_lock = PTHREAD_MUTEX_INITIALIZER;
 
-int gp_futex;
+int32_t gp_futex;
 
 /*
  * Global grace period counter.
@@ -428,4 +432,8 @@ void rcu_exit(void)
 	assert(act.sa_sigaction == sigrcu_handler);
 	assert(cds_list_empty(&registry));
 }
+
 #endif /* #ifdef RCU_SIGNAL */
+
+#include "urcu-call-rcu-impl.h"
+#include "urcu-defer-impl.h"

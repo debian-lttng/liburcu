@@ -35,7 +35,8 @@
 #include <pthread.h>
 
 /*
- * See urcu-pointer.h and urcu-pointer-static.h for pointer publication headers.
+ * See urcu-pointer.h and urcu/static/urcu-pointer.h for pointer
+ * publication headers.
  */
 #include <urcu-pointer.h>
 
@@ -43,17 +44,19 @@
 extern "C" {
 #endif 
 
+#include <urcu/map/urcu.h>
+
 /*
  * Important !
  *
  * Each thread containing read-side critical sections must be registered
- * with rcu_register_thread() before calling rcu_read_lock().
- * rcu_unregister_thread() should be called before the thread exits.
+ * with rcu_register_thread_mb() before calling rcu_read_lock_mb().
+ * rcu_unregister_thread_mb() should be called before the thread exits.
  */
 
 #ifdef _LGPL_SOURCE
 
-#include <urcu-static.h>
+#include <urcu/static/urcu.h>
 
 /*
  * Mappings for static use of the userspace RCU library.
@@ -68,14 +71,22 @@ extern "C" {
  * DON'T FORGET TO USE RCU_REGISTER/UNREGISTER_THREAD() FOR EACH THREAD WITH
  * READ-SIDE CRITICAL SECTION.
  */
-#define rcu_read_lock()		_rcu_read_lock()
-#define rcu_read_unlock()	_rcu_read_unlock()
+#ifdef RCU_MEMBARRIER
+#define rcu_read_lock_memb		_rcu_read_lock
+#define rcu_read_unlock_memb		_rcu_read_unlock
+#elif defined(RCU_SIGNAL)
+#define rcu_read_lock_sig		_rcu_read_lock
+#define rcu_read_unlock_sig		_rcu_read_unlock
+#elif defined(RCU_MB)
+#define rcu_read_lock_mb		_rcu_read_lock
+#define rcu_read_unlock_mb		_rcu_read_unlock
+#endif
 
 #else /* !_LGPL_SOURCE */
 
 /*
  * library wrappers to be used by non-LGPL compatible source code.
- * See LGPL-only urcu-pointer-static.h for documentation.
+ * See LGPL-only urcu/static/urcu-pointer.h for documentation.
  */
 
 extern void rcu_read_lock(void);
@@ -99,5 +110,8 @@ extern void rcu_init(void);
 #ifdef __cplusplus 
 }
 #endif
+
+#include <urcu-call-rcu.h>
+#include <urcu-defer.h>
 
 #endif /* _URCU_H */
