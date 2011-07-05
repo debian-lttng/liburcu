@@ -46,7 +46,7 @@ DIST_COMMON = README $(am__configure_deps) $(include_HEADERS) \
 	$(srcdir)/liburcu-mb.pc.in $(srcdir)/liburcu-qsbr.pc.in \
 	$(srcdir)/liburcu-signal.pc.in $(srcdir)/liburcu.pc.in \
 	$(top_srcdir)/configure $(top_srcdir)/urcu/config.h.in \
-	config/compile config/config.guess config/config.sub \
+	ChangeLog config/compile config/config.guess config/config.sub \
 	config/depcomp config/install-sh config/ltmain.sh \
 	config/missing
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
@@ -373,7 +373,8 @@ nobase_nodist_include_HEADERS = urcu/arch.h urcu/uatomic.h urcu/config.h
 EXTRA_DIST = $(top_srcdir)/urcu/arch/*.h $(top_srcdir)/urcu/uatomic/*.h \
 		gpl-2.0.txt lgpl-2.1.txt lgpl-relicensing.txt \
 		README LICENSE compat_arch_x86.c \
-		urcu-call-rcu-impl.h urcu-defer-impl.h
+		urcu-call-rcu-impl.h urcu-defer-impl.h \
+		ChangeLog
 
 @COMPAT_ARCH_FALSE@COMPAT = $(am__append_1)
 @COMPAT_ARCH_TRUE@COMPAT = compat_arch_@ARCHTYPE@.c $(am__append_1)
