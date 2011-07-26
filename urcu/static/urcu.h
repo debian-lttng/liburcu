@@ -31,7 +31,6 @@
 
 #include <stdlib.h>
 #include <pthread.h>
-#include <syscall.h>
 #include <unistd.h>
 #include <stdint.h>
 
@@ -51,9 +50,17 @@ extern "C" {
 #define RCU_MEMBARRIER
 #endif
 
+/*
+ * RCU_MEMBARRIER is only possibly available on Linux. Fallback to RCU_MB
+ * otherwise.
+ */
+#if !defined(__linux__) && defined(RCU_MEMBARRIER)
+#undef RCU_MEMBARRIER
+#define RCU_MB
+#endif
+
 #ifdef RCU_MEMBARRIER
-#include <unistd.h>
-#include <sys/syscall.h>
+#include <syscall.h>
 
 /* If the headers do not support SYS_membarrier, statically use RCU_MB */
 #ifdef SYS_membarrier
@@ -144,7 +151,7 @@ static inline void debug_yield_write(void)
 
 static inline void debug_yield_init(void)
 {
-	rand_yield = time(NULL) ^ pthread_self();
+	rand_yield = time(NULL) ^ (unsigned long) pthread_self();
 }
 #else
 static inline void debug_yield_read(void)
