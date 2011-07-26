@@ -41,6 +41,39 @@
 /* Do not #define _LGPL_SOURCE to ensure we can emit the wrapper symbols */
 #include "urcu-bp.h"
 
+#ifndef MAP_ANONYMOUS
+#define MAP_ANONYMOUS MAP_ANON
+#endif
+
+#ifndef __linux__
+
+#define MREMAP_MAYMOVE	1
+#define MREMAP_FIXED	2
+
+/*
+ * mremap wrapper for non-Linux systems. Maps a RW, anonymous private mapping.
+ * This is not generic.
+*/
+void *mremap(void *old_address, size_t old_size, size_t new_size, int flags)
+{
+	void *new_address;
+
+	assert(flags & MREMAP_MAYMOVE);
+	assert(!(flags & MREMAP_FIXED));
+	new_address = mmap(old_address, new_size,
+			   PROT_READ | PROT_WRITE,
+			   MAP_ANONYMOUS | MAP_PRIVATE,
+			   -1, 0);
+	if (new_address == MAP_FAILED)
+		return MAP_FAILED;
+	if (old_address) {
+		memcpy(new_address, old_address, old_size);
+		munmap(old_address, old_size);
+	}
+	return new_address;
+}
+#endif
+
 /* Sleep delay in us */
 #define RCU_SLEEP_DELAY		1000
 #define ARENA_INIT_ALLOC	16
@@ -250,7 +283,6 @@ static void resize_arena(struct registry_arena *arena, size_t len)
 	if (new_arena == arena->p)
 		return;
 
-	memcpy(new_arena, arena->p, arena->len);
 	bzero(new_arena + arena->len, len - arena->len);
 	arena->p = new_arena;
 }
