@@ -71,12 +71,12 @@ am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
 	$(ACLOCAL_M4)
 mkinstalldirs = $(install_sh) -d
 CONFIG_HEADER = $(top_builddir)/config.h $(top_builddir)/urcu/config.h
-CONFIG_CLEAN_FILES = api.h
+CONFIG_CLEAN_FILES =
 CONFIG_CLEAN_VPATH_FILES =
 PROGRAMS = $(noinst_PROGRAMS)
 am_rcutorture_qsbr_OBJECTS = rcutorture_qsbr-urcutorture.$(OBJEXT)
 rcutorture_qsbr_OBJECTS = $(am_rcutorture_qsbr_OBJECTS)
-rcutorture_qsbr_DEPENDENCIES = $(URCU_QSBR_LIB) $(URCU_CDS_LIB)
+rcutorture_qsbr_DEPENDENCIES = $(URCU_QSBR_LIB)
 AM_V_lt = $(am__v_lt_$(V))
 am__v_lt_ = $(am__v_lt_$(AM_DEFAULT_VERBOSITY))
 am__v_lt_0 = --silent
@@ -86,7 +86,7 @@ rcutorture_qsbr_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC \
 	-o $@
 am_rcutorture_urcu_OBJECTS = rcutorture_urcu-urcutorture.$(OBJEXT)
 rcutorture_urcu_OBJECTS = $(am_rcutorture_urcu_OBJECTS)
-rcutorture_urcu_DEPENDENCIES = $(URCU) $(URCU_CDS_LIB)
+rcutorture_urcu_DEPENDENCIES = $(URCU)
 rcutorture_urcu_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC \
 	$(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=link $(CCLD) \
 	$(rcutorture_urcu_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) $(LDFLAGS) \
@@ -94,7 +94,7 @@ rcutorture_urcu_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC \
 am_rcutorture_urcu_bp_OBJECTS =  \
 	rcutorture_urcu_bp-urcutorture.$(OBJEXT)
 rcutorture_urcu_bp_OBJECTS = $(am_rcutorture_urcu_bp_OBJECTS)
-rcutorture_urcu_bp_DEPENDENCIES = $(URCU_BP_LIB) $(URCU_CDS_LIB)
+rcutorture_urcu_bp_DEPENDENCIES = $(URCU_BP_LIB)
 rcutorture_urcu_bp_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC \
 	$(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=link $(CCLD) \
 	$(rcutorture_urcu_bp_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) \
@@ -102,7 +102,7 @@ rcutorture_urcu_bp_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC \
 am_rcutorture_urcu_mb_OBJECTS =  \
 	rcutorture_urcu_mb-urcutorture.$(OBJEXT)
 rcutorture_urcu_mb_OBJECTS = $(am_rcutorture_urcu_mb_OBJECTS)
-rcutorture_urcu_mb_DEPENDENCIES = $(URCU_MB_LIB) $(URCU_CDS_LIB)
+rcutorture_urcu_mb_DEPENDENCIES = $(URCU_MB_LIB)
 rcutorture_urcu_mb_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC \
 	$(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=link $(CCLD) \
 	$(rcutorture_urcu_mb_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) \
@@ -110,8 +110,7 @@ rcutorture_urcu_mb_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC \
 am_rcutorture_urcu_signal_OBJECTS =  \
 	rcutorture_urcu_signal-urcutorture.$(OBJEXT)
 rcutorture_urcu_signal_OBJECTS = $(am_rcutorture_urcu_signal_OBJECTS)
-rcutorture_urcu_signal_DEPENDENCIES = $(URCU_SIGNAL_LIB) \
-	$(URCU_CDS_LIB)
+rcutorture_urcu_signal_DEPENDENCIES = $(URCU_SIGNAL_LIB)
 rcutorture_urcu_signal_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC \
 	$(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=link $(CCLD) \
 	$(rcutorture_urcu_signal_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) \
@@ -340,24 +339,27 @@ test_urcu_gc_LDADD = $(LDADD)
 am__test_urcu_lfq_SOURCES_DIST = test_urcu_lfq.c $(top_srcdir)/urcu.c \
 	$(top_srcdir)/urcu-pointer.c $(top_srcdir)/wfqueue.c \
 	$(top_srcdir)/compat_futex.c \
-	$(top_srcdir)/compat_arch_@ARCHTYPE@.c
-am_test_urcu_lfq_OBJECTS = test_urcu_lfq.$(OBJEXT) $(am__objects_3)
+	$(top_srcdir)/compat_arch_@ARCHTYPE@.c \
+	$(top_builddir)/liburcu-cds.la
+am__objects_21 =
+am_test_urcu_lfq_OBJECTS = test_urcu_lfq.$(OBJEXT) $(am__objects_3) \
+	$(am__objects_21)
 test_urcu_lfq_OBJECTS = $(am_test_urcu_lfq_OBJECTS)
 test_urcu_lfq_LDADD = $(LDADD)
 am__test_urcu_lfq_dynlink_SOURCES_DIST = test_urcu_lfq.c \
 	$(top_srcdir)/urcu.c $(top_srcdir)/urcu-pointer.c \
 	$(top_srcdir)/wfqueue.c $(top_srcdir)/compat_futex.c \
 	$(top_srcdir)/compat_arch_@ARCHTYPE@.c
-@COMPAT_FUTEX_TRUE@am__objects_21 = test_urcu_lfq_dynlink-compat_futex.$(OBJEXT)
-@COMPAT_ARCH_FALSE@am__objects_22 = $(am__objects_21)
-@COMPAT_ARCH_TRUE@am__objects_22 = test_urcu_lfq_dynlink-compat_arch_@ARCHTYPE@.$(OBJEXT) \
-@COMPAT_ARCH_TRUE@	$(am__objects_21)
-am__objects_23 = test_urcu_lfq_dynlink-urcu.$(OBJEXT) \
+@COMPAT_FUTEX_TRUE@am__objects_22 = test_urcu_lfq_dynlink-compat_futex.$(OBJEXT)
+@COMPAT_ARCH_FALSE@am__objects_23 = $(am__objects_22)
+@COMPAT_ARCH_TRUE@am__objects_23 = test_urcu_lfq_dynlink-compat_arch_@ARCHTYPE@.$(OBJEXT) \
+@COMPAT_ARCH_TRUE@	$(am__objects_22)
+am__objects_24 = test_urcu_lfq_dynlink-urcu.$(OBJEXT) \
 	test_urcu_lfq_dynlink-urcu-pointer.$(OBJEXT) \
-	test_urcu_lfq_dynlink-wfqueue.$(OBJEXT) $(am__objects_22)
+	test_urcu_lfq_dynlink-wfqueue.$(OBJEXT) $(am__objects_23)
 am_test_urcu_lfq_dynlink_OBJECTS =  \
 	test_urcu_lfq_dynlink-test_urcu_lfq.$(OBJEXT) \
-	$(am__objects_23)
+	$(am__objects_24)
 test_urcu_lfq_dynlink_OBJECTS = $(am_test_urcu_lfq_dynlink_OBJECTS)
 test_urcu_lfq_dynlink_DEPENDENCIES = $(URCU_CDS_LIB)
 test_urcu_lfq_dynlink_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC \
@@ -367,24 +369,26 @@ test_urcu_lfq_dynlink_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC \
 am__test_urcu_lfs_SOURCES_DIST = test_urcu_lfs.c $(top_srcdir)/urcu.c \
 	$(top_srcdir)/urcu-pointer.c $(top_srcdir)/wfqueue.c \
 	$(top_srcdir)/compat_futex.c \
-	$(top_srcdir)/compat_arch_@ARCHTYPE@.c
-am_test_urcu_lfs_OBJECTS = test_urcu_lfs.$(OBJEXT) $(am__objects_3)
+	$(top_srcdir)/compat_arch_@ARCHTYPE@.c \
+	$(top_builddir)/liburcu-cds.la
+am_test_urcu_lfs_OBJECTS = test_urcu_lfs.$(OBJEXT) $(am__objects_3) \
+	$(am__objects_21)
 test_urcu_lfs_OBJECTS = $(am_test_urcu_lfs_OBJECTS)
 test_urcu_lfs_LDADD = $(LDADD)
 am__test_urcu_lfs_dynlink_SOURCES_DIST = test_urcu_lfs.c \
 	$(top_srcdir)/urcu.c $(top_srcdir)/urcu-pointer.c \
 	$(top_srcdir)/wfqueue.c $(top_srcdir)/compat_futex.c \
 	$(top_srcdir)/compat_arch_@ARCHTYPE@.c
-@COMPAT_FUTEX_TRUE@am__objects_24 = test_urcu_lfs_dynlink-compat_futex.$(OBJEXT)
-@COMPAT_ARCH_FALSE@am__objects_25 = $(am__objects_24)
-@COMPAT_ARCH_TRUE@am__objects_25 = test_urcu_lfs_dynlink-compat_arch_@ARCHTYPE@.$(OBJEXT) \
-@COMPAT_ARCH_TRUE@	$(am__objects_24)
-am__objects_26 = test_urcu_lfs_dynlink-urcu.$(OBJEXT) \
+@COMPAT_FUTEX_TRUE@am__objects_25 = test_urcu_lfs_dynlink-compat_futex.$(OBJEXT)
+@COMPAT_ARCH_FALSE@am__objects_26 = $(am__objects_25)
+@COMPAT_ARCH_TRUE@am__objects_26 = test_urcu_lfs_dynlink-compat_arch_@ARCHTYPE@.$(OBJEXT) \
+@COMPAT_ARCH_TRUE@	$(am__objects_25)
+am__objects_27 = test_urcu_lfs_dynlink-urcu.$(OBJEXT) \
 	test_urcu_lfs_dynlink-urcu-pointer.$(OBJEXT) \
-	test_urcu_lfs_dynlink-wfqueue.$(OBJEXT) $(am__objects_25)
+	test_urcu_lfs_dynlink-wfqueue.$(OBJEXT) $(am__objects_26)
 am_test_urcu_lfs_dynlink_OBJECTS =  \
 	test_urcu_lfs_dynlink-test_urcu_lfs.$(OBJEXT) \
-	$(am__objects_26)
+	$(am__objects_27)
 test_urcu_lfs_dynlink_OBJECTS = $(am_test_urcu_lfs_dynlink_OBJECTS)
 test_urcu_lfs_dynlink_DEPENDENCIES = $(URCU_CDS_LIB)
 test_urcu_lfs_dynlink_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC \
@@ -395,16 +399,16 @@ am__test_urcu_lgc_SOURCES_DIST = test_urcu_gc.c $(top_srcdir)/urcu.c \
 	$(top_srcdir)/urcu-pointer.c $(top_srcdir)/wfqueue.c \
 	$(top_srcdir)/compat_futex.c \
 	$(top_srcdir)/compat_arch_@ARCHTYPE@.c
-@COMPAT_FUTEX_TRUE@am__objects_27 =  \
+@COMPAT_FUTEX_TRUE@am__objects_28 =  \
 @COMPAT_FUTEX_TRUE@	test_urcu_lgc-compat_futex.$(OBJEXT)
-@COMPAT_ARCH_FALSE@am__objects_28 = $(am__objects_27)
-@COMPAT_ARCH_TRUE@am__objects_28 = test_urcu_lgc-compat_arch_@ARCHTYPE@.$(OBJEXT) \
-@COMPAT_ARCH_TRUE@	$(am__objects_27)
-am__objects_29 = test_urcu_lgc-urcu.$(OBJEXT) \
+@COMPAT_ARCH_FALSE@am__objects_29 = $(am__objects_28)
+@COMPAT_ARCH_TRUE@am__objects_29 = test_urcu_lgc-compat_arch_@ARCHTYPE@.$(OBJEXT) \
+@COMPAT_ARCH_TRUE@	$(am__objects_28)
+am__objects_30 = test_urcu_lgc-urcu.$(OBJEXT) \
 	test_urcu_lgc-urcu-pointer.$(OBJEXT) \
-	test_urcu_lgc-wfqueue.$(OBJEXT) $(am__objects_28)
+	test_urcu_lgc-wfqueue.$(OBJEXT) $(am__objects_29)
 am_test_urcu_lgc_OBJECTS = test_urcu_lgc-test_urcu_gc.$(OBJEXT) \
-	$(am__objects_29)
+	$(am__objects_30)
 test_urcu_lgc_OBJECTS = $(am_test_urcu_lgc_OBJECTS)
 test_urcu_lgc_LDADD = $(LDADD)
 test_urcu_lgc_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
@@ -414,16 +418,16 @@ am__test_urcu_mb_SOURCES_DIST = test_urcu.c $(top_srcdir)/urcu.c \
 	$(top_srcdir)/urcu-pointer.c $(top_srcdir)/wfqueue.c \
 	$(top_srcdir)/compat_futex.c \
 	$(top_srcdir)/compat_arch_@ARCHTYPE@.c
-@COMPAT_FUTEX_TRUE@am__objects_30 =  \
+@COMPAT_FUTEX_TRUE@am__objects_31 =  \
 @COMPAT_FUTEX_TRUE@	test_urcu_mb-compat_futex.$(OBJEXT)
-@COMPAT_ARCH_FALSE@am__objects_31 = $(am__objects_30)
-@COMPAT_ARCH_TRUE@am__objects_31 = test_urcu_mb-compat_arch_@ARCHTYPE@.$(OBJEXT) \
-@COMPAT_ARCH_TRUE@	$(am__objects_30)
-am__objects_32 = test_urcu_mb-urcu.$(OBJEXT) \
+@COMPAT_ARCH_FALSE@am__objects_32 = $(am__objects_31)
+@COMPAT_ARCH_TRUE@am__objects_32 = test_urcu_mb-compat_arch_@ARCHTYPE@.$(OBJEXT) \
+@COMPAT_ARCH_TRUE@	$(am__objects_31)
+am__objects_33 = test_urcu_mb-urcu.$(OBJEXT) \
 	test_urcu_mb-urcu-pointer.$(OBJEXT) \
-	test_urcu_mb-wfqueue.$(OBJEXT) $(am__objects_31)
+	test_urcu_mb-wfqueue.$(OBJEXT) $(am__objects_32)
 am_test_urcu_mb_OBJECTS = test_urcu_mb-test_urcu.$(OBJEXT) \
-	$(am__objects_32)
+	$(am__objects_33)
 test_urcu_mb_OBJECTS = $(am_test_urcu_mb_OBJECTS)
 test_urcu_mb_LDADD = $(LDADD)
 test_urcu_mb_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
@@ -433,16 +437,16 @@ am__test_urcu_mb_gc_SOURCES_DIST = test_urcu_gc.c $(top_srcdir)/urcu.c \
 	$(top_srcdir)/urcu-pointer.c $(top_srcdir)/wfqueue.c \
 	$(top_srcdir)/compat_futex.c \
 	$(top_srcdir)/compat_arch_@ARCHTYPE@.c
-@COMPAT_FUTEX_TRUE@am__objects_33 =  \
+@COMPAT_FUTEX_TRUE@am__objects_34 =  \
 @COMPAT_FUTEX_TRUE@	test_urcu_mb_gc-compat_futex.$(OBJEXT)
-@COMPAT_ARCH_FALSE@am__objects_34 = $(am__objects_33)
-@COMPAT_ARCH_TRUE@am__objects_34 = test_urcu_mb_gc-compat_arch_@ARCHTYPE@.$(OBJEXT) \
-@COMPAT_ARCH_TRUE@	$(am__objects_33)
-am__objects_35 = test_urcu_mb_gc-urcu.$(OBJEXT) \
+@COMPAT_ARCH_FALSE@am__objects_35 = $(am__objects_34)
+@COMPAT_ARCH_TRUE@am__objects_35 = test_urcu_mb_gc-compat_arch_@ARCHTYPE@.$(OBJEXT) \
+@COMPAT_ARCH_TRUE@	$(am__objects_34)
+am__objects_36 = test_urcu_mb_gc-urcu.$(OBJEXT) \
 	test_urcu_mb_gc-urcu-pointer.$(OBJEXT) \
-	test_urcu_mb_gc-wfqueue.$(OBJEXT) $(am__objects_34)
+	test_urcu_mb_gc-wfqueue.$(OBJEXT) $(am__objects_35)
 am_test_urcu_mb_gc_OBJECTS = test_urcu_mb_gc-test_urcu_gc.$(OBJEXT) \
-	$(am__objects_35)
+	$(am__objects_36)
 test_urcu_mb_gc_OBJECTS = $(am_test_urcu_mb_gc_OBJECTS)
 test_urcu_mb_gc_LDADD = $(LDADD)
 test_urcu_mb_gc_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC \
@@ -453,16 +457,16 @@ am__test_urcu_mb_lgc_SOURCES_DIST = test_urcu_gc.c \
 	$(top_srcdir)/urcu.c $(top_srcdir)/urcu-pointer.c \
 	$(top_srcdir)/wfqueue.c $(top_srcdir)/compat_futex.c \
 	$(top_srcdir)/compat_arch_@ARCHTYPE@.c
-@COMPAT_FUTEX_TRUE@am__objects_36 =  \
+@COMPAT_FUTEX_TRUE@am__objects_37 =  \
 @COMPAT_FUTEX_TRUE@	test_urcu_mb_lgc-compat_futex.$(OBJEXT)
-@COMPAT_ARCH_FALSE@am__objects_37 = $(am__objects_36)
-@COMPAT_ARCH_TRUE@am__objects_37 = test_urcu_mb_lgc-compat_arch_@ARCHTYPE@.$(OBJEXT) \
-@COMPAT_ARCH_TRUE@	$(am__objects_36)
-am__objects_38 = test_urcu_mb_lgc-urcu.$(OBJEXT) \
+@COMPAT_ARCH_FALSE@am__objects_38 = $(am__objects_37)
+@COMPAT_ARCH_TRUE@am__objects_38 = test_urcu_mb_lgc-compat_arch_@ARCHTYPE@.$(OBJEXT) \
+@COMPAT_ARCH_TRUE@	$(am__objects_37)
+am__objects_39 = test_urcu_mb_lgc-urcu.$(OBJEXT) \
 	test_urcu_mb_lgc-urcu-pointer.$(OBJEXT) \
-	test_urcu_mb_lgc-wfqueue.$(OBJEXT) $(am__objects_37)
+	test_urcu_mb_lgc-wfqueue.$(OBJEXT) $(am__objects_38)
 am_test_urcu_mb_lgc_OBJECTS = test_urcu_mb_lgc-test_urcu_gc.$(OBJEXT) \
-	$(am__objects_38)
+	$(am__objects_39)
 test_urcu_mb_lgc_OBJECTS = $(am_test_urcu_mb_lgc_OBJECTS)
 test_urcu_mb_lgc_LDADD = $(LDADD)
 test_urcu_mb_lgc_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC \
@@ -473,16 +477,16 @@ am__test_urcu_signal_SOURCES_DIST = test_urcu.c $(top_srcdir)/urcu.c \
 	$(top_srcdir)/urcu-pointer.c $(top_srcdir)/wfqueue.c \
 	$(top_srcdir)/compat_futex.c \
 	$(top_srcdir)/compat_arch_@ARCHTYPE@.c
-@COMPAT_FUTEX_TRUE@am__objects_39 =  \
+@COMPAT_FUTEX_TRUE@am__objects_40 =  \
 @COMPAT_FUTEX_TRUE@	test_urcu_signal-compat_futex.$(OBJEXT)
-@COMPAT_ARCH_FALSE@am__objects_40 = $(am__objects_39)
-@COMPAT_ARCH_TRUE@am__objects_40 = test_urcu_signal-compat_arch_@ARCHTYPE@.$(OBJEXT) \
-@COMPAT_ARCH_TRUE@	$(am__objects_39)
-am__objects_41 = test_urcu_signal-urcu.$(OBJEXT) \
+@COMPAT_ARCH_FALSE@am__objects_41 = $(am__objects_40)
+@COMPAT_ARCH_TRUE@am__objects_41 = test_urcu_signal-compat_arch_@ARCHTYPE@.$(OBJEXT) \
+@COMPAT_ARCH_TRUE@	$(am__objects_40)
+am__objects_42 = test_urcu_signal-urcu.$(OBJEXT) \
 	test_urcu_signal-urcu-pointer.$(OBJEXT) \
-	test_urcu_signal-wfqueue.$(OBJEXT) $(am__objects_40)
+	test_urcu_signal-wfqueue.$(OBJEXT) $(am__objects_41)
 am_test_urcu_signal_OBJECTS = test_urcu_signal-test_urcu.$(OBJEXT) \
-	$(am__objects_41)
+	$(am__objects_42)
 test_urcu_signal_OBJECTS = $(am_test_urcu_signal_OBJECTS)
 test_urcu_signal_LDADD = $(LDADD)
 test_urcu_signal_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC \
@@ -493,17 +497,17 @@ am__test_urcu_signal_dynamic_link_SOURCES_DIST = test_urcu.c \
 	$(top_srcdir)/urcu.c $(top_srcdir)/urcu-pointer.c \
 	$(top_srcdir)/wfqueue.c $(top_srcdir)/compat_futex.c \
 	$(top_srcdir)/compat_arch_@ARCHTYPE@.c
-@COMPAT_FUTEX_TRUE@am__objects_42 = test_urcu_signal_dynamic_link-compat_futex.$(OBJEXT)
-@COMPAT_ARCH_FALSE@am__objects_43 = $(am__objects_42)
-@COMPAT_ARCH_TRUE@am__objects_43 = test_urcu_signal_dynamic_link-compat_arch_@ARCHTYPE@.$(OBJEXT) \
-@COMPAT_ARCH_TRUE@	$(am__objects_42)
-am__objects_44 = test_urcu_signal_dynamic_link-urcu.$(OBJEXT) \
+@COMPAT_FUTEX_TRUE@am__objects_43 = test_urcu_signal_dynamic_link-compat_futex.$(OBJEXT)
+@COMPAT_ARCH_FALSE@am__objects_44 = $(am__objects_43)
+@COMPAT_ARCH_TRUE@am__objects_44 = test_urcu_signal_dynamic_link-compat_arch_@ARCHTYPE@.$(OBJEXT) \
+@COMPAT_ARCH_TRUE@	$(am__objects_43)
+am__objects_45 = test_urcu_signal_dynamic_link-urcu.$(OBJEXT) \
 	test_urcu_signal_dynamic_link-urcu-pointer.$(OBJEXT) \
 	test_urcu_signal_dynamic_link-wfqueue.$(OBJEXT) \
-	$(am__objects_43)
+	$(am__objects_44)
 am_test_urcu_signal_dynamic_link_OBJECTS =  \
 	test_urcu_signal_dynamic_link-test_urcu.$(OBJEXT) \
-	$(am__objects_44)
+	$(am__objects_45)
 test_urcu_signal_dynamic_link_OBJECTS =  \
 	$(am_test_urcu_signal_dynamic_link_OBJECTS)
 test_urcu_signal_dynamic_link_LDADD = $(LDADD)
@@ -515,16 +519,16 @@ am__test_urcu_signal_gc_SOURCES_DIST = test_urcu_gc.c \
 	$(top_srcdir)/urcu.c $(top_srcdir)/urcu-pointer.c \
 	$(top_srcdir)/wfqueue.c $(top_srcdir)/compat_futex.c \
 	$(top_srcdir)/compat_arch_@ARCHTYPE@.c
-@COMPAT_FUTEX_TRUE@am__objects_45 =  \
+@COMPAT_FUTEX_TRUE@am__objects_46 =  \
 @COMPAT_FUTEX_TRUE@	test_urcu_signal_gc-compat_futex.$(OBJEXT)
-@COMPAT_ARCH_FALSE@am__objects_46 = $(am__objects_45)
-@COMPAT_ARCH_TRUE@am__objects_46 = test_urcu_signal_gc-compat_arch_@ARCHTYPE@.$(OBJEXT) \
-@COMPAT_ARCH_TRUE@	$(am__objects_45)
-am__objects_47 = test_urcu_signal_gc-urcu.$(OBJEXT) \
+@COMPAT_ARCH_FALSE@am__objects_47 = $(am__objects_46)
+@COMPAT_ARCH_TRUE@am__objects_47 = test_urcu_signal_gc-compat_arch_@ARCHTYPE@.$(OBJEXT) \
+@COMPAT_ARCH_TRUE@	$(am__objects_46)
+am__objects_48 = test_urcu_signal_gc-urcu.$(OBJEXT) \
 	test_urcu_signal_gc-urcu-pointer.$(OBJEXT) \
-	test_urcu_signal_gc-wfqueue.$(OBJEXT) $(am__objects_46)
+	test_urcu_signal_gc-wfqueue.$(OBJEXT) $(am__objects_47)
 am_test_urcu_signal_gc_OBJECTS =  \
-	test_urcu_signal_gc-test_urcu_gc.$(OBJEXT) $(am__objects_47)
+	test_urcu_signal_gc-test_urcu_gc.$(OBJEXT) $(am__objects_48)
 test_urcu_signal_gc_OBJECTS = $(am_test_urcu_signal_gc_OBJECTS)
 test_urcu_signal_gc_LDADD = $(LDADD)
 test_urcu_signal_gc_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC \
@@ -535,15 +539,15 @@ am__test_urcu_signal_lgc_SOURCES_DIST = test_urcu_gc.c \
 	$(top_srcdir)/urcu.c $(top_srcdir)/urcu-pointer.c \
 	$(top_srcdir)/wfqueue.c $(top_srcdir)/compat_futex.c \
 	$(top_srcdir)/compat_arch_@ARCHTYPE@.c
-@COMPAT_FUTEX_TRUE@am__objects_48 = test_urcu_signal_lgc-compat_futex.$(OBJEXT)
-@COMPAT_ARCH_FALSE@am__objects_49 = $(am__objects_48)
-@COMPAT_ARCH_TRUE@am__objects_49 = test_urcu_signal_lgc-compat_arch_@ARCHTYPE@.$(OBJEXT) \
-@COMPAT_ARCH_TRUE@	$(am__objects_48)
-am__objects_50 = test_urcu_signal_lgc-urcu.$(OBJEXT) \
+@COMPAT_FUTEX_TRUE@am__objects_49 = test_urcu_signal_lgc-compat_futex.$(OBJEXT)
+@COMPAT_ARCH_FALSE@am__objects_50 = $(am__objects_49)
+@COMPAT_ARCH_TRUE@am__objects_50 = test_urcu_signal_lgc-compat_arch_@ARCHTYPE@.$(OBJEXT) \
+@COMPAT_ARCH_TRUE@	$(am__objects_49)
+am__objects_51 = test_urcu_signal_lgc-urcu.$(OBJEXT) \
 	test_urcu_signal_lgc-urcu-pointer.$(OBJEXT) \
-	test_urcu_signal_lgc-wfqueue.$(OBJEXT) $(am__objects_49)
+	test_urcu_signal_lgc-wfqueue.$(OBJEXT) $(am__objects_50)
 am_test_urcu_signal_lgc_OBJECTS =  \
-	test_urcu_signal_lgc-test_urcu_gc.$(OBJEXT) $(am__objects_50)
+	test_urcu_signal_lgc-test_urcu_gc.$(OBJEXT) $(am__objects_51)
 test_urcu_signal_lgc_OBJECTS = $(am_test_urcu_signal_lgc_OBJECTS)
 test_urcu_signal_lgc_LDADD = $(LDADD)
 test_urcu_signal_lgc_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC \
@@ -554,16 +558,16 @@ am__test_urcu_signal_timing_SOURCES_DIST = test_urcu_timing.c \
 	$(top_srcdir)/urcu.c $(top_srcdir)/urcu-pointer.c \
 	$(top_srcdir)/wfqueue.c $(top_srcdir)/compat_futex.c \
 	$(top_srcdir)/compat_arch_@ARCHTYPE@.c
-@COMPAT_FUTEX_TRUE@am__objects_51 = test_urcu_signal_timing-compat_futex.$(OBJEXT)
-@COMPAT_ARCH_FALSE@am__objects_52 = $(am__objects_51)
-@COMPAT_ARCH_TRUE@am__objects_52 = test_urcu_signal_timing-compat_arch_@ARCHTYPE@.$(OBJEXT) \
-@COMPAT_ARCH_TRUE@	$(am__objects_51)
-am__objects_53 = test_urcu_signal_timing-urcu.$(OBJEXT) \
+@COMPAT_FUTEX_TRUE@am__objects_52 = test_urcu_signal_timing-compat_futex.$(OBJEXT)
+@COMPAT_ARCH_FALSE@am__objects_53 = $(am__objects_52)
+@COMPAT_ARCH_TRUE@am__objects_53 = test_urcu_signal_timing-compat_arch_@ARCHTYPE@.$(OBJEXT) \
+@COMPAT_ARCH_TRUE@	$(am__objects_52)
+am__objects_54 = test_urcu_signal_timing-urcu.$(OBJEXT) \
 	test_urcu_signal_timing-urcu-pointer.$(OBJEXT) \
-	test_urcu_signal_timing-wfqueue.$(OBJEXT) $(am__objects_52)
+	test_urcu_signal_timing-wfqueue.$(OBJEXT) $(am__objects_53)
 am_test_urcu_signal_timing_OBJECTS =  \
 	test_urcu_signal_timing-test_urcu_timing.$(OBJEXT) \
-	$(am__objects_53)
+	$(am__objects_54)
 test_urcu_signal_timing_OBJECTS =  \
 	$(am_test_urcu_signal_timing_OBJECTS)
 test_urcu_signal_timing_LDADD = $(LDADD)
@@ -575,15 +579,15 @@ am__test_urcu_signal_yield_SOURCES_DIST = test_urcu.c \
 	$(top_srcdir)/urcu.c $(top_srcdir)/urcu-pointer.c \
 	$(top_srcdir)/wfqueue.c $(top_srcdir)/compat_futex.c \
 	$(top_srcdir)/compat_arch_@ARCHTYPE@.c
-@COMPAT_FUTEX_TRUE@am__objects_54 = test_urcu_signal_yield-compat_futex.$(OBJEXT)
-@COMPAT_ARCH_FALSE@am__objects_55 = $(am__objects_54)
-@COMPAT_ARCH_TRUE@am__objects_55 = test_urcu_signal_yield-compat_arch_@ARCHTYPE@.$(OBJEXT) \
-@COMPAT_ARCH_TRUE@	$(am__objects_54)
-am__objects_56 = test_urcu_signal_yield-urcu.$(OBJEXT) \
+@COMPAT_FUTEX_TRUE@am__objects_55 = test_urcu_signal_yield-compat_futex.$(OBJEXT)
+@COMPAT_ARCH_FALSE@am__objects_56 = $(am__objects_55)
+@COMPAT_ARCH_TRUE@am__objects_56 = test_urcu_signal_yield-compat_arch_@ARCHTYPE@.$(OBJEXT) \
+@COMPAT_ARCH_TRUE@	$(am__objects_55)
+am__objects_57 = test_urcu_signal_yield-urcu.$(OBJEXT) \
 	test_urcu_signal_yield-urcu-pointer.$(OBJEXT) \
-	test_urcu_signal_yield-wfqueue.$(OBJEXT) $(am__objects_55)
+	test_urcu_signal_yield-wfqueue.$(OBJEXT) $(am__objects_56)
 am_test_urcu_signal_yield_OBJECTS =  \
-	test_urcu_signal_yield-test_urcu.$(OBJEXT) $(am__objects_56)
+	test_urcu_signal_yield-test_urcu.$(OBJEXT) $(am__objects_57)
 test_urcu_signal_yield_OBJECTS = $(am_test_urcu_signal_yield_OBJECTS)
 test_urcu_signal_yield_LDADD = $(LDADD)
 test_urcu_signal_yield_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC \
@@ -598,30 +602,24 @@ am_test_urcu_timing_OBJECTS = test_urcu_timing.$(OBJEXT) \
 	$(am__objects_3)
 test_urcu_timing_OBJECTS = $(am_test_urcu_timing_OBJECTS)
 test_urcu_timing_LDADD = $(LDADD)
-am__test_urcu_wfq_SOURCES_DIST = test_urcu_wfq.c \
-	$(top_srcdir)/compat_futex.c \
-	$(top_srcdir)/compat_arch_@ARCHTYPE@.c
-am_test_urcu_wfq_OBJECTS = test_urcu_wfq.$(OBJEXT) $(am__objects_2)
+am_test_urcu_wfq_OBJECTS = test_urcu_wfq.$(OBJEXT) $(am__objects_21)
 test_urcu_wfq_OBJECTS = $(am_test_urcu_wfq_OBJECTS)
 test_urcu_wfq_LDADD = $(LDADD)
 am_test_urcu_wfq_dynlink_OBJECTS =  \
 	test_urcu_wfq_dynlink-test_urcu_wfq.$(OBJEXT)
 test_urcu_wfq_dynlink_OBJECTS = $(am_test_urcu_wfq_dynlink_OBJECTS)
-test_urcu_wfq_dynlink_DEPENDENCIES = $(URCU_CDS_LIB)
+test_urcu_wfq_dynlink_DEPENDENCIES = $(URCU_COMMON_LIB)
 test_urcu_wfq_dynlink_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC \
 	$(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=link $(CCLD) \
 	$(test_urcu_wfq_dynlink_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) \
 	$(LDFLAGS) -o $@
-am__test_urcu_wfs_SOURCES_DIST = test_urcu_wfs.c \
-	$(top_srcdir)/compat_futex.c \
-	$(top_srcdir)/compat_arch_@ARCHTYPE@.c
-am_test_urcu_wfs_OBJECTS = test_urcu_wfs.$(OBJEXT) $(am__objects_2)
+am_test_urcu_wfs_OBJECTS = test_urcu_wfs.$(OBJEXT) $(am__objects_21)
 test_urcu_wfs_OBJECTS = $(am_test_urcu_wfs_OBJECTS)
 test_urcu_wfs_LDADD = $(LDADD)
 am_test_urcu_wfs_dynlink_OBJECTS =  \
 	test_urcu_wfs_dynlink-test_urcu_wfs.$(OBJEXT)
 test_urcu_wfs_dynlink_OBJECTS = $(am_test_urcu_wfs_dynlink_OBJECTS)
-test_urcu_wfs_dynlink_DEPENDENCIES = $(URCU_CDS_LIB)
+test_urcu_wfs_dynlink_DEPENDENCIES = $(URCU_COMMON_LIB)
 test_urcu_wfs_dynlink_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC \
 	$(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=link $(CCLD) \
 	$(test_urcu_wfs_dynlink_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) \
@@ -630,16 +628,16 @@ am__test_urcu_yield_SOURCES_DIST = test_urcu.c $(top_srcdir)/urcu.c \
 	$(top_srcdir)/urcu-pointer.c $(top_srcdir)/wfqueue.c \
 	$(top_srcdir)/compat_futex.c \
 	$(top_srcdir)/compat_arch_@ARCHTYPE@.c
-@COMPAT_FUTEX_TRUE@am__objects_57 =  \
+@COMPAT_FUTEX_TRUE@am__objects_58 =  \
 @COMPAT_FUTEX_TRUE@	test_urcu_yield-compat_futex.$(OBJEXT)
-@COMPAT_ARCH_FALSE@am__objects_58 = $(am__objects_57)
-@COMPAT_ARCH_TRUE@am__objects_58 = test_urcu_yield-compat_arch_@ARCHTYPE@.$(OBJEXT) \
-@COMPAT_ARCH_TRUE@	$(am__objects_57)
-am__objects_59 = test_urcu_yield-urcu.$(OBJEXT) \
+@COMPAT_ARCH_FALSE@am__objects_59 = $(am__objects_58)
+@COMPAT_ARCH_TRUE@am__objects_59 = test_urcu_yield-compat_arch_@ARCHTYPE@.$(OBJEXT) \
+@COMPAT_ARCH_TRUE@	$(am__objects_58)
+am__objects_60 = test_urcu_yield-urcu.$(OBJEXT) \
 	test_urcu_yield-urcu-pointer.$(OBJEXT) \
-	test_urcu_yield-wfqueue.$(OBJEXT) $(am__objects_58)
+	test_urcu_yield-wfqueue.$(OBJEXT) $(am__objects_59)
 am_test_urcu_yield_OBJECTS = test_urcu_yield-test_urcu.$(OBJEXT) \
-	$(am__objects_59)
+	$(am__objects_60)
 test_urcu_yield_OBJECTS = $(am_test_urcu_yield_OBJECTS)
 test_urcu_yield_LDADD = $(LDADD)
 test_urcu_yield_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC \
@@ -734,10 +732,8 @@ DIST_SOURCES = $(rcutorture_qsbr_SOURCES) $(rcutorture_urcu_SOURCES) \
 	$(am__test_urcu_signal_lgc_SOURCES_DIST) \
 	$(am__test_urcu_signal_timing_SOURCES_DIST) \
 	$(am__test_urcu_signal_yield_SOURCES_DIST) \
-	$(am__test_urcu_timing_SOURCES_DIST) \
-	$(am__test_urcu_wfq_SOURCES_DIST) \
-	$(test_urcu_wfq_dynlink_SOURCES) \
-	$(am__test_urcu_wfs_SOURCES_DIST) \
+	$(am__test_urcu_timing_SOURCES_DIST) $(test_urcu_wfq_SOURCES) \
+	$(test_urcu_wfq_dynlink_SOURCES) $(test_urcu_wfs_SOURCES) \
 	$(test_urcu_wfs_dynlink_SOURCES) \
 	$(am__test_urcu_yield_SOURCES_DIST)
 HEADERS = $(noinst_HEADERS)
@@ -877,13 +873,14 @@ URCU_MB = $(top_srcdir)/urcu.c $(top_srcdir)/urcu-pointer.c $(top_srcdir)/wfqueu
 URCU_SIGNAL = $(top_srcdir)/urcu.c $(top_srcdir)/urcu-pointer.c $(top_srcdir)/wfqueue.c $(COMPAT)
 URCU_BP = $(top_srcdir)/urcu-bp.c $(top_srcdir)/urcu-pointer.c $(top_srcdir)/wfqueue.c $(COMPAT)
 URCU_DEFER = $(top_srcdir)/urcu.c $(top_srcdir)/urcu-pointer.c $(top_srcdir)/wfqueue.c $(COMPAT)
+URCU_COMMON_LIB = $(top_builddir)/liburcu-common.la
 URCU_LIB = $(top_builddir)/liburcu.la
 URCU_QSBR_LIB = $(top_builddir)/liburcu-qsbr.la
 URCU_MB_LIB = $(top_builddir)/liburcu-mb.la
 URCU_SIGNAL_LIB = $(top_builddir)/liburcu-signal.la
 URCU_BP_LIB = $(top_builddir)/liburcu-bp.la
 URCU_CDS_LIB = $(top_builddir)/liburcu-cds.la
-EXTRA_DIST = $(top_srcdir)/tests/api_*.h
+EXTRA_DIST = $(top_srcdir)/tests/api.h runall.sh
 test_urcu_SOURCES = test_urcu.c $(URCU)
 test_urcu_dynamic_link_SOURCES = test_urcu.c $(URCU)
 test_urcu_dynamic_link_CFLAGS = -DDYNAMIC_LINK_TEST $(AM_CFLAGS)
@@ -910,19 +907,19 @@ test_perthreadlock_timing_SOURCES = test_perthreadlock_timing.c $(URCU_SIGNAL)
 test_perthreadlock_SOURCES = test_perthreadlock.c $(URCU_SIGNAL)
 rcutorture_urcu_SOURCES = urcutorture.c
 rcutorture_urcu_CFLAGS = -DRCU_MEMBARRIER $(AM_CFLAGS)
-rcutorture_urcu_LDADD = $(URCU) $(URCU_CDS_LIB)
+rcutorture_urcu_LDADD = $(URCU)
 rcutorture_urcu_mb_SOURCES = urcutorture.c
 rcutorture_urcu_mb_CFLAGS = -DRCU_MB $(AM_CFLAGS)
-rcutorture_urcu_mb_LDADD = $(URCU_MB_LIB) $(URCU_CDS_LIB)
+rcutorture_urcu_mb_LDADD = $(URCU_MB_LIB)
 rcutorture_qsbr_SOURCES = urcutorture.c
-rcutorture_qsbr_CFLAGS = -DRCU_QSBR $(AM_CFLAGS)
-rcutorture_qsbr_LDADD = $(URCU_QSBR_LIB) $(URCU_CDS_LIB)
+rcutorture_qsbr_CFLAGS = -DTORTURE_QSBR -DRCU_QSBR $(AM_CFLAGS)
+rcutorture_qsbr_LDADD = $(URCU_QSBR_LIB)
 rcutorture_urcu_signal_SOURCES = urcutorture.c
 rcutorture_urcu_signal_CFLAGS = -DRCU_SIGNAL $(AM_CFLAGS)
-rcutorture_urcu_signal_LDADD = $(URCU_SIGNAL_LIB) $(URCU_CDS_LIB)
+rcutorture_urcu_signal_LDADD = $(URCU_SIGNAL_LIB)
 rcutorture_urcu_bp_SOURCES = urcutorture.c
 rcutorture_urcu_bp_CFLAGS = -DRCU_BP $(AM_CFLAGS)
-rcutorture_urcu_bp_LDADD = $(URCU_BP_LIB) $(URCU_CDS_LIB)
+rcutorture_urcu_bp_LDADD = $(URCU_BP_LIB)
 test_mutex_SOURCES = test_mutex.c $(URCU)
 test_looplen_SOURCES = test_looplen.c
 test_urcu_gc_SOURCES = test_urcu_gc.c $(URCU)
@@ -950,22 +947,22 @@ test_urcu_assign_dynamic_link_CFLAGS = -DDYNAMIC_LINK_TEST $(AM_CFLAGS)
 test_urcu_bp_SOURCES = test_urcu_bp.c $(URCU_BP)
 test_urcu_bp_dynamic_link_SOURCES = test_urcu_bp.c $(URCU_BP)
 test_urcu_bp_dynamic_link_CFLAGS = -DDYNAMIC_LINK_TEST $(AM_CFLAGS)
-test_urcu_lfq_SOURCES = test_urcu_lfq.c $(URCU)
+test_urcu_lfq_SOURCES = test_urcu_lfq.c $(URCU) $(URCU_CDS_LIB)
 test_urcu_lfq_dynlink_SOURCES = test_urcu_lfq.c $(URCU)
 test_urcu_lfq_dynlink_CFLAGS = -DDYNAMIC_LINK_TEST $(AM_CFLAGS)
 test_urcu_lfq_dynlink_LDADD = $(URCU_CDS_LIB)
-test_urcu_wfq_SOURCES = test_urcu_wfq.c $(COMPAT)
+test_urcu_wfq_SOURCES = test_urcu_wfq.c $(URCU_COMMON_LIB)
 test_urcu_wfq_dynlink_SOURCES = test_urcu_wfq.c
 test_urcu_wfq_dynlink_CFLAGS = -DDYNAMIC_LINK_TEST $(AM_CFLAGS)
-test_urcu_wfq_dynlink_LDADD = $(URCU_CDS_LIB)
-test_urcu_lfs_SOURCES = test_urcu_lfs.c $(URCU_DEFER)
-test_urcu_lfs_dynlink_SOURCES = test_urcu_lfs.c $(URCU_DEFER)
+test_urcu_wfq_dynlink_LDADD = $(URCU_COMMON_LIB)
+test_urcu_lfs_SOURCES = test_urcu_lfs.c $(URCU) $(URCU_CDS_LIB)
+test_urcu_lfs_dynlink_SOURCES = test_urcu_lfs.c $(URCU)
 test_urcu_lfs_dynlink_CFLAGS = -DDYNAMIC_LINK_TEST $(AM_CFLAGS)
 test_urcu_lfs_dynlink_LDADD = $(URCU_CDS_LIB)
-test_urcu_wfs_SOURCES = test_urcu_wfs.c $(COMPAT)
+test_urcu_wfs_SOURCES = test_urcu_wfs.c $(URCU_COMMON_LIB)
 test_urcu_wfs_dynlink_SOURCES = test_urcu_wfs.c
 test_urcu_wfs_dynlink_CFLAGS = -DDYNAMIC_LINK_TEST $(AM_CFLAGS)
-test_urcu_wfs_dynlink_LDADD = $(URCU_CDS_LIB)
+test_urcu_wfs_dynlink_LDADD = $(URCU_COMMON_LIB)
 all: all-am
 
 .SUFFIXES:

@@ -24,6 +24,7 @@
  */
 
 #define _GNU_SOURCE
+#define _LGPL_SOURCE
 #include <stdio.h>
 #include <pthread.h>
 #include <signal.h>
@@ -34,12 +35,16 @@
 #include <errno.h>
 #include <poll.h>
 
+#include "urcu/wfqueue.h"
 #include "urcu/map/urcu-qsbr.h"
-
 #define BUILD_QSBR_LIB
 #include "urcu/static/urcu-qsbr.h"
+#include "urcu-pointer.h"
+
 /* Do not #define _LGPL_SOURCE to ensure we can emit the wrapper symbols */
+#undef _LGPL_SOURCE
 #include "urcu-qsbr.h"
+#define _LGPL_SOURCE
 
 void __attribute__((destructor)) rcu_exit(void);
 
@@ -51,6 +56,11 @@ int32_t gp_futex;
  * Global grace period counter.
  */
 unsigned long rcu_gp_ctr = RCU_GP_ONLINE;
+
+/*
+ * Active attempts to check for reader Q.S. before calling futex().
+ */
+#define RCU_QS_ACTIVE_ATTEMPTS 100
 
 /*
  * Written to only by each individual reader. Read by both the reader and the
@@ -145,26 +155,33 @@ static void update_counter_and_wait(void)
 	 */
 	for (;;) {
 		wait_loops++;
-		if (wait_loops == RCU_QS_ACTIVE_ATTEMPTS) {
-			uatomic_dec(&gp_futex);
+		if (wait_loops >= RCU_QS_ACTIVE_ATTEMPTS) {
+			uatomic_set(&gp_futex, -1);
+			/*
+			 * Write futex before write waiting (the other side
+			 * reads them in the opposite order).
+			 */
+			cmm_smp_wmb();
+			cds_list_for_each_entry(index, &registry, node) {
+				_CMM_STORE_SHARED(index->waiting, 1);
+			}
 			/* Write futex before read reader_gp */
 			cmm_smp_mb();
 		}
-
 		cds_list_for_each_entry_safe(index, tmp, &registry, node) {
 			if (!rcu_gp_ongoing(&index->ctr))
 				cds_list_move(&index->node, &qsreaders);
 		}
 
 		if (cds_list_empty(&registry)) {
-			if (wait_loops == RCU_QS_ACTIVE_ATTEMPTS) {
+			if (wait_loops >= RCU_QS_ACTIVE_ATTEMPTS) {
 				/* Read reader_gp before write futex */
 				cmm_smp_mb();
 				uatomic_set(&gp_futex, 0);
 			}
 			break;
 		} else {
-			if (wait_loops == RCU_QS_ACTIVE_ATTEMPTS) {
+			if (wait_loops >= RCU_QS_ACTIVE_ATTEMPTS) {
 				wait_gp();
 			} else {
 #ifndef HAS_INCOHERENT_CACHES
@@ -192,18 +209,17 @@ void synchronize_rcu(void)
 	was_online = rcu_reader.ctr;
 
 	/* All threads should read qparity before accessing data structure
-	 * where new ptr points to.
-	 */
-	/* Write new ptr before changing the qparity */
-	cmm_smp_mb();
-
-	/*
+	 * where new ptr points to.  In the "then" case, rcu_thread_offline
+	 * includes a memory barrier.
+	 *
 	 * Mark the writer thread offline to make sure we don't wait for
 	 * our own quiescent state. This allows using synchronize_rcu()
 	 * in threads registered as readers.
 	 */
 	if (was_online)
-		CMM_STORE_SHARED(rcu_reader.ctr, 0);
+		rcu_thread_offline();
+	else
+		cmm_smp_mb();
 
 	mutex_lock(&rcu_gp_lock);
 
@@ -244,9 +260,9 @@ out:
 	 * freed.
 	 */
 	if (was_online)
-		_CMM_STORE_SHARED(rcu_reader.ctr,
-				  CMM_LOAD_SHARED(rcu_gp_ctr));
-	cmm_smp_mb();
+		rcu_thread_online();
+	else
+		cmm_smp_mb();
 }
 #else /* !(CAA_BITS_PER_LONG < 64) */
 void synchronize_rcu(void)
@@ -260,9 +276,10 @@ void synchronize_rcu(void)
 	 * our own quiescent state. This allows using synchronize_rcu()
 	 * in threads registered as readers.
 	 */
-	cmm_smp_mb();
 	if (was_online)
-		CMM_STORE_SHARED(rcu_reader.ctr, 0);
+		rcu_thread_offline();
+	else
+		cmm_smp_mb();
 
 	mutex_lock(&rcu_gp_lock);
 	if (cds_list_empty(&registry))
@@ -272,9 +289,9 @@ out:
 	mutex_unlock(&rcu_gp_lock);
 
 	if (was_online)
-		_CMM_STORE_SHARED(rcu_reader.ctr,
-				  CMM_LOAD_SHARED(rcu_gp_ctr));
-	cmm_smp_mb();
+		rcu_thread_online();
+	else
+		cmm_smp_mb();
 }
 #endif  /* !(CAA_BITS_PER_LONG < 64) */
 

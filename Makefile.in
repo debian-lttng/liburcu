@@ -86,7 +86,7 @@ am__installdirs = "$(DESTDIR)$(libdir)" "$(DESTDIR)$(pkgconfigdir)" \
 	"$(DESTDIR)$(includedir)" "$(DESTDIR)$(includedir)" \
 	"$(DESTDIR)$(includedir)"
 LTLIBRARIES = $(lib_LTLIBRARIES)
-liburcu_bp_la_DEPENDENCIES = liburcu-cds.la
+liburcu_bp_la_DEPENDENCIES = liburcu-common.la
 am__liburcu_bp_la_SOURCES_DIST = urcu-bp.c urcu-pointer.c \
 	compat_futex.c compat_arch_@ARCHTYPE@.c
 @COMPAT_FUTEX_TRUE@am__objects_1 = compat_futex.lo
@@ -98,13 +98,18 @@ liburcu_bp_la_OBJECTS = $(am_liburcu_bp_la_OBJECTS)
 AM_V_lt = $(am__v_lt_$(V))
 am__v_lt_ = $(am__v_lt_$(AM_DEFAULT_VERBOSITY))
 am__v_lt_0 = --silent
-liburcu_cds_la_LIBADD =
-am__liburcu_cds_la_SOURCES_DIST = wfqueue.c wfstack.c rculfqueue.c \
-	rculfstack.c compat_futex.c compat_arch_@ARCHTYPE@.c
-am_liburcu_cds_la_OBJECTS = wfqueue.lo wfstack.lo rculfqueue.lo \
-	rculfstack.lo $(am__objects_2)
+liburcu_cds_la_DEPENDENCIES = liburcu-common.la
+am__liburcu_cds_la_SOURCES_DIST = rculfqueue.c rculfstack.c \
+	compat_futex.c compat_arch_@ARCHTYPE@.c
+am_liburcu_cds_la_OBJECTS = rculfqueue.lo rculfstack.lo \
+	$(am__objects_2)
 liburcu_cds_la_OBJECTS = $(am_liburcu_cds_la_OBJECTS)
-liburcu_mb_la_DEPENDENCIES = liburcu-cds.la
+liburcu_common_la_LIBADD =
+am__liburcu_common_la_SOURCES_DIST = wfqueue.c wfstack.c \
+	compat_futex.c compat_arch_@ARCHTYPE@.c
+am_liburcu_common_la_OBJECTS = wfqueue.lo wfstack.lo $(am__objects_2)
+liburcu_common_la_OBJECTS = $(am_liburcu_common_la_OBJECTS)
+liburcu_mb_la_DEPENDENCIES = liburcu-common.la
 am__liburcu_mb_la_SOURCES_DIST = urcu.c urcu-pointer.c compat_futex.c \
 	compat_arch_@ARCHTYPE@.c
 @COMPAT_FUTEX_TRUE@am__objects_3 = liburcu_mb_la-compat_futex.lo
@@ -118,13 +123,13 @@ liburcu_mb_la_OBJECTS = $(am_liburcu_mb_la_OBJECTS)
 liburcu_mb_la_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(liburcu_mb_la_CFLAGS) \
 	$(CFLAGS) $(AM_LDFLAGS) $(LDFLAGS) -o $@
-liburcu_qsbr_la_DEPENDENCIES = liburcu-cds.la
+liburcu_qsbr_la_DEPENDENCIES = liburcu-common.la
 am__liburcu_qsbr_la_SOURCES_DIST = urcu-qsbr.c urcu-pointer.c \
 	compat_futex.c compat_arch_@ARCHTYPE@.c
 am_liburcu_qsbr_la_OBJECTS = urcu-qsbr.lo urcu-pointer.lo \
 	$(am__objects_2)
 liburcu_qsbr_la_OBJECTS = $(am_liburcu_qsbr_la_OBJECTS)
-liburcu_signal_la_DEPENDENCIES = liburcu-cds.la
+liburcu_signal_la_DEPENDENCIES = liburcu-common.la
 am__liburcu_signal_la_SOURCES_DIST = urcu.c urcu-pointer.c \
 	compat_futex.c compat_arch_@ARCHTYPE@.c
 @COMPAT_FUTEX_TRUE@am__objects_5 = liburcu_signal_la-compat_futex.lo
@@ -139,7 +144,7 @@ liburcu_signal_la_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC \
 	$(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=link $(CCLD) \
 	$(liburcu_signal_la_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) $(LDFLAGS) \
 	-o $@
-liburcu_la_DEPENDENCIES = liburcu-cds.la
+liburcu_la_DEPENDENCIES = liburcu-common.la
 am__liburcu_la_SOURCES_DIST = urcu.c urcu-pointer.c compat_futex.c \
 	compat_arch_@ARCHTYPE@.c
 am_liburcu_la_OBJECTS = urcu.lo urcu-pointer.lo $(am__objects_2)
@@ -171,10 +176,12 @@ AM_V_GEN = $(am__v_GEN_$(V))
 am__v_GEN_ = $(am__v_GEN_$(AM_DEFAULT_VERBOSITY))
 am__v_GEN_0 = @echo "  GEN   " $@;
 SOURCES = $(liburcu_bp_la_SOURCES) $(liburcu_cds_la_SOURCES) \
-	$(liburcu_mb_la_SOURCES) $(liburcu_qsbr_la_SOURCES) \
-	$(liburcu_signal_la_SOURCES) $(liburcu_la_SOURCES)
+	$(liburcu_common_la_SOURCES) $(liburcu_mb_la_SOURCES) \
+	$(liburcu_qsbr_la_SOURCES) $(liburcu_signal_la_SOURCES) \
+	$(liburcu_la_SOURCES)
 DIST_SOURCES = $(am__liburcu_bp_la_SOURCES_DIST) \
 	$(am__liburcu_cds_la_SOURCES_DIST) \
+	$(am__liburcu_common_la_SOURCES_DIST) \
 	$(am__liburcu_mb_la_SOURCES_DIST) \
 	$(am__liburcu_qsbr_la_SOURCES_DIST) \
 	$(am__liburcu_signal_la_SOURCES_DIST) \
@@ -378,24 +385,31 @@ EXTRA_DIST = $(top_srcdir)/urcu/arch/*.h $(top_srcdir)/urcu/uatomic/*.h \
 
 @COMPAT_ARCH_FALSE@COMPAT = $(am__append_1)
 @COMPAT_ARCH_TRUE@COMPAT = compat_arch_@ARCHTYPE@.c $(am__append_1)
-lib_LTLIBRARIES = liburcu-cds.la liburcu.la liburcu-qsbr.la \
-		liburcu-mb.la liburcu-signal.la liburcu-bp.la
+lib_LTLIBRARIES = liburcu-common.la \
+		liburcu.la liburcu-qsbr.la \
+		liburcu-mb.la liburcu-signal.la liburcu-bp.la \
+		liburcu-cds.la
 
-liburcu_cds_la_SOURCES = wfqueue.c wfstack.c rculfqueue.c rculfstack.c \
-			$(COMPAT)
 
+#
+# liburcu-common contains wait-free queues (needed by call_rcu) as well
+# as futex fallbacks.
+#
+liburcu_common_la_SOURCES = wfqueue.c wfstack.c $(COMPAT)
 liburcu_la_SOURCES = urcu.c urcu-pointer.c $(COMPAT)
-liburcu_la_LIBADD = liburcu-cds.la
+liburcu_la_LIBADD = liburcu-common.la
 liburcu_qsbr_la_SOURCES = urcu-qsbr.c urcu-pointer.c $(COMPAT)
-liburcu_qsbr_la_LIBADD = liburcu-cds.la
+liburcu_qsbr_la_LIBADD = liburcu-common.la
 liburcu_mb_la_SOURCES = urcu.c urcu-pointer.c $(COMPAT)
 liburcu_mb_la_CFLAGS = -DRCU_MB
-liburcu_mb_la_LIBADD = liburcu-cds.la
+liburcu_mb_la_LIBADD = liburcu-common.la
 liburcu_signal_la_SOURCES = urcu.c urcu-pointer.c $(COMPAT)
 liburcu_signal_la_CFLAGS = -DRCU_SIGNAL
-liburcu_signal_la_LIBADD = liburcu-cds.la
+liburcu_signal_la_LIBADD = liburcu-common.la
 liburcu_bp_la_SOURCES = urcu-bp.c urcu-pointer.c $(COMPAT)
-liburcu_bp_la_LIBADD = liburcu-cds.la
+liburcu_bp_la_LIBADD = liburcu-common.la
+liburcu_cds_la_SOURCES = rculfqueue.c rculfstack.c $(COMPAT)
+liburcu_cds_la_LIBADD = liburcu-common.la
 pkgconfigdir = $(libdir)/pkgconfig
 pkgconfig_DATA = liburcu-cds.pc liburcu.pc liburcu-bp.pc liburcu-qsbr.pc \
 	liburcu-signal.pc liburcu-mb.pc
@@ -513,6 +527,8 @@ liburcu-bp.la: $(liburcu_bp_la_OBJECTS) $(liburcu_bp_la_DEPENDENCIES)
 	$(AM_V_CCLD)$(LINK) -rpath $(libdir) $(liburcu_bp_la_OBJECTS) $(liburcu_bp_la_LIBADD) $(LIBS)
 liburcu-cds.la: $(liburcu_cds_la_OBJECTS) $(liburcu_cds_la_DEPENDENCIES) 
 	$(AM_V_CCLD)$(LINK) -rpath $(libdir) $(liburcu_cds_la_OBJECTS) $(liburcu_cds_la_LIBADD) $(LIBS)
+liburcu-common.la: $(liburcu_common_la_OBJECTS) $(liburcu_common_la_DEPENDENCIES) 
+	$(AM_V_CCLD)$(LINK) -rpath $(libdir) $(liburcu_common_la_OBJECTS) $(liburcu_common_la_LIBADD) $(LIBS)
 liburcu-mb.la: $(liburcu_mb_la_OBJECTS) $(liburcu_mb_la_DEPENDENCIES) 
 	$(AM_V_CCLD)$(liburcu_mb_la_LINK) -rpath $(libdir) $(liburcu_mb_la_OBJECTS) $(liburcu_mb_la_LIBADD) $(LIBS)
 liburcu-qsbr.la: $(liburcu_qsbr_la_OBJECTS) $(liburcu_qsbr_la_DEPENDENCIES) 
