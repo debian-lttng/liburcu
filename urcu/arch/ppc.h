@@ -32,7 +32,30 @@ extern "C" {
 /* Include size of POWER5+ L3 cache lines: 256 bytes */
 #define CAA_CACHE_LINE_SIZE	256
 
-#define cmm_mb()    asm volatile("sync":::"memory")
+#ifdef __NO_LWSYNC__
+#define LWSYNC_OPCODE	"sync\n"
+#else
+#define LWSYNC_OPCODE	"lwsync\n"
+#endif
+
+/*
+ * Use sync for all cmm_mb/rmb/wmb barriers because lwsync does not
+ * preserve ordering of cacheable vs. non-cacheable accesses, so it
+ * should not be used to order with respect to MMIO operations.  An
+ * eieio+lwsync pair is also not enough for cmm_rmb, because it will
+ * order cacheable and non-cacheable memory operations separately---i.e.
+ * not the latter against the former.
+ */
+#define cmm_mb()         asm volatile("sync":::"memory")
+
+/*
+ * lwsync orders loads in cacheable memory with respect to other loads,
+ * and stores in cacheable memory with respect to other stores.
+ * Therefore, use it for barriers ordering accesses to cacheable memory
+ * only.
+ */
+#define cmm_smp_rmb()    asm volatile(LWSYNC_OPCODE:::"memory")
+#define cmm_smp_wmb()    asm volatile(LWSYNC_OPCODE:::"memory")
 
 #define mftbl()						\
 	({ 						\
@@ -48,11 +71,24 @@ extern "C" {
 		rval;					\
 	})
 
+#define mftb()						\
+	({						\
+		unsigned long long rval;		\
+		asm volatile("mftb %0" : "=r" (rval));	\
+		rval;					\
+	})
+
 typedef unsigned long long cycles_t;
 
-static inline cycles_t caa_get_cycles (void)
+#ifdef __powerpc64__
+static inline cycles_t caa_get_cycles(void)
 {
-	long h, l;
+	return (cycles_t) mftb();
+}
+#else
+static inline cycles_t caa_get_cycles(void)
+{
+	unsigned long h, l;
 
 	for (;;) {
 		h = mftbu();
@@ -63,6 +99,7 @@ static inline cycles_t caa_get_cycles (void)
 			return (((cycles_t) h) << 32) + l;
 	}
 }
+#endif
 
 #ifdef __cplusplus 
 }
