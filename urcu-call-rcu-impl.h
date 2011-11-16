@@ -204,7 +204,7 @@ static void call_rcu_wake_up(struct call_rcu_data *crdp)
 {
 	/* Write to call_rcu list before reading/writing futex */
 	cmm_smp_mb();
-	if (unlikely(uatomic_read(&crdp->futex) == -1)) {
+	if (caa_unlikely(uatomic_read(&crdp->futex) == -1)) {
 		uatomic_set(&crdp->futex, 0);
 		futex_async(&crdp->futex, FUTEX_WAKE, 1,
 		      NULL, NULL, 0);
@@ -396,6 +396,10 @@ struct call_rcu_data *create_call_rcu_data(unsigned long flags,
  * the caller's responsibility to dispose of the removed structure.
  * Use get_cpu_call_rcu_data() to obtain a pointer to the old structure
  * (prior to NULLing it out, of course).
+ *
+ * The caller must wait for a grace-period to pass between return from
+ * set_cpu_call_rcu_data() and call to call_rcu_data_free() passing the
+ * previous call rcu data as argument.
  */
 
 int set_cpu_call_rcu_data(int cpu, struct call_rcu_data *crdp)
@@ -612,6 +616,10 @@ void call_rcu(struct rcu_head *head,
  *
  * We also silently refuse to free NULL pointers.  This simplifies
  * the calling code.
+ *
+ * The caller must wait for a grace-period to pass between return from
+ * set_cpu_call_rcu_data() and call to call_rcu_data_free() passing the
+ * previous call rcu data as argument.
  */
 void call_rcu_data_free(struct call_rcu_data *crdp)
 {
