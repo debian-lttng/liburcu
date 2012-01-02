@@ -39,4 +39,4 @@ dlpreopen=''
 
 # Directory that this library needs to be installed in:
 libdir='/usr/local/lib'
-relink_command="(cd /home/compudj/doc/userspace-rcu; /bin/bash /home/compudj/doc/userspace-rcu/libtool  --silent --tag CC --mode=relink gcc -Wall -g -O2 -lpthread -version-info 1:0:0 -o liburcu-cds.la -rpath /usr/local/lib rculfqueue.lo rculfstack.lo liburcu-common.la @inst_prefix_dir@)"
+relink_command="(cd /home/compudj/doc/userspace-rcu; /bin/bash /home/compudj/doc/userspace-rcu/libtool  --silent --tag CC --mode=relink gcc -Wall -g -O2 -lpthread -version-info 1:0:0 -o liburcu-cds.la -rpath /usr/local/lib rculfqueue.lo rculfstack.lo rculfhash.lo rculfhash-mm-order.lo rculfhash-mm-chunk.lo rculfhash-mm-mmap.lo liburcu-common.la @inst_prefix_dir@)"
