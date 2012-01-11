@@ -1,3 +1,10 @@
+liburcu (0.6.7-2) unstable; urgency=low
+
+  * [5e454ad] Add support for armhf.
+    Thanks to Konstantinos Margaritis (Closes: #645398)
+
+ -- Jon Bernard <jbernard@debian.org>  Wed, 11 Jan 2012 09:30:18 -0500
+
 liburcu (0.6.7-1) unstable; urgency=low
 
   * [1520cd9] New upstream version 0.6.7
