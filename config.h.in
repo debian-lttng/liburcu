@@ -1,6 +1,6 @@
 /* config.h.in.  Generated from configure.ac by autoheader.  */
 
-/* Use the dmb instruction is available for use on ARM. */
+/* Use the dmb instruction if available for use on ARM. */
 #undef CONFIG_RCU_ARM_HAVE_DMB
 
 /* Compatibility mode for i386 which lacks cmpxchg instruction. */
@@ -17,13 +17,16 @@
    behavior of SMP systems is undefined. */
 #undef CONFIG_RCU_SMP
 
+/* TLS provided by the compiler. */
+#undef CONFIG_RCU_TLS
+
 /* Define to 1 if you have the `bzero' function. */
 #undef HAVE_BZERO
 
 /* Define to 1 if the system has the type `cpu_set_t'. */
 #undef HAVE_CPU_SET_T
 
-/* Define to 1 if we have CPU_ZERO and if it works */
+/* Defined to 1 if we have CPU_ZERO and it works */
 #undef HAVE_CPU_ZERO
 
 /* Define to 1 if you have the <dlfcn.h> header file. */
@@ -112,11 +115,14 @@
 /* Define to the version of this package. */
 #undef PACKAGE_VERSION
 
-/* Define to sched_setaffinity's number of arguments. */
+/* Defined to sched_setaffinity's number of arguments. */
 #undef SCHED_SETAFFINITY_ARGS
 
 /* Define to 1 if you have the ANSI C header files. */
 #undef STDC_HEADERS
+
+/* If the compiler supports a TLS storage class define it to that here */
+#undef TLS
 
 /* Version number of package */
 #undef VERSION

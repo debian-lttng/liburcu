@@ -35,6 +35,7 @@
 #include <errno.h>
 
 #include <urcu/arch.h>
+#include <urcu/tls-compat.h>
 
 #ifdef __linux__
 #include <syscall.h>
@@ -159,8 +160,8 @@ static int test_duration_read(void)
 	return !test_stop;
 }
 
-static unsigned long long __thread nr_writes;
-static unsigned long long __thread nr_reads;
+static DEFINE_URCU_TLS(unsigned long long, nr_writes);
+static DEFINE_URCU_TLS(unsigned long long, nr_reads);
 
 static
 unsigned long long __attribute__((aligned(CAA_CACHE_LINE_SIZE))) *tot_nr_writes;
@@ -212,12 +213,12 @@ void *thr_reader(void *data)
 		if (caa_unlikely(rduration))
 			loop_sleep(rduration);
 		pthread_mutex_unlock(&per_thread_lock[tidx].lock);
-		nr_reads++;
+		URCU_TLS(nr_reads)++;
 		if (caa_unlikely(!test_duration_read()))
 			break;
 	}
 
-	tot_nr_reads[tidx] = nr_reads;
+	tot_nr_reads[tidx] = URCU_TLS(nr_reads);
 	printf_verbose("thread_end %s, thread id : %lx, tid %lu\n",
 			"reader", pthread_self(), (unsigned long)gettid());
 	return ((void*)1);
@@ -250,7 +251,7 @@ void *thr_writer(void *data)
 		for (tidx = (long)nr_readers - 1; tidx >= 0; tidx--) {
 			pthread_mutex_unlock(&per_thread_lock[tidx].lock);
 		}
-		nr_writes++;
+		URCU_TLS(nr_writes)++;
 		if (caa_unlikely(!test_duration_write()))
 			break;
 		if (caa_unlikely(wdelay))
@@ -259,7 +260,7 @@ void *thr_writer(void *data)
 
 	printf_verbose("thread_end %s, thread id : %lx, tid %lu\n",
 			"writer", pthread_self(), (unsigned long)gettid());
-	tot_nr_writes[wtidx] = nr_writes;
+	tot_nr_writes[wtidx] = URCU_TLS(nr_writes);
 	return ((void*)2);
 }
 
@@ -282,7 +283,6 @@ int main(int argc, char **argv)
 	int err;
 	pthread_t *tid_reader, *tid_writer;
 	void *tret;
-	unsigned long long *count_reader, *count_writer;
 	unsigned long long tot_reads = 0, tot_writes = 0;
 	int i, a;
 
@@ -368,11 +368,14 @@ int main(int argc, char **argv)
 
 	tid_reader = malloc(sizeof(*tid_reader) * nr_readers);
 	tid_writer = malloc(sizeof(*tid_writer) * nr_writers);
-	count_reader = malloc(sizeof(*count_reader) * nr_readers);
-	count_writer = malloc(sizeof(*count_writer) * nr_writers);
 	tot_nr_reads = malloc(sizeof(*tot_nr_reads) * nr_readers);
 	tot_nr_writes = malloc(sizeof(*tot_nr_writes) * nr_writers);
 	per_thread_lock = malloc(sizeof(*per_thread_lock) * nr_readers);
+	for (i = 0; i < nr_readers; i++) {
+		err = pthread_mutex_init(&per_thread_lock[i].lock, NULL);
+		if (err != 0)
+			exit(1);
+	}
 
 	next_aff = 0;
 
@@ -421,8 +424,6 @@ int main(int argc, char **argv)
 
 	free(tid_reader);
 	free(tid_writer);
-	free(count_reader);
-	free(count_writer);
 	free(tot_nr_reads);
 	free(tot_nr_writes);
 	free(per_thread_lock);
