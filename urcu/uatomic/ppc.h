@@ -93,14 +93,17 @@ unsigned long _uatomic_exchange(void *addr, unsigned long val, int len)
 	}
 #endif
 	}
-	/* generate an illegal instruction. Cannot catch this with linker tricks
-	 * when optimizations are disabled. */
+	/*
+	 * generate an illegal instruction. Cannot catch this with
+	 * linker tricks when optimizations are disabled.
+	 */
 	__asm__ __volatile__(ILLEGAL_INSTR);
 	return 0;
 }
 
 #define uatomic_xchg(addr, v)						    \
-	((__typeof__(*(addr))) _uatomic_exchange((addr), (unsigned long)(v), \
+	((__typeof__(*(addr))) _uatomic_exchange((addr),		    \
+						caa_cast_long_keep_sign(v), \
 						sizeof(*(addr))))
 /* cmpxchg */
 
@@ -152,16 +155,19 @@ unsigned long _uatomic_cmpxchg(void *addr, unsigned long old,
 	}
 #endif
 	}
-	/* generate an illegal instruction. Cannot catch this with linker tricks
-	 * when optimizations are disabled. */
+	/*
+	 * generate an illegal instruction. Cannot catch this with
+	 * linker tricks when optimizations are disabled.
+	 */
 	__asm__ __volatile__(ILLEGAL_INSTR);
 	return 0;
 }
 
 
-#define uatomic_cmpxchg(addr, old, _new)				    \
-	((__typeof__(*(addr))) _uatomic_cmpxchg((addr), (unsigned long)(old),\
-						(unsigned long)(_new), 	    \
+#define uatomic_cmpxchg(addr, old, _new)				      \
+	((__typeof__(*(addr))) _uatomic_cmpxchg((addr),			      \
+						caa_cast_long_keep_sign(old), \
+						caa_cast_long_keep_sign(_new),\
 						sizeof(*(addr))))
 
 /* uatomic_add_return */
@@ -208,17 +214,19 @@ unsigned long _uatomic_add_return(void *addr, unsigned long val,
 	}
 #endif
 	}
-	/* generate an illegal instruction. Cannot catch this with linker tricks
-	 * when optimizations are disabled. */
+	/*
+	 * generate an illegal instruction. Cannot catch this with
+	 * linker tricks when optimizations are disabled.
+	 */
 	__asm__ __volatile__(ILLEGAL_INSTR);
 	return 0;
 }
 
 
-#define uatomic_add_return(addr, v)					\
-	((__typeof__(*(addr))) _uatomic_add_return((addr),		\
-						  (unsigned long)(v),	\
-						  sizeof(*(addr))))
+#define uatomic_add_return(addr, v)					    \
+	((__typeof__(*(addr))) _uatomic_add_return((addr),		    \
+						caa_cast_long_keep_sign(v), \
+						sizeof(*(addr))))
 
 #ifdef __cplusplus 
 }

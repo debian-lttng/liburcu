@@ -15,7 +15,7 @@ noinst_PROGRAMS = test_urcu test_urcu_dynamic_link test_urcu_timing \
         test_urcu_bp test_urcu_bp_dynamic_link test_cycles_per_loop \
 	test_urcu_lfq test_urcu_wfq test_urcu_lfs test_urcu_wfs \
 	test_urcu_wfq_dynlink test_urcu_wfs_dynlink \
-	test_urcu_lfq_dynlink test_urcu_lfs_dynlink
+	test_urcu_lfq_dynlink test_urcu_lfs_dynlink test_urcu_hash
 noinst_HEADERS = rcutorture.h
 
 if COMPAT_ARCH
@@ -45,7 +45,7 @@ URCU_SIGNAL_LIB=$(top_builddir)/liburcu-signal.la
 URCU_BP_LIB=$(top_builddir)/liburcu-bp.la
 URCU_CDS_LIB=$(top_builddir)/liburcu-cds.la
 
-EXTRA_DIST = $(top_srcdir)/tests/api.h runall.sh
+EXTRA_DIST = $(top_srcdir)/tests/api.h runall.sh runhash.sh
 
 test_urcu_SOURCES = test_urcu.c $(URCU)
 
@@ -155,25 +155,38 @@ test_urcu_bp_SOURCES = test_urcu_bp.c $(URCU_BP)
 test_urcu_bp_dynamic_link_SOURCES = test_urcu_bp.c $(URCU_BP)
 test_urcu_bp_dynamic_link_CFLAGS = -DDYNAMIC_LINK_TEST $(AM_CFLAGS)
 
-test_urcu_lfq_SOURCES = test_urcu_lfq.c $(URCU) $(URCU_CDS_LIB)
+test_urcu_lfq_SOURCES = test_urcu_lfq.c $(URCU)
+test_urcu_lfq_LDADD = $(URCU_CDS_LIB)
+
 test_urcu_lfq_dynlink_SOURCES = test_urcu_lfq.c $(URCU)
 test_urcu_lfq_dynlink_CFLAGS = -DDYNAMIC_LINK_TEST $(AM_CFLAGS)
 test_urcu_lfq_dynlink_LDADD = $(URCU_CDS_LIB)
 
-test_urcu_wfq_SOURCES = test_urcu_wfq.c $(URCU_COMMON_LIB) $(COMPAT)
+test_urcu_wfq_SOURCES = test_urcu_wfq.c $(COMPAT)
+test_urcu_wfq_LDADD = $(URCU_COMMON_LIB)
+
 test_urcu_wfq_dynlink_SOURCES = test_urcu_wfq.c
 test_urcu_wfq_dynlink_CFLAGS = -DDYNAMIC_LINK_TEST $(AM_CFLAGS)
 test_urcu_wfq_dynlink_LDADD = $(URCU_COMMON_LIB)
 
-test_urcu_lfs_SOURCES = test_urcu_lfs.c $(URCU) $(URCU_CDS_LIB)
+test_urcu_lfs_SOURCES = test_urcu_lfs.c $(URCU)
+test_urcu_lfs_LDADD = $(URCU_CDS_LIB)
+
 test_urcu_lfs_dynlink_SOURCES = test_urcu_lfs.c $(URCU)
 test_urcu_lfs_dynlink_CFLAGS = -DDYNAMIC_LINK_TEST $(AM_CFLAGS)
 test_urcu_lfs_dynlink_LDADD = $(URCU_CDS_LIB)
 
-test_urcu_wfs_SOURCES = test_urcu_wfs.c $(URCU_COMMON_LIB) $(COMPAT)
+test_urcu_wfs_SOURCES = test_urcu_wfs.c $(COMPAT)
+test_urcu_wfs_LDADD = $(URCU_COMMON_LIB)
+
 test_urcu_wfs_dynlink_SOURCES = test_urcu_wfs.c
 test_urcu_wfs_dynlink_CFLAGS = -DDYNAMIC_LINK_TEST $(AM_CFLAGS)
 test_urcu_wfs_dynlink_LDADD = $(URCU_COMMON_LIB)
+
+test_urcu_hash_SOURCES = test_urcu_hash.c test_urcu_hash.h \
+		test_urcu_hash_rw.c test_urcu_hash_unique.c $(COMPAT)
+test_urcu_hash_CFLAGS = -DRCU_QSBR $(AM_CFLAGS)
+test_urcu_hash_LDADD = $(URCU_QSBR_LIB) $(URCU_CDS_LIB)
 
 urcutorture.c: api.h
 

@@ -40,6 +40,7 @@
 #include "urcu/map/urcu-bp.h"
 #include "urcu/static/urcu-bp.h"
 #include "urcu-pointer.h"
+#include "urcu/tls-compat.h"
 
 /* Do not #define _LGPL_SOURCE to ensure we can emit the wrapper symbols */
 #undef _LGPL_SOURCE
@@ -50,7 +51,14 @@
 #define MAP_ANONYMOUS MAP_ANON
 #endif
 
-#ifndef __linux__
+#ifdef __linux__
+static
+void *mremap_wrapper(void *old_address, size_t old_size,
+		size_t new_size, int flags)
+{
+	return mremap(old_address, old_size, new_size, flags);
+}
+#else
 
 #define MREMAP_MAYMOVE	1
 #define MREMAP_FIXED	2
@@ -59,7 +67,9 @@
  * mremap wrapper for non-Linux systems. Maps a RW, anonymous private mapping.
  * This is not generic.
 */
-void *mremap(void *old_address, size_t old_size, size_t new_size, int flags)
+static
+void *mremap_wrapper(void *old_address, size_t old_size,
+		size_t new_size, int flags)
 {
 	void *new_address;
 
@@ -94,7 +104,7 @@ static pthread_mutex_t rcu_gp_lock = PTHREAD_MUTEX_INITIALIZER;
 
 #ifdef DEBUG_YIELD
 unsigned int yield_active;
-unsigned int __thread rand_yield;
+DEFINE_URCU_TLS(unsigned int, rand_yield);
 #endif
 
 /*
@@ -109,7 +119,7 @@ long rcu_gp_ctr = RCU_GP_COUNT;
  * Pointer to registry elements. Written to only by each individual reader. Read
  * by both the reader and the writers.
  */
-struct rcu_reader __thread *rcu_reader;
+DEFINE_URCU_TLS(struct rcu_reader *, rcu_reader);
 
 static CDS_LIST_HEAD(registry);
 
@@ -283,8 +293,8 @@ static void resize_arena(struct registry_arena *arena, size_t len)
 				 MAP_ANONYMOUS | MAP_PRIVATE,
 				 -1, 0);
 	else
-		new_arena = mremap(arena->p, arena->len,
-				   len, MREMAP_MAYMOVE);
+		new_arena = mremap_wrapper(arena->p, arena->len,
+				   	len, MREMAP_MAYMOVE);
 	assert(new_arena != MAP_FAILED);
 
 	/*
@@ -322,7 +332,7 @@ static void add_thread(void)
 	rcu_reader_reg->tid = pthread_self();
 	assert(rcu_reader_reg->ctr == 0);
 	cds_list_add(&rcu_reader_reg->node, &registry);
-	rcu_reader = rcu_reader_reg;
+	URCU_TLS(rcu_reader) = rcu_reader_reg;
 }
 
 /* Called with signals off and mutex locked */
@@ -363,7 +373,7 @@ void rcu_bp_register(void)
 	/*
 	 * Check if a signal concurrently registered our thread since
 	 * the check in rcu_read_lock(). */
-	if (rcu_reader)
+	if (URCU_TLS(rcu_reader))
 		goto end;
 
 	mutex_lock(&rcu_gp_lock);
@@ -429,7 +439,8 @@ void *rcu_dereference_sym_bp(void *p)
 void *rcu_set_pointer_sym_bp(void **p, void *v)
 {
 	cmm_wmb();
-	return uatomic_set(p, v);
+	uatomic_set(p, v);
+	return v;
 }
 
 void *rcu_xchg_pointer_sym_bp(void **p, void *v)
@@ -443,6 +454,8 @@ void *rcu_cmpxchg_pointer_sym_bp(void **p, void *old, void *_new)
 	cmm_wmb();
 	return uatomic_cmpxchg(p, old, _new);
 }
+
+DEFINE_RCU_FLAVOR(rcu_flavor);
 
 #include "urcu-call-rcu-impl.h"
 #include "urcu-defer-impl.h"
