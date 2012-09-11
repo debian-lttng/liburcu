@@ -175,6 +175,8 @@ struct cds_lfht *cds_lfht_new(unsigned long init_size,
  *
  * Return 0 on success, negative error value on error.
  * Threads calling this API need to be registered RCU read-side threads.
+ * cds_lfht_destroy should *not* be called from a RCU read-side critical
+ * section.
  */
 int cds_lfht_destroy(struct cds_lfht *ht, pthread_attr_t **attr);
 
@@ -450,21 +452,21 @@ void cds_lfht_resize(struct cds_lfht *ht, unsigned long new_size);
 #define cds_lfht_for_each_entry(ht, iter, pos, member)			\
 	for (cds_lfht_first(ht, iter),					\
 			pos = caa_container_of(cds_lfht_iter_get_node(iter), \
-					typeof(*(pos)), member);	\
+					__typeof__(*(pos)), member);	\
 		&(pos)->member != NULL;					\
 		cds_lfht_next(ht, iter),				\
 			pos = caa_container_of(cds_lfht_iter_get_node(iter), \
-					typeof(*(pos)), member))
+					__typeof__(*(pos)), member))
 
 #define cds_lfht_for_each_entry_duplicate(ht, hash, match, key,		\
 				iter, pos, member)			\
 	for (cds_lfht_lookup(ht, hash, match, key, iter),		\
 			pos = caa_container_of(cds_lfht_iter_get_node(iter), \
-					typeof(*(pos)), member);	\
+					__typeof__(*(pos)), member);	\
 		&(pos)->member != NULL;					\
 		cds_lfht_next_duplicate(ht, match, key, iter),		\
 			pos = caa_container_of(cds_lfht_iter_get_node(iter), \
-					typeof(*(pos)), member))
+					__typeof__(*(pos)), member))
 
 #ifdef __cplusplus
 }

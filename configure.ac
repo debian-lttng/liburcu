@@ -2,7 +2,7 @@
 # Process this file with autoconf to produce a configure script.
 
 
-AC_INIT([userspace-rcu],[0.7.3],[mathieu dot desnoyers at efficios dot com])
+AC_INIT([userspace-rcu],[0.7.4],[mathieu dot desnoyers at efficios dot com])
 
 # Following the numbering scheme proposed by libtool for the library version
 # http://www.gnu.org/software/libtool/manual/html_node/Updating-version-info.html
@@ -28,7 +28,7 @@ AH_TEMPLATE([CONFIG_RCU_COMPAT_ARCH], [Compatibility mode for i386 which lacks c
 AH_TEMPLATE([CONFIG_RCU_ARM_HAVE_DMB], [Use the dmb instruction if available for use on ARM.])
 AH_TEMPLATE([CONFIG_RCU_TLS], [TLS provided by the compiler.])
 
-AX_TLS([AC_DEFINE_UNQUOTED([CONFIG_RCU_TLS], $ac_cv_tls)], [])
+AX_TLS(AC_DEFINE_UNQUOTED([CONFIG_RCU_TLS], $ac_cv_tls), [:])
 
 # Checks for programs.
 AC_PROG_CC
@@ -63,6 +63,7 @@ AS_CASE([$host_cpu],
 	[alpha*], [ARCHTYPE="alpha"],
 	[ia64], [ARCHTYPE="gcc"],
 	[arm*], [ARCHTYPE="arm"],
+	[mips*], [ARCHTYPE="mips"],
 	[ARCHTYPE="unknown"]
 )
 
