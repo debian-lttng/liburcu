@@ -1,10 +1,12 @@
-#ifndef _URCU_ARCH_ALPHA_H
-#define _URCU_ARCH_ALPHA_H
+#ifndef _URCU_DIE_H
+#define _URCU_DIE_H
 
 /*
- * arch_alpha.h: trivial definitions for the Alpha architecture.
+ * urcu-die.h
  *
- * Copyright (c) 2010 Paolo Bonzini <pbonzini@redhat.com>
+ * Userspace RCU library unrecoverable error handling
+ *
+ * Copyright (c) 2012 Mathieu Desnoyers <mathieu.desnoyers@efficios.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -21,28 +23,15 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-#include <urcu/compiler.h>
-#include <urcu/config.h>
+#include <stdlib.h>
+#include <stdio.h>
+#include <string.h>
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+#define urcu_die(cause)								\
+do {										\
+	fprintf(stderr, "(" __FILE__ ":%s@%u) Unrecoverable error: %s\n",	\
+		__func__, __LINE__, strerror(cause));				\
+	abort();								\
+} while (0)
 
-#define cmm_mb()			__asm__ __volatile__ ("mb":::"memory")
-#define cmm_wmb()			__asm__ __volatile__ ("wmb":::"memory")
-#define cmm_read_barrier_depends()	__asm__ __volatile__ ("mb":::"memory")
-
-typedef unsigned long long cycles_t;
-
-static inline cycles_t caa_get_cycles (void)
-{
-	return 0;	/* not supported */
-}
-
-#ifdef __cplusplus
-}
-#endif
-
-#include <urcu/arch/generic.h>
-
-#endif /* _URCU_ARCH_ALPHA_H */
+#endif /* _URCU_DIE_H */

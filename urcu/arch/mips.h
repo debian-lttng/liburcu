@@ -1,10 +1,11 @@
-#ifndef _URCU_ARCH_ALPHA_H
-#define _URCU_ARCH_ALPHA_H
+#ifndef _URCU_ARCH_MIPS_H
+#define _URCU_ARCH_MIPS_H
 
 /*
- * arch_alpha.h: trivial definitions for the Alpha architecture.
+ * arch_mips.h: trivial definitions for the MIPS architecture.
  *
  * Copyright (c) 2010 Paolo Bonzini <pbonzini@redhat.com>
+ * Copyright (c) 2012 Ralf Baechle <ralf@linux-mips.org>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -28,13 +29,15 @@
 extern "C" {
 #endif
 
-#define cmm_mb()			__asm__ __volatile__ ("mb":::"memory")
-#define cmm_wmb()			__asm__ __volatile__ ("wmb":::"memory")
-#define cmm_read_barrier_depends()	__asm__ __volatile__ ("mb":::"memory")
+#define cmm_mb()			__asm__ __volatile__ (		    \
+					"	.set	mips2		\n" \
+					"	sync			\n" \
+					"	.set	mips0		\n" \
+					:::"memory")
 
 typedef unsigned long long cycles_t;
 
-static inline cycles_t caa_get_cycles (void)
+static inline cycles_t caa_get_cycles(void)
 {
 	return 0;	/* not supported */
 }
@@ -45,4 +48,4 @@ static inline cycles_t caa_get_cycles (void)
 
 #include <urcu/arch/generic.h>
 
-#endif /* _URCU_ARCH_ALPHA_H */
+#endif /* _URCU_ARCH_MIPS_H */
