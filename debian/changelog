@@ -1,3 +1,10 @@
+liburcu (0.7.4-1) unstable; urgency=low
+
+  * [6a8726f] Set Architecture to any
+  * [c6851ed] New upstream version 0.7.4
+
+ -- Jon Bernard <jbernard@debian.org>  Tue, 11 Sep 2012 14:23:01 -0400
+
 liburcu (0.7.3-1) unstable; urgency=low
 
   * [d010fe8] New upstream version 0.7.3
