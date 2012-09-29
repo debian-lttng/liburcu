@@ -1,3 +1,9 @@
+liburcu (0.7.4-2) unstable; urgency=low
+
+  * [563adcf] Override dh_makeshlibs to tighten symbol dependencies
+
+ -- Jon Bernard <jbernard@debian.org>  Sat, 29 Sep 2012 11:21:09 -0400
+
 liburcu (0.7.4-1) unstable; urgency=low
 
   * [6a8726f] Set Architecture to any
