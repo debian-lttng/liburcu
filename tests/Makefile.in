@@ -77,18 +77,15 @@ noinst_PROGRAMS = test_urcu$(EXEEXT) test_urcu_dynamic_link$(EXEEXT) \
 	test_urcu_wfq$(EXEEXT) test_urcu_lfs$(EXEEXT) \
 	test_urcu_wfs$(EXEEXT) test_urcu_wfq_dynlink$(EXEEXT) \
 	test_urcu_wfs_dynlink$(EXEEXT) test_urcu_lfq_dynlink$(EXEEXT) \
-	test_urcu_lfs_dynlink$(EXEEXT) test_urcu_hash$(EXEEXT)
+	test_urcu_lfs_dynlink$(EXEEXT) test_urcu_hash$(EXEEXT) \
+	test_urcu_fork$(EXEEXT)
 @COMPAT_FUTEX_TRUE@am__append_1 = $(top_srcdir)/compat_futex.c
 subdir = tests
 DIST_COMMON = $(noinst_HEADERS) $(srcdir)/Makefile.am \
 	$(srcdir)/Makefile.in
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
-am__aclocal_m4_deps = $(top_srcdir)/config/libtool.m4 \
-	$(top_srcdir)/config/ltoptions.m4 \
-	$(top_srcdir)/config/ltsugar.m4 \
-	$(top_srcdir)/config/ltversion.m4 \
-	$(top_srcdir)/config/lt~obsolete.m4 \
-	$(top_srcdir)/config/ax_tls.m4 $(top_srcdir)/configure.ac
+am__aclocal_m4_deps = $(top_srcdir)/config/ax_tls.m4 \
+	$(top_srcdir)/configure.ac
 am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
 	$(ACLOCAL_M4)
 mkinstalldirs = $(install_sh) -d
@@ -290,6 +287,13 @@ test_urcu_dynamic_link_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC \
 	$(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=link $(CCLD) \
 	$(test_urcu_dynamic_link_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) \
 	$(LDFLAGS) -o $@
+am__test_urcu_fork_SOURCES_DIST = test_urcu_fork.c \
+	$(top_srcdir)/urcu.c $(top_srcdir)/urcu-pointer.c \
+	$(top_srcdir)/wfqueue.c $(top_srcdir)/compat_futex.c \
+	$(top_srcdir)/compat_arch_@ARCHTYPE@.c
+am_test_urcu_fork_OBJECTS = test_urcu_fork.$(OBJEXT) $(am__objects_3)
+test_urcu_fork_OBJECTS = $(am_test_urcu_fork_OBJECTS)
+test_urcu_fork_LDADD = $(LDADD)
 am__test_urcu_gc_SOURCES_DIST = test_urcu_gc.c $(top_srcdir)/urcu.c \
 	$(top_srcdir)/urcu-pointer.c $(top_srcdir)/wfqueue.c \
 	$(top_srcdir)/compat_futex.c \
@@ -730,12 +734,12 @@ SOURCES = $(rcutorture_urcu_SOURCES) $(rcutorture_urcu_bp_SOURCES) \
 	$(test_urcu_assign_dynamic_link_SOURCES) \
 	$(test_urcu_bp_SOURCES) $(test_urcu_bp_dynamic_link_SOURCES) \
 	$(test_urcu_defer_SOURCES) $(test_urcu_dynamic_link_SOURCES) \
-	$(test_urcu_gc_SOURCES) $(test_urcu_hash_SOURCES) \
-	$(test_urcu_lfq_SOURCES) $(test_urcu_lfq_dynlink_SOURCES) \
-	$(test_urcu_lfs_SOURCES) $(test_urcu_lfs_dynlink_SOURCES) \
-	$(test_urcu_lgc_SOURCES) $(test_urcu_mb_SOURCES) \
-	$(test_urcu_mb_gc_SOURCES) $(test_urcu_mb_lgc_SOURCES) \
-	$(test_urcu_qsbr_SOURCES) \
+	$(test_urcu_fork_SOURCES) $(test_urcu_gc_SOURCES) \
+	$(test_urcu_hash_SOURCES) $(test_urcu_lfq_SOURCES) \
+	$(test_urcu_lfq_dynlink_SOURCES) $(test_urcu_lfs_SOURCES) \
+	$(test_urcu_lfs_dynlink_SOURCES) $(test_urcu_lgc_SOURCES) \
+	$(test_urcu_mb_SOURCES) $(test_urcu_mb_gc_SOURCES) \
+	$(test_urcu_mb_lgc_SOURCES) $(test_urcu_qsbr_SOURCES) \
 	$(test_urcu_qsbr_dynamic_link_SOURCES) \
 	$(test_urcu_qsbr_gc_SOURCES) $(test_urcu_qsbr_lgc_SOURCES) \
 	$(test_urcu_qsbr_timing_SOURCES) $(test_urcu_signal_SOURCES) \
@@ -763,6 +767,7 @@ DIST_SOURCES = $(rcutorture_urcu_SOURCES) \
 	$(am__test_urcu_bp_dynamic_link_SOURCES_DIST) \
 	$(am__test_urcu_defer_SOURCES_DIST) \
 	$(am__test_urcu_dynamic_link_SOURCES_DIST) \
+	$(am__test_urcu_fork_SOURCES_DIST) \
 	$(am__test_urcu_gc_SOURCES_DIST) \
 	$(am__test_urcu_hash_SOURCES_DIST) \
 	$(am__test_urcu_lfq_SOURCES_DIST) \
@@ -962,6 +967,7 @@ test_urcu_signal_timing_SOURCES = test_urcu_timing.c $(URCU_SIGNAL)
 test_urcu_signal_timing_CFLAGS = -DRCU_SIGNAL $(AM_CFLAGS)
 test_urcu_signal_yield_SOURCES = test_urcu.c $(URCU_SIGNAL)
 test_urcu_signal_yield_CFLAGS = -DRCU_SIGNAL -DDEBUG_YIELD $(AM_CFLAGS)
+test_urcu_fork_SOURCES = test_urcu_fork.c $(URCU)
 test_rwlock_timing_SOURCES = test_rwlock_timing.c $(URCU_SIGNAL)
 test_rwlock_SOURCES = test_rwlock.c $(URCU_SIGNAL)
 test_perthreadlock_timing_SOURCES = test_perthreadlock_timing.c $(URCU_SIGNAL)
@@ -1136,6 +1142,9 @@ test_urcu_defer$(EXEEXT): $(test_urcu_defer_OBJECTS) $(test_urcu_defer_DEPENDENC
 test_urcu_dynamic_link$(EXEEXT): $(test_urcu_dynamic_link_OBJECTS) $(test_urcu_dynamic_link_DEPENDENCIES) $(EXTRA_test_urcu_dynamic_link_DEPENDENCIES) 
 	@rm -f test_urcu_dynamic_link$(EXEEXT)
 	$(AM_V_CCLD)$(test_urcu_dynamic_link_LINK) $(test_urcu_dynamic_link_OBJECTS) $(test_urcu_dynamic_link_LDADD) $(LIBS)
+test_urcu_fork$(EXEEXT): $(test_urcu_fork_OBJECTS) $(test_urcu_fork_DEPENDENCIES) $(EXTRA_test_urcu_fork_DEPENDENCIES) 
+	@rm -f test_urcu_fork$(EXEEXT)
+	$(AM_V_CCLD)$(LINK) $(test_urcu_fork_OBJECTS) $(test_urcu_fork_LDADD) $(LIBS)
 test_urcu_gc$(EXEEXT): $(test_urcu_gc_OBJECTS) $(test_urcu_gc_DEPENDENCIES) $(EXTRA_test_urcu_gc_DEPENDENCIES) 
 	@rm -f test_urcu_gc$(EXEEXT)
 	$(AM_V_CCLD)$(LINK) $(test_urcu_gc_OBJECTS) $(test_urcu_gc_LDADD) $(LIBS)
@@ -1261,6 +1270,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/test_urcu_dynamic_link-urcu-pointer.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/test_urcu_dynamic_link-urcu.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/test_urcu_dynamic_link-wfqueue.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/test_urcu_fork.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/test_urcu_gc.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/test_urcu_hash-compat_arch_@ARCHTYPE@.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/test_urcu_hash-compat_futex.Po@am__quote@
