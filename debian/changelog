@@ -1,3 +1,9 @@
+liburcu (0.7.6-1) unstable; urgency=low
+
+  * [4506e88] New upstream version 0.7.6
+
+ -- Jon Bernard <jbernard@debian.org>  Sun, 20 Jan 2013 16:47:51 -0500
+
 liburcu (0.7.5-1) unstable; urgency=low
 
   * [acdba4a] New upstream version 0.7.5
