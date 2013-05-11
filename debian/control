@@ -1,7 +1,7 @@
 Source: liburcu
 Priority: extra
 Maintainer: Jon Bernard <jbernard@debian.org>
-Build-Depends: debhelper (>= 9), dpkg-dev (>= 1.13.2), autotools-dev
+Build-Depends: debhelper (>= 9), dpkg-dev (>= 1.13.2), dh-autoreconf
 Standards-Version: 3.9.3
 Section: libs
 Vcs-Git: git://git.debian.org/git/collab-maint/liburcu.git

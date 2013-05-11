@@ -8,7 +8,7 @@ ifeq ($(DEB_HOST_ARCH_CPU), sparc)
 endif
 
 %:
-	dh $@
+	dh $@ --with autoreconf
 
 override_dh_auto_configure:
 	./configure --prefix=/usr
