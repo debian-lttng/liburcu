@@ -1,3 +1,12 @@
+liburcu (0.7.6-2) unstable; urgency=low
+
+  * [08b0bb6] Include upstream fix for FTBFS on sparc.
+    Thanks to Faidon Liambotis (Closes: #705037)
+  * [7a962a2] Add symbols file for liburcu1.
+    Thanks to Faidon Liambotis
+
+ -- Jon Bernard <jbernard@debian.org>  Sat, 11 May 2013 15:34:12 -0400
+
 liburcu (0.7.6-1) unstable; urgency=low
 
   * [4506e88] New upstream version 0.7.6
