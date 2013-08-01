@@ -84,8 +84,12 @@ subdir = tests
 DIST_COMMON = $(noinst_HEADERS) $(srcdir)/Makefile.am \
 	$(srcdir)/Makefile.in
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
-am__aclocal_m4_deps = $(top_srcdir)/config/ax_tls.m4 \
-	$(top_srcdir)/configure.ac
+am__aclocal_m4_deps = $(top_srcdir)/config/libtool.m4 \
+	$(top_srcdir)/config/ltoptions.m4 \
+	$(top_srcdir)/config/ltsugar.m4 \
+	$(top_srcdir)/config/ltversion.m4 \
+	$(top_srcdir)/config/lt~obsolete.m4 \
+	$(top_srcdir)/config/ax_tls.m4 $(top_srcdir)/configure.ac
 am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
 	$(ACLOCAL_M4)
 mkinstalldirs = $(install_sh) -d
@@ -927,7 +931,7 @@ top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 AM_LDFLAGS = -lpthread
 AM_CFLAGS = -I$(top_srcdir) -I$(top_builddir) -g
-noinst_HEADERS = rcutorture.h
+noinst_HEADERS = rcutorture.h cpuset.h
 @COMPAT_ARCH_FALSE@COMPAT = $(am__append_1)
 @COMPAT_ARCH_TRUE@COMPAT = $(top_srcdir)/compat_arch_@ARCHTYPE@.c \
 @COMPAT_ARCH_TRUE@	$(am__append_1)

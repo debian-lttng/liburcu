@@ -23,6 +23,9 @@
 /* Define to 1 if you have the `bzero' function. */
 #undef HAVE_BZERO
 
+/* Defined to 1 if we have CPU_SET and it works */
+#undef HAVE_CPU_SET
+
 /* Define to 1 if the system has the type `cpu_set_t'. */
 #undef HAVE_CPU_SET_T
 
