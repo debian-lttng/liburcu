@@ -13,6 +13,9 @@ endif
 override_dh_auto_configure:
 	./configure --prefix=/usr
 
+override_dh_auto_build:
+	dh_auto_build -- V=1
+
 override_dh_auto_test:
 
 override_dh_makeshlibs:
