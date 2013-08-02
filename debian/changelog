@@ -1,3 +1,13 @@
+liburcu (0.7.7-1) unstable; urgency=low
+
+  * [168b2c5] New upstream version 0.7.7
+  * [f07b6db] Bump Standards-Version to 3.9.4, no changes necessary
+  * [8f2716c] Remove backport patch for sparc, included upstream
+  * [10ec904] Include pkgconfig files in liburcu-dev package (Closes: #710544)
+  * [cfa7bd6] Prevent hiding of gcc commandline arguments
+
+ -- Jon Bernard <jbernard@debian.org>  Thu, 01 Aug 2013 21:43:09 -0400
+
 liburcu (0.7.6-2) unstable; urgency=low
 
   * [08b0bb6] Include upstream fix for FTBFS on sparc.
