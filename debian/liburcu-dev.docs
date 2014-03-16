@@ -1,2 +1,6 @@
 README
 lgpl-relicensing.txt
+doc/cds-api.txt
+doc/rcu-api.txt
+doc/uatomic-api.txt
+doc/examples
