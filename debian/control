@@ -4,8 +4,8 @@ Maintainer: Jon Bernard <jbernard@debian.org>
 Build-Depends: debhelper (>= 9), dpkg-dev (>= 1.13.2), dh-autoreconf
 Standards-Version: 3.9.5
 Section: libs
-Vcs-Git: git://git.debian.org/git/collab-maint/liburcu.git
-Vcs-Browser: http://git.debian.org/?p=collab-maint/liburcu.git;a=summary
+Vcs-Git: git://anonscm.debian.org/collab-maint/liburcu.git
+Vcs-Browser: http://anonscm.debian.org/gitweb/?p=collab-maint/liburcu.git;a=summary
 Homepage: http://lttng.org/urcu
 
 Package: liburcu-dev
