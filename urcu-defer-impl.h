@@ -300,7 +300,7 @@ end:
 /*
  * _defer_rcu - Queue a RCU callback.
  */
-void _defer_rcu(void (*fct)(void *p), void *p)
+static void _defer_rcu(void (*fct)(void *p), void *p)
 {
 	unsigned long head, tail;
 
@@ -363,7 +363,7 @@ void _defer_rcu(void (*fct)(void *p), void *p)
 	wake_up_defer();
 }
 
-void *thr_defer(void *args)
+static void *thr_defer(void *args)
 {
 	for (;;) {
 		/*

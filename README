@@ -22,13 +22,15 @@ BUILDING
 		Forcing a 32-bit build for Sparcv9 (typical for Sparc v9)
 		* CFLAGS="-m32 -Wa,-Av9a -g -O2" ./configure
 
+
 ARCHITECTURES SUPPORTED
 -----------------------
 
 Currently, Linux x86 (i386, i486, i586, i686), x86 64-bit, PowerPC 32/64,
-S390, S390x, ARM, Alpha, ia64 and Sparcv9 32/64 are supported. Tested on
-Linux, FreeBSD 8.2/9.0, and Cygwin. Should also work on: Android, NetBSD 5,
-OpenBSD, Darwin (more testing needed before claiming support for these OS).
+S390, S390x, ARM, MIPS, Alpha, ia64 and Sparcv9 32/64 are supported.
+Tested on Linux, FreeBSD 8.2/8.3/9.0/9.1/10.0 i386/amd64, and Cygwin.
+Should also work on: Android, NetBSD 5, OpenBSD, Darwin (more testing
+needed before claiming support for these OS).
 
 Linux ARM depends on running a Linux kernel 2.6.15 or better, GCC 4.4 or
 better.
@@ -49,6 +51,13 @@ supported, with the following exceptions:
 
 Clang version 3.0 (based on LLVM 3.0) is supported.
 
+Building on MacOS X (Darwin) requires a work-around for processor
+detection:
+  # 32-bit
+  ./configure --build=i686-apple-darwin11
+  # 64-bit
+  ./configure --build=x86_64-apple-darwin11
+
 For developers using the git tree:
 
 This source tree is based on the autotools suite from GNU to simplify
@@ -68,6 +77,19 @@ Test scripts provided in the tests/ directory of the source tree depend
 on "bash" and the "seq" program.
 
 
+API
+---
+
+See the relevant API documentation files in doc/. The APIs provided by
+Userspace RCU are, by prefix:
+
+- rcu_ : Read-Copy Update (see doc/rcu-api.txt)
+- cmm_ : Concurrent Memory Model
+- caa_ : Concurrent Architecture Abstraction
+- cds_ : Concurrent Data Structures (see doc/cds-api.txt)
+- uatomic_: Userspace Atomic (see doc/uatomic-api.txt)
+
+
 QUICK START GUIDE
 -----------------
 
@@ -79,6 +101,19 @@ Usage of all urcu libraries
 	  instead of inlines, so your application can link with the library.
 	* Linking with one of the libraries below is always necessary even for
 	  LGPL and GPL applications.
+	* Define URCU_INLINE_SMALL_FUNCTIONS before including Userspace RCU
+	  headers if you want Userspace RCU to inline small functions (10
+	  lines or less) into the application. It can be used by applications
+	  distributed under any kind of license, and does *not* make the
+	  application a derived work of Userspace RCU.
+
+	  Those small inlined functions are guaranteed to match the library
+	  content as long as the library major version is unchanged.
+	  Therefore, the application *must* be compiled with headers matching
+	  the library major version number. Applications using
+	  URCU_INLINE_SMALL_FUNCTIONS may be unable to use debugging
+	  features of Userspace RCU without being recompiled.
+
 
 Usage of liburcu
 
@@ -220,28 +255,6 @@ Interaction with mutexes
 	should only be taken when the RCU reader thread is "offline"
 	(this can be performed by calling rcu_thread_offline()).
 
-Usage of DEBUG_RCU
-
-	DEBUG_RCU is used to add internal debugging self-checks to the
-	RCU library. This define adds a performance penalty when enabled.
-	Can be enabled by uncommenting the corresponding line in
-	Makefile.build.inc.
-
-Usage of DEBUG_YIELD
-
-	DEBUG_YIELD is used to add random delays in the code for testing
-	purposes.
-
-SMP support
-
-	By default the library is configured to use synchronization primitives
-	adequate for SMP systems. On uniprocessor systems, support for SMP
-	systems can be disabled with:
-
-		./configure --disable-smp-support
-
-	theoretically yielding slightly better performance.
-
 Interaction with fork()
 
 	Special care must be taken for applications performing fork() without
@@ -282,3 +295,40 @@ Thread Local Storage (TLS)
 	TLS variables on systems where it is not available. This behavior
 	can be forced by specifying --disable-compiler-tls as configure
 	argument.
+
+Usage of DEBUG_RCU
+
+	DEBUG_RCU is used to add internal debugging self-checks to the
+	RCU library. This define adds a performance penalty when enabled.
+	Can be enabled by uncommenting the corresponding line in
+	Makefile.build.inc.
+
+Usage of DEBUG_YIELD
+
+	DEBUG_YIELD is used to add random delays in the code for testing
+	purposes.
+
+SMP support
+
+	By default the library is configured to use synchronization primitives
+	adequate for SMP systems. On uniprocessor systems, support for SMP
+	systems can be disabled with:
+
+		./configure --disable-smp-support
+
+	theoretically yielding slightly better performance.
+
+MAKE TARGETS
+------------
+
+In addition to the usual "make check" target, Userspace RCU features
+"make regtest" and "make bench" targets.
+
+make check:   Short tests, meant to be run when rebuilding or porting
+              Userspace RCU.
+
+make regtest: Long (many hours) test, meant to be run when modifying
+              Userspace RCU or porting it to a new architecture or
+              operating system.
+
+make bench:   Long (many hours) benchmarks.

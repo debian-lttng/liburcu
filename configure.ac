@@ -2,11 +2,11 @@
 # Process this file with autoconf to produce a configure script.
 
 
-AC_INIT([userspace-rcu],[0.7.7],[mathieu dot desnoyers at efficios dot com])
+AC_INIT([userspace-rcu],[0.8.4],[mathieu dot desnoyers at efficios dot com])
 
 # Following the numbering scheme proposed by libtool for the library version
 # http://www.gnu.org/software/libtool/manual/html_node/Updating-version-info.html
-AC_SUBST([URCU_LIBRARY_VERSION], [1:0:0])
+AC_SUBST([URCU_LIBRARY_VERSION], [2:0:0])
 
 AC_CONFIG_AUX_DIR([config])
 AC_CONFIG_MACRO_DIR([config])
@@ -78,6 +78,7 @@ AS_CASE([$host_cpu],
 	[ia64], [ARCHTYPE="gcc"],
 	[arm*], [ARCHTYPE="arm"],
 	[mips*], [ARCHTYPE="mips"],
+	[tile*], [ARCHTYPE="gcc"],
 	[ARCHTYPE="unknown"]
 )
 
@@ -110,6 +111,21 @@ AS_IF([test "x$ARCHTYPE" = "xarm"],[
 		AC_DEFINE([CONFIG_RCU_ARM_HAVE_DMB], [1])
 	],[
 		AC_MSG_RESULT([no])
+	])
+])
+
+# Tile-specific checks
+AS_IF([echo "$host_cpu" | grep "^tile"],[
+	AC_MSG_CHECKING([for Tile architecture type])
+	AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
+				#ifndef __tilegx__
+				#error
+				#endif
+		]])
+	],[
+		AC_MSG_RESULT([ok])
+	],[
+		AC_MSG_FAILURE([URCU has only been tested on the TileGx architecture. For other Tile* architectures, please run the tests first and report the results to the maintainer so that proper support can be added.])
 	])
 ])
 
@@ -146,6 +162,7 @@ AC_COMPILE_IFELSE([AC_LANG_SOURCE([[
 
 AM_CONDITIONAL([COMPAT_FUTEX], [test "x$compat_futex_test" = "x1"])
 AM_CONDITIONAL([COMPAT_ARCH], [test "x$SUBARCHTYPE" = "xx86compat"])
+AM_CONDITIONAL([NO_SHARED], [test "x$enable_shared" = "xno"])
 
 # smp-support configure option
 AC_ARG_ENABLE([smp-support], 
@@ -274,7 +291,12 @@ AC_CONFIG_LINKS([
 AC_CONFIG_FILES([
 	Makefile
 	doc/Makefile
+	doc/examples/Makefile
 	tests/Makefile
+	tests/common/Makefile
+	tests/unit/Makefile
+	tests/benchmark/Makefile
+	tests/regression/Makefile
 	liburcu.pc
 	liburcu-bp.pc
 	liburcu-cds.pc

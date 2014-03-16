@@ -86,9 +86,45 @@
 #define URCU_FORCE_CAST(type, arg)	((type) (arg))
 #endif
 
-#define caa_is_signed_type(type)	(((type) (-1)) < 0)
+#define caa_is_signed_type(type)	((type) -1 < (type) 0)
 
-#define caa_cast_long_keep_sign(v)	\
-	(caa_is_signed_type(__typeof__(v)) ? (long) (v) : (unsigned long) (v))
+/*
+ * Sign-extend to long if needed, and output type is unsigned long.
+ */
+#define caa_cast_long_keep_sign(v)		\
+	(caa_is_signed_type(__typeof__(v)) ?	\
+		(unsigned long) (long) (v) :	\
+		(unsigned long) (v))
+
+#if defined (__GNUC__) \
+	&& ((__GNUC_MAJOR__ == 4) && (__GNUC_MINOR__ >= 5)	\
+		|| __GNUC_MAJOR__ >= 5)
+#define CDS_DEPRECATED(msg)	\
+	__attribute__((deprecated(msg)))
+#else
+#define CDS_DEPRECATED(msg)	\
+	__attribute__((deprecated))
+#endif
+
+#define CAA_ARRAY_SIZE(x)	(sizeof(x) / sizeof((x)[0]))
+
+/*
+ * Don't allow compiling with buggy compiler.
+ */
+
+#ifdef __GNUC__
+# define URCU_GCC_VERSION	(__GNUC__ * 10000 \
+				+ __GNUC_MINOR__ * 100 \
+				+ __GNUC_PATCHLEVEL__)
+
+/*
+ * http://gcc.gnu.org/bugzilla/show_bug.cgi?id=58854
+ */
+# ifdef __ARMEL__
+#  if URCU_GCC_VERSION >= 40800 && URCU_GCC_VERSION <= 40802
+#   error Your gcc version produces clobbered frame accesses
+#  endif
+# endif
+#endif
 
 #endif /* _URCU_COMPILER_H */

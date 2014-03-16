@@ -36,13 +36,14 @@
 #include <errno.h>
 #include <poll.h>
 
-#include "urcu/wfqueue.h"
+#include "urcu/wfcqueue.h"
 #include "urcu/map/urcu.h"
 #include "urcu/static/urcu.h"
 #include "urcu-pointer.h"
 #include "urcu/tls-compat.h"
 
 #include "urcu-die.h"
+#include "urcu-wait.h"
 
 /* Do not #define _LGPL_SOURCE to ensure we can emit the wrapper symbols */
 #undef _LGPL_SOURCE
@@ -52,18 +53,36 @@
 /*
  * If a reader is really non-cooperative and refuses to commit its
  * rcu_active_readers count to memory (there is no barrier in the reader
- * per-se), kick it after a few loops waiting for it.
+ * per-se), kick it after 10 loops waiting for it.
  */
-#define KICK_READER_LOOPS 10000
+#define KICK_READER_LOOPS 	10
 
 /*
  * Active attempts to check for reader Q.S. before calling futex().
  */
 #define RCU_QS_ACTIVE_ATTEMPTS 100
 
+/*
+ * RCU_MEMBARRIER is only possibly available on Linux.
+ */
+#if defined(RCU_MEMBARRIER) && defined(__linux__)
+#include <syscall.h>
+#endif
+
+/* If the headers do not support SYS_membarrier, fall back on RCU_MB */
+#ifdef SYS_membarrier
+# define membarrier(...)		syscall(SYS_membarrier, __VA_ARGS__)
+#else
+# define membarrier(...)		-ENOSYS
+#endif
+
+#define MEMBARRIER_EXPEDITED		(1 << 0)
+#define MEMBARRIER_DELAYED		(1 << 1)
+#define MEMBARRIER_QUERY		(1 << 16)
+
 #ifdef RCU_MEMBARRIER
 static int init_done;
-int has_sys_membarrier;
+int rcu_has_sys_membarrier;
 
 void __attribute__((constructor)) rcu_init(void);
 #endif
@@ -82,29 +101,21 @@ void __attribute__((destructor)) rcu_exit(void);
 #endif
 
 static pthread_mutex_t rcu_gp_lock = PTHREAD_MUTEX_INITIALIZER;
-
-int32_t gp_futex;
-
-/*
- * Global grace period counter.
- * Contains the current RCU_GP_CTR_PHASE.
- * Also has a RCU_GP_COUNT of 1, to accelerate the reader fast path.
- * Written to only by writer with mutex taken. Read by both writer and readers.
- */
-unsigned long rcu_gp_ctr = RCU_GP_COUNT;
+struct rcu_gp rcu_gp = { .ctr = RCU_GP_COUNT };
 
 /*
  * Written to only by each individual reader. Read by both the reader and the
  * writers.
  */
-DEFINE_URCU_TLS(struct rcu_reader, rcu_reader);
-
-#ifdef DEBUG_YIELD
-unsigned int yield_active;
-DEFINE_URCU_TLS(unsigned int, rand_yield);
-#endif
+__DEFINE_URCU_TLS_GLOBAL(struct rcu_reader, rcu_reader);
 
 static CDS_LIST_HEAD(registry);
+
+/*
+ * Queue keeping threads awaiting to wait for a grace period. Contains
+ * struct gp_waiters_thread objects.
+ */
+static DEFINE_URCU_WAIT_QUEUE(gp_waiters);
 
 static void mutex_lock(pthread_mutex_t *mutex)
 {
@@ -140,8 +151,8 @@ static void mutex_unlock(pthread_mutex_t *mutex)
 #ifdef RCU_MEMBARRIER
 static void smp_mb_master(int group)
 {
-	if (caa_likely(has_sys_membarrier))
-		membarrier(MEMBARRIER_EXPEDITED);
+	if (caa_likely(rcu_has_sys_membarrier))
+		(void) membarrier(MEMBARRIER_EXPEDITED);
 	else
 		cmm_smp_mb();
 }
@@ -210,25 +221,171 @@ static void wait_gp(void)
 {
 	/* Read reader_gp before read futex */
 	smp_mb_master(RCU_MB_GROUP);
-	if (uatomic_read(&gp_futex) == -1)
-		futex_async(&gp_futex, FUTEX_WAIT, -1,
+	if (uatomic_read(&rcu_gp.futex) == -1)
+		futex_async(&rcu_gp.futex, FUTEX_WAIT, -1,
 		      NULL, NULL, 0);
 }
 
-void update_counter_and_wait(void)
+static void wait_for_readers(struct cds_list_head *input_readers,
+			struct cds_list_head *cur_snap_readers,
+			struct cds_list_head *qsreaders)
 {
-	CDS_LIST_HEAD(qsreaders);
-	int wait_loops = 0;
+	unsigned int wait_loops = 0;
 	struct rcu_reader *index, *tmp;
-
-	/* Switch parity: 0 -> 1, 1 -> 0 */
-	CMM_STORE_SHARED(rcu_gp_ctr, rcu_gp_ctr ^ RCU_GP_CTR_PHASE);
+#ifdef HAS_INCOHERENT_CACHES
+	unsigned int wait_gp_loops = 0;
+#endif /* HAS_INCOHERENT_CACHES */
 
 	/*
-	 * Must commit rcu_gp_ctr update to memory before waiting for quiescent
+	 * Wait for each thread URCU_TLS(rcu_reader).ctr to either
+	 * indicate quiescence (not nested), or observe the current
+	 * rcu_gp.ctr value.
+	 */
+	for (;;) {
+		if (wait_loops < RCU_QS_ACTIVE_ATTEMPTS)
+			wait_loops++;
+		if (wait_loops >= RCU_QS_ACTIVE_ATTEMPTS) {
+			uatomic_dec(&rcu_gp.futex);
+			/* Write futex before read reader_gp */
+			smp_mb_master(RCU_MB_GROUP);
+		}
+
+		cds_list_for_each_entry_safe(index, tmp, input_readers, node) {
+			switch (rcu_reader_state(&index->ctr)) {
+			case RCU_READER_ACTIVE_CURRENT:
+				if (cur_snap_readers) {
+					cds_list_move(&index->node,
+						cur_snap_readers);
+					break;
+				}
+				/* Fall-through */
+			case RCU_READER_INACTIVE:
+				cds_list_move(&index->node, qsreaders);
+				break;
+			case RCU_READER_ACTIVE_OLD:
+				/*
+				 * Old snapshot. Leaving node in
+				 * input_readers will make us busy-loop
+				 * until the snapshot becomes current or
+				 * the reader becomes inactive.
+				 */
+				break;
+			}
+		}
+
+#ifndef HAS_INCOHERENT_CACHES
+		if (cds_list_empty(input_readers)) {
+			if (wait_loops >= RCU_QS_ACTIVE_ATTEMPTS) {
+				/* Read reader_gp before write futex */
+				smp_mb_master(RCU_MB_GROUP);
+				uatomic_set(&rcu_gp.futex, 0);
+			}
+			break;
+		} else {
+			if (wait_loops >= RCU_QS_ACTIVE_ATTEMPTS)
+				wait_gp();
+			else
+				caa_cpu_relax();
+		}
+#else /* #ifndef HAS_INCOHERENT_CACHES */
+		/*
+		 * BUSY-LOOP. Force the reader thread to commit its
+		 * URCU_TLS(rcu_reader).ctr update to memory if we wait
+		 * for too long.
+		 */
+		if (cds_list_empty(input_readers)) {
+			if (wait_loops >= RCU_QS_ACTIVE_ATTEMPTS) {
+				/* Read reader_gp before write futex */
+				smp_mb_master(RCU_MB_GROUP);
+				uatomic_set(&rcu_gp.futex, 0);
+			}
+			break;
+		} else {
+			if (wait_gp_loops == KICK_READER_LOOPS) {
+				smp_mb_master(RCU_MB_GROUP);
+				wait_gp_loops = 0;
+			}
+			if (wait_loops >= RCU_QS_ACTIVE_ATTEMPTS) {
+				wait_gp();
+				wait_gp_loops++;
+			} else {
+				caa_cpu_relax();
+			}
+		}
+#endif /* #else #ifndef HAS_INCOHERENT_CACHES */
+	}
+}
+
+void synchronize_rcu(void)
+{
+	CDS_LIST_HEAD(cur_snap_readers);
+	CDS_LIST_HEAD(qsreaders);
+	DEFINE_URCU_WAIT_NODE(wait, URCU_WAIT_WAITING);
+	struct urcu_waiters waiters;
+
+	/*
+	 * Add ourself to gp_waiters queue of threads awaiting to wait
+	 * for a grace period. Proceed to perform the grace period only
+	 * if we are the first thread added into the queue.
+	 * The implicit memory barrier before urcu_wait_add()
+	 * orders prior memory accesses of threads put into the wait
+	 * queue before their insertion into the wait queue.
+	 */
+	if (urcu_wait_add(&gp_waiters, &wait) != 0) {
+		/* Not first in queue: will be awakened by another thread. */
+		urcu_adaptative_busy_wait(&wait);
+		/* Order following memory accesses after grace period. */
+		cmm_smp_mb();
+		return;
+	}
+	/* We won't need to wake ourself up */
+	urcu_wait_set_state(&wait, URCU_WAIT_RUNNING);
+
+	mutex_lock(&rcu_gp_lock);
+
+	/*
+	 * Move all waiters into our local queue.
+	 */
+	urcu_move_waiters(&waiters, &gp_waiters);
+
+	if (cds_list_empty(&registry))
+		goto out;
+
+	/* All threads should read qparity before accessing data structure
+	 * where new ptr points to. Must be done within rcu_gp_lock because it
+	 * iterates on reader threads.*/
+	/* Write new ptr before changing the qparity */
+	smp_mb_master(RCU_MB_GROUP);
+
+	/*
+	 * Wait for readers to observe original parity or be quiescent.
+	 */
+	wait_for_readers(&registry, &cur_snap_readers, &qsreaders);
+
+	/*
+	 * Must finish waiting for quiescent state for original parity before
+	 * committing next rcu_gp.ctr update to memory. Failure to do so could
+	 * result in the writer waiting forever while new readers are always
+	 * accessing data (no progress).  Enforce compiler-order of load
+	 * URCU_TLS(rcu_reader).ctr before store to rcu_gp.ctr.
+	 */
+	cmm_barrier();
+
+	/*
+	 * Adding a cmm_smp_mb() which is _not_ formally required, but makes the
+	 * model easier to understand. It does not have a big performance impact
+	 * anyway, given this is the write-side.
+	 */
+	cmm_smp_mb();
+
+	/* Switch parity: 0 -> 1, 1 -> 0 */
+	CMM_STORE_SHARED(rcu_gp.ctr, rcu_gp.ctr ^ RCU_GP_CTR_PHASE);
+
+	/*
+	 * Must commit rcu_gp.ctr update to memory before waiting for quiescent
 	 * state. Failure to do so could result in the writer waiting forever
 	 * while new readers are always accessing data (no progress). Enforce
-	 * compiler-order of store to rcu_gp_ctr before load rcu_reader ctr.
+	 * compiler-order of store to rcu_gp.ctr before load rcu_reader ctr.
 	 */
 	cmm_barrier();
 
@@ -241,105 +398,14 @@ void update_counter_and_wait(void)
 	cmm_smp_mb();
 
 	/*
-	 * Wait for each thread URCU_TLS(rcu_reader).ctr count to become 0.
+	 * Wait for readers to observe new parity or be quiescent.
 	 */
-	for (;;) {
-		wait_loops++;
-		if (wait_loops == RCU_QS_ACTIVE_ATTEMPTS) {
-			uatomic_dec(&gp_futex);
-			/* Write futex before read reader_gp */
-			smp_mb_master(RCU_MB_GROUP);
-		}
+	wait_for_readers(&cur_snap_readers, NULL, &qsreaders);
 
-		cds_list_for_each_entry_safe(index, tmp, &registry, node) {
-			if (!rcu_gp_ongoing(&index->ctr))
-				cds_list_move(&index->node, &qsreaders);
-		}
-
-#ifndef HAS_INCOHERENT_CACHES
-		if (cds_list_empty(&registry)) {
-			if (wait_loops == RCU_QS_ACTIVE_ATTEMPTS) {
-				/* Read reader_gp before write futex */
-				smp_mb_master(RCU_MB_GROUP);
-				uatomic_set(&gp_futex, 0);
-			}
-			break;
-		} else {
-			if (wait_loops == RCU_QS_ACTIVE_ATTEMPTS)
-				wait_gp();
-			else
-				caa_cpu_relax();
-		}
-#else /* #ifndef HAS_INCOHERENT_CACHES */
-		/*
-		 * BUSY-LOOP. Force the reader thread to commit its
-		 * URCU_TLS(rcu_reader).ctr update to memory if we wait
-		 * for too long.
-		 */
-		if (cds_list_empty(&registry)) {
-			if (wait_loops == RCU_QS_ACTIVE_ATTEMPTS) {
-				/* Read reader_gp before write futex */
-				smp_mb_master(RCU_MB_GROUP);
-				uatomic_set(&gp_futex, 0);
-			}
-			break;
-		} else {
-			switch (wait_loops) {
-			case RCU_QS_ACTIVE_ATTEMPTS:
-				wait_gp();
-				break; /* only escape switch */
-			case KICK_READER_LOOPS:
-				smp_mb_master(RCU_MB_GROUP);
-				wait_loops = 0;
-				break; /* only escape switch */
-			default:
-				caa_cpu_relax();
-			}
-		}
-#endif /* #else #ifndef HAS_INCOHERENT_CACHES */
-	}
-	/* put back the reader list in the registry */
+	/*
+	 * Put quiescent reader list back into registry.
+	 */
 	cds_list_splice(&qsreaders, &registry);
-}
-
-void synchronize_rcu(void)
-{
-	mutex_lock(&rcu_gp_lock);
-
-	if (cds_list_empty(&registry))
-		goto out;
-
-	/* All threads should read qparity before accessing data structure
-	 * where new ptr points to. Must be done within rcu_gp_lock because it
-	 * iterates on reader threads.*/
-	/* Write new ptr before changing the qparity */
-	smp_mb_master(RCU_MB_GROUP);
-
-	/*
-	 * Wait for previous parity to be empty of readers.
-	 */
-	update_counter_and_wait();	/* 0 -> 1, wait readers in parity 0 */
-
-	/*
-	 * Must finish waiting for quiescent state for parity 0 before
-	 * committing next rcu_gp_ctr update to memory. Failure to do so could
-	 * result in the writer waiting forever while new readers are always
-	 * accessing data (no progress).  Enforce compiler-order of load
-	 * URCU_TLS(rcu_reader).ctr before store to rcu_gp_ctr.
-	 */
-	cmm_barrier();
-
-	/*
-	 * Adding a cmm_smp_mb() which is _not_ formally required, but makes the
-	 * model easier to understand. It does not have a big performance impact
-	 * anyway, given this is the write-side.
-	 */
-	cmm_smp_mb();
-
-	/*
-	 * Wait for previous parity to be empty of readers.
-	 */
-	update_counter_and_wait();	/* 1 -> 0, wait readers in parity 1 */
 
 	/* Finish waiting for reader threads before letting the old ptr being
 	 * freed. Must be done within rcu_gp_lock because it iterates on reader
@@ -347,6 +413,13 @@ void synchronize_rcu(void)
 	smp_mb_master(RCU_MB_GROUP);
 out:
 	mutex_unlock(&rcu_gp_lock);
+
+	/*
+	 * Wakeup waiters only after we have completed the grace period
+	 * and have ensured the memory barriers at the end of the grace
+	 * period have been issued.
+	 */
+	urcu_wake_all_waiters(&waiters);
 }
 
 /*
@@ -361,6 +434,11 @@ void rcu_read_lock(void)
 void rcu_read_unlock(void)
 {
 	_rcu_read_unlock();
+}
+
+int rcu_read_ongoing(void)
+{
+	return _rcu_read_ongoing();
 }
 
 void rcu_register_thread(void)
@@ -389,7 +467,7 @@ void rcu_init(void)
 		return;
 	init_done = 1;
 	if (!membarrier(MEMBARRIER_EXPEDITED | MEMBARRIER_QUERY))
-		has_sys_membarrier = 1;
+		rcu_has_sys_membarrier = 1;
 }
 #endif
 
@@ -433,14 +511,14 @@ void rcu_init(void)
 
 void rcu_exit(void)
 {
-	struct sigaction act;
-	int ret;
-
-	ret = sigaction(SIGRCU, NULL, &act);
-	if (ret)
-		urcu_die(errno);
-	assert(act.sa_sigaction == sigrcu_handler);
-	assert(cds_list_empty(&registry));
+	/*
+	 * Don't unregister the SIGRCU signal handler anymore, because
+	 * call_rcu threads could still be using it shortly before the
+	 * application exits.
+	 * Assertion disabled because call_rcu threads are now rcu
+	 * readers, and left running at exit.
+	 * assert(cds_list_empty(&registry));
+	 */
 }
 
 #endif /* #ifdef RCU_SIGNAL */

@@ -62,63 +62,27 @@ extern "C" {
 #define rcu_assert(args...)
 #endif
 
-#ifdef DEBUG_YIELD
-#include <sched.h>
-#include <time.h>
-#include <pthread.h>
-#include <unistd.h>
-
-#define YIELD_READ 	(1 << 0)
-#define YIELD_WRITE	(1 << 1)
-
-/* maximum sleep delay, in us */
-#define MAX_SLEEP 50
-
-extern unsigned int yield_active;
-extern DECLARE_URCU_TLS(unsigned int, rand_yield);
-
-static inline void debug_yield_read(void)
-{
-	if (yield_active & YIELD_READ)
-		if (rand_r(&URCU_TLS(rand_yield)) & 0x1)
-			usleep(rand_r(&URCU_TLS(rand_yield)) % MAX_SLEEP);
-}
-
-static inline void debug_yield_write(void)
-{
-	if (yield_active & YIELD_WRITE)
-		if (rand_r(&URCU_TLS(rand_yield)) & 0x1)
-			usleep(rand_r(&URCU_TLS(rand_yield)) % MAX_SLEEP);
-}
-
-static inline void debug_yield_init(void)
-{
-	URCU_TLS(rand_yield) = time(NULL) ^ (unsigned long) pthread_self();
-}
-#else
-static inline void debug_yield_read(void)
-{
-}
-
-static inline void debug_yield_write(void)
-{
-}
-
-static inline void debug_yield_init(void)
-{
-
-}
-#endif
+enum rcu_state {
+	RCU_READER_ACTIVE_CURRENT,
+	RCU_READER_ACTIVE_OLD,
+	RCU_READER_INACTIVE,
+};
 
 #define RCU_GP_ONLINE		(1UL << 0)
 #define RCU_GP_CTR		(1UL << 1)
 
-/*
- * Global quiescent period counter with low-order bits unused.
- * Using a int rather than a char to eliminate false register dependencies
- * causing stalls on some architectures.
- */
-extern unsigned long rcu_gp_ctr;
+struct rcu_gp {
+	/*
+	 * Global quiescent period counter with low-order bits unused.
+	 * Using a int rather than a char to eliminate false register
+	 * dependencies causing stalls on some architectures.
+	 */
+	unsigned long ctr;
+
+	int32_t futex;
+} __attribute__((aligned(CAA_CACHE_LINE_SIZE)));
+
+extern struct rcu_gp rcu_gp;
 
 struct rcu_reader {
 	/* Data used by both reader and synchronize_rcu() */
@@ -131,8 +95,6 @@ struct rcu_reader {
 
 extern DECLARE_URCU_TLS(struct rcu_reader, rcu_reader);
 
-extern int32_t gp_futex;
-
 /*
  * Wake-up waiting synchronize_rcu(). Called from many concurrent threads.
  */
@@ -141,20 +103,24 @@ static inline void wake_up_gp(void)
 	if (caa_unlikely(_CMM_LOAD_SHARED(URCU_TLS(rcu_reader).waiting))) {
 		_CMM_STORE_SHARED(URCU_TLS(rcu_reader).waiting, 0);
 		cmm_smp_mb();
-		if (uatomic_read(&gp_futex) != -1)
+		if (uatomic_read(&rcu_gp.futex) != -1)
 			return;
-		uatomic_set(&gp_futex, 0);
-		futex_noasync(&gp_futex, FUTEX_WAKE, 1,
+		uatomic_set(&rcu_gp.futex, 0);
+		futex_noasync(&rcu_gp.futex, FUTEX_WAKE, 1,
 		      NULL, NULL, 0);
 	}
 }
 
-static inline int rcu_gp_ongoing(unsigned long *ctr)
+static inline enum rcu_state rcu_reader_state(unsigned long *ctr)
 {
 	unsigned long v;
 
 	v = CMM_LOAD_SHARED(*ctr);
-	return v && (v != rcu_gp_ctr);
+	if (!v)
+		return RCU_READER_INACTIVE;
+	if (v == rcu_gp.ctr)
+		return RCU_READER_ACTIVE_CURRENT;
+	return RCU_READER_ACTIVE_OLD;
 }
 
 /*
@@ -181,19 +147,54 @@ static inline void _rcu_read_unlock(void)
 }
 
 /*
- * Inform RCU of a quiescent state.
+ * Returns whether within a RCU read-side critical section.
  *
  * This function is less than 10 lines long.  The intent is that this
  * function meets the 10-line criterion for LGPL, allowing this function
  * to be invoked directly from non-LGPL code.
  */
-static inline void _rcu_quiescent_state(void)
+static inline int _rcu_read_ongoing(void)
+{
+	return URCU_TLS(rcu_reader).ctr;
+}
+
+/*
+ * This is a helper function for _rcu_quiescent_state().
+ * The first cmm_smp_mb() ensures memory accesses in the prior read-side
+ * critical sections are not reordered with store to
+ * URCU_TLS(rcu_reader).ctr, and ensures that mutexes held within an
+ * offline section that would happen to end with this
+ * rcu_quiescent_state() call are not reordered with
+ * store to URCU_TLS(rcu_reader).ctr.
+ */
+static inline void _rcu_quiescent_state_update_and_wakeup(unsigned long gp_ctr)
 {
 	cmm_smp_mb();
-	_CMM_STORE_SHARED(URCU_TLS(rcu_reader).ctr, _CMM_LOAD_SHARED(rcu_gp_ctr));
+	_CMM_STORE_SHARED(URCU_TLS(rcu_reader).ctr, gp_ctr);
 	cmm_smp_mb();	/* write URCU_TLS(rcu_reader).ctr before read futex */
 	wake_up_gp();
 	cmm_smp_mb();
+}
+
+/*
+ * Inform RCU of a quiescent state.
+ *
+ * This function is less than 10 lines long.  The intent is that this
+ * function meets the 10-line criterion for LGPL, allowing this function
+ * to be invoked directly from non-LGPL code.
+ *
+ * We skip the memory barriers and gp store if our local ctr already
+ * matches the global rcu_gp.ctr value: this is OK because a prior
+ * _rcu_quiescent_state() or _rcu_thread_online() already updated it
+ * within our thread, so we have no quiescent state to report.
+ */
+static inline void _rcu_quiescent_state(void)
+{
+	unsigned long gp_ctr;
+
+	if ((gp_ctr = CMM_LOAD_SHARED(rcu_gp.ctr)) == URCU_TLS(rcu_reader).ctr)
+		return;
+	_rcu_quiescent_state_update_and_wakeup(gp_ctr);
 }
 
 /*
@@ -224,7 +225,7 @@ static inline void _rcu_thread_offline(void)
 static inline void _rcu_thread_online(void)
 {
 	cmm_barrier();	/* Ensure the compiler does not reorder us with mutex */
-	_CMM_STORE_SHARED(URCU_TLS(rcu_reader).ctr, CMM_LOAD_SHARED(rcu_gp_ctr));
+	_CMM_STORE_SHARED(URCU_TLS(rcu_reader).ctr, CMM_LOAD_SHARED(rcu_gp.ctr));
 	cmm_smp_mb();
 }
 
