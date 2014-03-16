@@ -32,7 +32,7 @@
 #include <stdlib.h>
 #include <pthread.h>
 
-#include <urcu/wfqueue.h>
+#include <urcu/wfcqueue.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -57,7 +57,7 @@ struct call_rcu_data;
  */
 
 struct rcu_head {
-	struct cds_wfq_node next;
+	struct cds_wfcq_node next;
 	void (*func)(struct rcu_head *head);
 };
 
@@ -91,6 +91,8 @@ void free_all_cpu_call_rcu_data(void);
 void call_rcu_before_fork(void);
 void call_rcu_after_fork_parent(void);
 void call_rcu_after_fork_child(void);
+
+void rcu_barrier(void);
 
 #ifdef __cplusplus 
 }

@@ -44,7 +44,7 @@ extern "C" {
  * 	typedef int my_int_array_type[4];
  * 	DEFINE_URCU_TLS(my_int_array_type, var_name);
  *
- * Another exmaple:
+ * Another example:
  * 	typedef void (*call_rcu_flavor)(struct rcu_head *, XXXX);
  * 	DECLARE_URCU_TLS(call_rcu_flavor, p_call_rcu);
  *
@@ -70,9 +70,21 @@ extern "C" {
 # define DEFINE_URCU_TLS(type, name)	\
 	CONFIG_RCU_TLS type name
 
+# define __DEFINE_URCU_TLS_GLOBAL(type, name)	\
+	CONFIG_RCU_TLS type name
+
 # define URCU_TLS(name)		(name)
 
 #else /* #ifndef CONFIG_RCU_TLS */
+
+/*
+ * The *_1() macros ensure macro parameters are expanded.
+ *
+ * __DEFINE_URCU_TLS_GLOBAL and __URCU_TLS_CALL exist for the sole
+ * purpose of notifying applications compiled against non-fixed 0.7 and
+ * 0.8 userspace RCU headers and using multiple flavors concurrently to
+ * recompile against fixed userspace RCU headers.
+ */
 
 # include <pthread.h>
 
@@ -82,15 +94,24 @@ struct urcu_tls {
 	int init_done;
 };
 
+# define DECLARE_URCU_TLS_1(type, name)				\
+	type *__tls_access2_ ## name(void)
+
 # define DECLARE_URCU_TLS(type, name)				\
-	type *__tls_access_ ## name(void)
+	DECLARE_URCU_TLS_1(type, name)
 
 /*
  * Note: we don't free memory at process exit, since it will be dealt
  * with by the OS.
  */
-# define DEFINE_URCU_TLS(type, name)				\
-	type *__tls_access_ ## name(void)			\
+# define __URCU_TLS_CALL_1(name)				\
+	__tls_access2_ ## name
+
+# define __URCU_TLS_CALL(name)					\
+	__URCU_TLS_CALL_1(name)
+
+# define DEFINE_URCU_TLS_1(type, name)				\
+	type *__tls_access2_ ## name(void)			\
 	{							\
 		static struct urcu_tls __tls_ ## name = {	\
 			.init_mutex = PTHREAD_MUTEX_INITIALIZER,\
@@ -118,7 +139,34 @@ struct urcu_tls {
 		return __tls_p;					\
 	}
 
-# define URCU_TLS(name)		(*__tls_access_ ## name())
+/*
+ * Define with and without macro expansion to handle erroneous callers.
+ * Trigger an abort() if the caller application uses the clashing symbol
+ * if a weak symbol is overridden.
+ */
+# define __DEFINE_URCU_TLS_GLOBAL(type, name)			\
+	DEFINE_URCU_TLS_1(type, name)				\
+	int __urcu_tls_symbol_refcount_ ## name __attribute__((weak)); \
+	static __attribute__((constructor))			\
+	void __urcu_tls_inc_refcount_ ## name(void)		\
+	{							\
+		__urcu_tls_symbol_refcount_ ## name++;		\
+	}							\
+	type *__tls_access_ ## name(void)			\
+	{							\
+		if (__urcu_tls_symbol_refcount_ ## name > 1) {	\
+			fprintf(stderr, "Error: Userspace RCU symbol clash for multiple concurrent flavors. Please upgrade liburcu libraries and headers, then recompile your application.\n"); \
+			abort();				\
+		} 						\
+		return __URCU_TLS_CALL(name)();			\
+	}
+
+# define DEFINE_URCU_TLS(type, name)				\
+	DEFINE_URCU_TLS_1(type, name)
+
+# define URCU_TLS_1(name)	(*__tls_access2_ ## name())
+
+# define URCU_TLS(name)		URCU_TLS_1(name)
 
 #endif	/* #else #ifndef CONFIG_RCU_TLS */
 

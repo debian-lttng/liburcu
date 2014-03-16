@@ -58,57 +58,11 @@ extern "C" {
 #define rcu_assert(args...)
 #endif
 
-#ifdef DEBUG_YIELD
-#include <sched.h>
-#include <time.h>
-#include <pthread.h>
-#include <unistd.h>
-
-#define YIELD_READ 	(1 << 0)
-#define YIELD_WRITE	(1 << 1)
-
-/*
- * Updates without RCU_MB are much slower. Account this in
- * the delay.
- */
-/* maximum sleep delay, in us */
-#define MAX_SLEEP 50
-
-extern unsigned int yield_active;
-extern DECLARE_URCU_TLS(unsigned int, rand_yield);
-
-static inline void debug_yield_read(void)
-{
-	if (yield_active & YIELD_READ)
-		if (rand_r(&URCU_TLS(rand_yield)) & 0x1)
-			usleep(rand_r(&URCU_TLS(rand_yield)) % MAX_SLEEP);
-}
-
-static inline void debug_yield_write(void)
-{
-	if (yield_active & YIELD_WRITE)
-		if (rand_r(&URCU_TLS(rand_yield)) & 0x1)
-			usleep(rand_r(&URCU_TLS(rand_yield)) % MAX_SLEEP);
-}
-
-static inline void debug_yield_init(void)
-{
-	URCU_TLS(rand_yield) = time(NULL) ^ (unsigned long) pthread_self();
-}
-#else
-static inline void debug_yield_read(void)
-{
-}
-
-static inline void debug_yield_write(void)
-{
-}
-
-static inline void debug_yield_init(void)
-{
-
-}
-#endif
+enum rcu_state {
+	RCU_READER_ACTIVE_CURRENT,
+	RCU_READER_ACTIVE_OLD,
+	RCU_READER_INACTIVE,
+};
 
 /*
  * The trick here is that RCU_GP_CTR_PHASE must be a multiple of 8 so we can use a
@@ -124,16 +78,22 @@ static inline void debug_yield_init(void)
  */
 extern void rcu_bp_register(void);
 
-/*
- * Global quiescent period counter with low-order bits unused.
- * Using a int rather than a char to eliminate false register dependencies
- * causing stalls on some architectures.
- */
-extern long rcu_gp_ctr;
+struct rcu_gp {
+	/*
+	 * Global grace period counter.
+	 * Contains the current RCU_GP_CTR_PHASE.
+	 * Also has a RCU_GP_COUNT of 1, to accelerate the reader fast path.
+	 * Written to only by writer with mutex taken.
+	 * Read by both writer and readers.
+	 */
+	unsigned long ctr;
+} __attribute__((aligned(CAA_CACHE_LINE_SIZE)));
+
+extern struct rcu_gp rcu_gp;
 
 struct rcu_reader {
 	/* Data used by both reader and synchronize_rcu() */
-	long ctr;
+	unsigned long ctr;
 	/* Data used for registry */
 	struct cds_list_head node __attribute__((aligned(CAA_CACHE_LINE_SIZE)));
 	pthread_t tid;
@@ -147,23 +107,26 @@ struct rcu_reader {
  */
 extern DECLARE_URCU_TLS(struct rcu_reader *, rcu_reader);
 
-static inline int rcu_old_gp_ongoing(long *value)
+static inline enum rcu_state rcu_reader_state(unsigned long *ctr)
 {
-	long v;
+	unsigned long v;
 
-	if (value == NULL)
-		return 0;
+	if (ctr == NULL)
+		return RCU_READER_INACTIVE;
 	/*
 	 * Make sure both tests below are done on the same version of *value
 	 * to insure consistency.
 	 */
-	v = CMM_LOAD_SHARED(*value);
-	return (v & RCU_GP_CTR_NEST_MASK) &&
-		 ((v ^ rcu_gp_ctr) & RCU_GP_CTR_PHASE);
+	v = CMM_LOAD_SHARED(*ctr);
+	if (!(v & RCU_GP_CTR_NEST_MASK))
+		return RCU_READER_INACTIVE;
+	if (!((v ^ rcu_gp.ctr) & RCU_GP_CTR_PHASE))
+		return RCU_READER_ACTIVE_CURRENT;
+	return RCU_READER_ACTIVE_OLD;
 }
 
 /*
- * Helper for _rcu_read_lock().  The format of rcu_gp_ctr (as well as
+ * Helper for _rcu_read_lock().  The format of rcu_gp.ctr (as well as
  * the per-thread rcu_reader.ctr) has the upper bits containing a count of
  * _rcu_read_lock() nesting, and a lower-order bit that contains either zero
  * or RCU_GP_CTR_PHASE.  The smp_mb_slave() ensures that the accesses in
@@ -172,7 +135,7 @@ static inline int rcu_old_gp_ongoing(long *value)
 static inline void _rcu_read_lock_update(unsigned long tmp)
 {
 	if (caa_likely(!(tmp & RCU_GP_CTR_NEST_MASK))) {
-		_CMM_STORE_SHARED(URCU_TLS(rcu_reader)->ctr, _CMM_LOAD_SHARED(rcu_gp_ctr));
+		_CMM_STORE_SHARED(URCU_TLS(rcu_reader)->ctr, _CMM_LOAD_SHARED(rcu_gp.ctr));
 		cmm_smp_mb();
 	} else
 		_CMM_STORE_SHARED(URCU_TLS(rcu_reader)->ctr, tmp + RCU_GP_COUNT);
@@ -190,7 +153,7 @@ static inline void _rcu_read_lock_update(unsigned long tmp)
  */
 static inline void _rcu_read_lock(void)
 {
-	long tmp;
+	unsigned long tmp;
 
 	if (caa_unlikely(!URCU_TLS(rcu_reader)))
 		rcu_bp_register(); /* If not yet registered. */
@@ -212,6 +175,20 @@ static inline void _rcu_read_unlock(void)
 	cmm_smp_mb();
 	_CMM_STORE_SHARED(URCU_TLS(rcu_reader)->ctr, URCU_TLS(rcu_reader)->ctr - RCU_GP_COUNT);
 	cmm_barrier();	/* Ensure the compiler does not reorder us with mutex */
+}
+
+/*
+ * Returns whether within a RCU read-side critical section.
+ *
+ * This function is less than 10 lines long.  The intent is that this
+ * function meets the 10-line criterion for LGPL, allowing this function
+ * to be invoked directly from non-LGPL code.
+ */
+static inline int _rcu_read_ongoing(void)
+{
+	if (caa_unlikely(!URCU_TLS(rcu_reader)))
+		rcu_bp_register(); /* If not yet registered. */
+	return URCU_TLS(rcu_reader)->ctr & RCU_GP_CTR_NEST_MASK;
 }
 
 #ifdef __cplusplus 
