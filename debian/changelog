@@ -1,3 +1,14 @@
+liburcu (0.8.4-1) unstable; urgency=low
+
+  * [18d8f23] New upstream version 0.8.4
+  * [2732dc7] Bump standards version, no changes necessary
+  * [a9d1d76] Update VCS fields to make lintian happy
+  * [cca1e6c] Include additional docs and example code
+  * [ad1838b] Bump soname and update symbols file
+  * [6790b2a] Re-enable build-time tests (Closes: #718409)
+
+ -- Jon Bernard <jbernard@debian.org>  Sun, 16 Mar 2014 19:59:56 -0400
+
 liburcu (0.7.7-1) unstable; urgency=low
 
   * [168b2c5] New upstream version 0.7.7
