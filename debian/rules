@@ -1,17 +1,16 @@
 #!/usr/bin/make -f
 
-CFLAGS = -O2
 DEB_HOST_ARCH_CPU := $(shell dpkg-architecture -qDEB_HOST_ARCH_CPU)
 
 ifeq ($(DEB_HOST_ARCH_CPU), sparc)
-	CFLAGS += -Wa,-Av9a
+	DEB_CFLAGS_MAINT_APPEND += -Wa,-Av9a
 endif
 
 %:
 	dh $@ --with autoreconf --with quilt
 
 override_dh_auto_configure:
-	./configure --prefix=/usr
+	./configure --prefix=/usr $(shell dpkg-buildflags --export=configure)
 
 override_dh_auto_build:
 	dh_auto_build -- V=1
