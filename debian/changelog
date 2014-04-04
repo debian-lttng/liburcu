@@ -1,3 +1,11 @@
+liburcu (0.8.4-2) unstable; urgency=low
+
+  [ Michael Jeanson ]
+  * [04cf85f] Fix FTBFS on amrel and armhf (Closes: #743403)
+  * [b515ef6] Use dpkg-buildflags to build with hardened flags
+
+ -- Jon Bernard <jbernard@debian.org>  Thu, 03 Apr 2014 20:31:36 -0400
+
 liburcu (0.8.4-1) unstable; urgency=low
 
   * [18d8f23] New upstream version 0.8.4
