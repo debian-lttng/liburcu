@@ -1,3 +1,10 @@
+liburcu (0.8.4-2.1) unstable; urgency=high
+
+  * Non-maintainer upload
+  * Don't enable dmb on armel (Closes: #745891)
+
+ -- Ondřej Surý <ondrej@debian.org>  Thu, 22 May 2014 15:28:37 +0200
+
 liburcu (0.8.4-2) unstable; urgency=low
 
   [ Michael Jeanson ]
