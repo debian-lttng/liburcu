@@ -9,13 +9,6 @@ endif
 %:
 	dh $@ --with autoreconf --with quilt
 
-override_dh_auto_configure:
-	./configure --prefix=/usr $(shell dpkg-buildflags --export=configure)
-ifeq ($(DEB_HOST_ARCH), armel)
-	sed -i -e "s|#define CONFIG_RCU_ARM_HAVE_DMB 1|/* #undef CONFIG_RCU_ARM_HAVE_DMB */|" config.h
-	sed -i -e "s|#define CONFIG_RCU_ARM_HAVE_DMB 1|/* #undef CONFIG_RCU_ARM_HAVE_DMB */|" urcu/config.h
-endif
-
 override_dh_auto_build:
 	dh_auto_build -- V=1
 
