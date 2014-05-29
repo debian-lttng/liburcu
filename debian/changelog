@@ -1,3 +1,10 @@
+liburcu (0.8.4-3) unstable; urgency=low
+
+  * [c69bbc8] Remove dh_auto_configure override to fix ARM builds
+  * [416f574] Update install files to include build target
+
+ -- Jon Bernard <jbernard@debian.org>  Wed, 28 May 2014 20:21:52 -0400
+
 liburcu (0.8.4-2.1) unstable; urgency=high
 
   * Non-maintainer upload
