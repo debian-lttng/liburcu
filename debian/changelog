@@ -1,3 +1,9 @@
+liburcu (0.8.4-4) unstable; urgency=low
+
+  * [049332d] Mark liburcu2 as a multiarch package (Closes: #742199)
+
+ -- Jon Bernard <jbernard@debian.org>  Thu, 29 May 2014 20:22:02 -0400
+
 liburcu (0.8.4-3) unstable; urgency=low
 
   * [c69bbc8] Remove dh_auto_configure override to fix ARM builds
