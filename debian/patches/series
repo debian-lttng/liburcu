@@ -1,1 +1,2 @@
 ignore-gcc-check.patch
+liburcu_add_ppc64le_architecture.patch
