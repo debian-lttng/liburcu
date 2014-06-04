@@ -1,3 +1,10 @@
+liburcu (0.8.4-5) unstable; urgency=low
+
+  * [6932c7f] Include patch to support ppc64le builds.
+    Thanks to Breno Leitao (Closes: #749926)
+
+ -- Jon Bernard <jbernard@debian.org>  Wed, 04 Jun 2014 14:42:02 -0400
+
 liburcu (0.8.4-4) unstable; urgency=low
 
   * [049332d] Mark liburcu2 as a multiarch package (Closes: #742199)
