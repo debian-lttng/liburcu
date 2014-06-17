@@ -1,0 +1,23 @@
+>>From 4513f563686920489ff176abbc3ba137dd6d7247 Mon Sep 17 00:00:00 2001
+From: Ian Campbell <ijc@hellion.org.uk>
+Date: Sun, 8 Jun 2014 08:24:37 +0100
+Subject: [PATCH] Include patch to support aarch64 builds using gcc atomics.
+
+Extracted from http://patches.ubuntu.com/libu/liburcu/liburcu_0.7.12-0ubuntu2.patch
+where the original author was Dmitrijs Ledkovs.
+---
+ debian/patches/arm64-archtype.patch | 21 +++++++++++++++++++++
+ debian/patches/series               |  1 +
+ 2 files changed, 22 insertions(+)
+ create mode 100644 debian/patches/arm64-archtype.patch
+
+--- a/configure.ac
++++ b/configure.ac
+@@ -78,6 +78,7 @@ AS_CASE([$host_cpu],
+ 	[alpha*], [ARCHTYPE="alpha"],
+ 	[ia64], [ARCHTYPE="gcc"],
+ 	[arm*], [ARCHTYPE="arm"],
++	[aarch64], [ARCHTYPE="gcc"],
+ 	[mips*], [ARCHTYPE="mips"],
+ 	[tile*], [ARCHTYPE="gcc"],
+ 	[ARCHTYPE="unknown"]
