@@ -1,3 +1,10 @@
+liburcu (0.8.4-6) unstable; urgency=medium
+
+  * [2d72312] Use gcc atomics on aarch64 for bootstrapping.
+    Thanks to Dmitrijs Ledkovs <dmitrij.ledkov@ubuntu.com> (Closes: #750894)
+
+ -- Jon Bernard <jbernard@debian.org>  Tue, 17 Jun 2014 14:35:34 -0400
+
 liburcu (0.8.4-5) unstable; urgency=low
 
   * [6932c7f] Include patch to support ppc64le builds.
