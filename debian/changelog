@@ -1,3 +1,11 @@
+liburcu (0.8.5-1) unstable; urgency=medium
+
+  * [a322cf3] New upstream version 0.8.5
+  * [130372a] Update symbols file for new version
+  * [d26f201] Bump standards version, no changed necessary
+
+ -- Jon Bernard <jbernard@debian.org>  Wed, 22 Oct 2014 20:39:51 +0000
+
 liburcu (0.8.4-6) unstable; urgency=medium
 
   * [2d72312] Use gcc atomics on aarch64 for bootstrapping.
