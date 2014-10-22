@@ -1171,10 +1171,14 @@ void partition_resize_helper(struct cds_lfht *ht, unsigned long i,
 		void (*fct)(struct cds_lfht *ht, unsigned long i,
 			unsigned long start, unsigned long len))
 {
-	unsigned long partition_len;
+	unsigned long partition_len, start = 0;
 	struct partition_resize_work *work;
 	int thread, ret;
 	unsigned long nr_threads;
+
+	assert(nr_cpus_mask != -1);
+	if (nr_cpus_mask < 0 || len < 2 * MIN_PARTITION_PER_THREAD)
+		goto fallback;
 
 	/*
 	 * Note: nr_cpus_mask + 1 is always power of 2.
@@ -1189,7 +1193,10 @@ void partition_resize_helper(struct cds_lfht *ht, unsigned long i,
 	}
 	partition_len = len >> cds_lfht_get_count_order_ulong(nr_threads);
 	work = calloc(nr_threads, sizeof(*work));
-	assert(work);
+	if (!work) {
+		dbg_printf("error allocating for resize, single-threading\n");
+		goto fallback;
+	}
 	for (thread = 0; thread < nr_threads; thread++) {
 		work[thread].ht = ht;
 		work[thread].i = i;
@@ -1198,6 +1205,17 @@ void partition_resize_helper(struct cds_lfht *ht, unsigned long i,
 		work[thread].fct = fct;
 		ret = pthread_create(&(work[thread].thread_id), ht->resize_attr,
 			partition_resize_thread, &work[thread]);
+		if (ret == EAGAIN) {
+			/*
+			 * Out of resources: wait and join the threads
+			 * we've created, then handle leftovers.
+			 */
+			dbg_printf("error spawning for resize, single-threading\n");
+			start = work[thread].start;
+			len -= start;
+			nr_threads = thread;
+			break;
+		}
 		assert(!ret);
 	}
 	for (thread = 0; thread < nr_threads; thread++) {
@@ -1205,6 +1223,18 @@ void partition_resize_helper(struct cds_lfht *ht, unsigned long i,
 		assert(!ret);
 	}
 	free(work);
+
+	/*
+	 * A pthread_create failure above will either lead in us having
+	 * no threads to join or starting at a non-zero offset,
+	 * fallback to single thread processing of leftovers.
+	 */
+	if (start == 0 && nr_threads > 0)
+		return;
+fallback:
+	ht->flavor->thread_online();
+	fct(ht, i, start, len);
+	ht->flavor->thread_offline();
 }
 
 /*
@@ -1242,13 +1272,6 @@ static
 void init_table_populate(struct cds_lfht *ht, unsigned long i,
 			 unsigned long len)
 {
-	assert(nr_cpus_mask != -1);
-	if (nr_cpus_mask < 0 || len < 2 * MIN_PARTITION_PER_THREAD) {
-		ht->flavor->thread_online();
-		init_table_populate_partition(ht, i, 0, len);
-		ht->flavor->thread_offline();
-		return;
-	}
 	partition_resize_helper(ht, i, len, init_table_populate_partition);
 }
 
@@ -1341,14 +1364,6 @@ void remove_table_partition(struct cds_lfht *ht, unsigned long i,
 static
 void remove_table(struct cds_lfht *ht, unsigned long i, unsigned long len)
 {
-
-	assert(nr_cpus_mask != -1);
-	if (nr_cpus_mask < 0 || len < 2 * MIN_PARTITION_PER_THREAD) {
-		ht->flavor->thread_online();
-		remove_table_partition(ht, i, 0, len);
-		ht->flavor->thread_offline();
-		return;
-	}
 	partition_resize_helper(ht, i, len, remove_table_partition);
 }
 
