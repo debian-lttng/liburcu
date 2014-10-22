@@ -2,7 +2,7 @@ Source: liburcu
 Priority: extra
 Maintainer: Jon Bernard <jbernard@debian.org>
 Build-Depends: debhelper (>= 9), dpkg-dev (>= 1.13.2), dh-autoreconf, quilt
-Standards-Version: 3.9.5
+Standards-Version: 3.9.6
 Section: libs
 Vcs-Git: git://anonscm.debian.org/collab-maint/liburcu.git
 Vcs-Browser: http://anonscm.debian.org/gitweb/?p=collab-maint/liburcu.git;a=summary
