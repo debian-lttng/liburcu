@@ -17,6 +17,7 @@ liburcu-bp.so.2 liburcu2 #MINVER#
  rcu_bp_after_fork_child@Base 0.8.4
  rcu_bp_after_fork_parent@Base 0.8.4
  rcu_bp_before_fork@Base 0.8.4
+ rcu_bp_exit@Base 0.8.5
  rcu_bp_register@Base 0.8.4
  rcu_cmpxchg_pointer_sym@Base 0.8.4
  rcu_cmpxchg_pointer_sym_bp@Base 0.8.4
