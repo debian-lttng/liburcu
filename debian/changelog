@@ -1,3 +1,11 @@
+liburcu (0.8.6-2) unstable; urgency=medium
+
+  [ Michael Jeanson ]
+  * [177b1b1] Enable hppa architecture using gcc atomic.
+    Thanks to Helge Deller <deller@gmx.de> (Closes: #776924)
+
+ -- Jon Bernard <jbernard@debian.org>  Fri, 13 Feb 2015 16:24:16 +0000
+
 liburcu (0.8.6-1) unstable; urgency=medium
 
   * [8633d09] New upstream version 0.8.6
