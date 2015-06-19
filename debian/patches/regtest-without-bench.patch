@@ -1,0 +1,7 @@
+--- a/tests/regression/Makefile.am
++++ b/tests/regression/Makefile.am
+@@ -54,4 +54,3 @@
+ 	./rcutorture_urcu_mb
+ 	./rcutorture_urcu_bp
+ 	./rcutorture_urcu_qsbr
+-	cd ../benchmark && ./runall.sh && cd ..
