@@ -1,3 +1,11 @@
+liburcu (0.8.7-2) unstable; urgency=medium
+
+  [ Michael Jeanson ]
+  * [8ba5541] Enable regression tests at build time (Closes: #754403)
+  * [08d5380] Enable sh4 architecture using gcc atomic (Closes: #779541)
+
+ -- Jon Bernard <jbernard@debian.org>  Fri, 19 Jun 2015 15:36:40 +0000
+
 liburcu (0.8.7-1) unstable; urgency=medium
 
   [ Michael Jeanson ]
