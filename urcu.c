@@ -26,6 +26,7 @@
 #define _BSD_SOURCE
 #define _GNU_SOURCE
 #define _LGPL_SOURCE
+#define _DEFAULT_SOURCE
 #include <stdio.h>
 #include <pthread.h>
 #include <signal.h>
@@ -63,18 +64,10 @@
 #define RCU_QS_ACTIVE_ATTEMPTS 100
 
 /*
- * RCU_MEMBARRIER is only possibly available on Linux.
+ * The ABI of sys_membarrier changed after its original implementation.
+ * Disable it for now. Use RCU_MB flavor instead.
  */
-#if defined(RCU_MEMBARRIER) && defined(__linux__)
-#include <syscall.h>
-#endif
-
-/* If the headers do not support SYS_membarrier, fall back on RCU_MB */
-#ifdef SYS_membarrier
-# define membarrier(...)		syscall(SYS_membarrier, __VA_ARGS__)
-#else
-# define membarrier(...)		-ENOSYS
-#endif
+#define membarrier(...)		-ENOSYS
 
 #define MEMBARRIER_EXPEDITED		(1 << 0)
 #define MEMBARRIER_DELAYED		(1 << 1)
@@ -235,9 +228,22 @@ static void wait_gp(void)
 {
 	/* Read reader_gp before read futex */
 	smp_mb_master(RCU_MB_GROUP);
-	if (uatomic_read(&rcu_gp.futex) == -1)
-		futex_async(&rcu_gp.futex, FUTEX_WAIT, -1,
-		      NULL, NULL, 0);
+	if (uatomic_read(&rcu_gp.futex) != -1)
+		return;
+	while (futex_async(&rcu_gp.futex, FUTEX_WAIT, -1,
+			NULL, NULL, 0)) {
+		switch (errno) {
+		case EWOULDBLOCK:
+			/* Value already changed. */
+			return;
+		case EINTR:
+			/* Retry if interrupted by signal. */
+			break;	/* Get out of switch. */
+		default:
+			/* Unexpected error. */
+			urcu_die(errno);
+		}
+	}
 }
 
 /*

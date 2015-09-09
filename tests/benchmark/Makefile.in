@@ -14,6 +14,7 @@
 
 @SET_MAKE@
 
+
 VPATH = @srcdir@
 am__is_gnu_make = test -n '$(MAKEFILE_LIST)' && test -n '$(MAKELEVEL)'
 am__make_running_with_option = \
@@ -105,7 +106,7 @@ noinst_PROGRAMS = test_urcu$(EXEEXT) test_urcu_dynamic_link$(EXEEXT) \
 	test_urcu_hash$(EXEEXT) test_urcu_lfs_rcu_dynlink$(EXEEXT)
 subdir = tests/benchmark
 DIST_COMMON = $(srcdir)/Makefile.in $(srcdir)/Makefile.am \
-	$(top_srcdir)/config/depcomp
+	$(dist_noinst_SCRIPTS) $(top_srcdir)/config/depcomp
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/config/libtool.m4 \
 	$(top_srcdir)/config/ltoptions.m4 \
@@ -377,6 +378,7 @@ test_urcu_yield_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC \
 	$(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=link $(CCLD) \
 	$(test_urcu_yield_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) $(LDFLAGS) \
 	-o $@
+SCRIPTS = $(dist_noinst_SCRIPTS)
 AM_V_P = $(am__v_P_@AM_V@)
 am__v_P_ = $(am__v_P_@AM_DEFAULT_V@)
 am__v_P_0 = false
@@ -611,6 +613,21 @@ top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 AM_LDFLAGS = -lpthread
 AM_CFLAGS = -I$(top_srcdir) -I$(top_builddir) -I$(top_srcdir)/tests/common -g
+SCRIPT_LIST = common.sh \
+	runall.sh \
+	runhash.sh \
+	runtests.sh \
+	runpaul-phase1.sh \
+	runpaul-phase2.sh \
+	runpaul-phase3.sh \
+	runpaul-phase4.sh \
+	runpaul-phase5.sh \
+	runpaul-phase6.sh \
+	runpaul-phase7.sh \
+	runtests-batch.sh \
+	subphase4.sh
+
+dist_noinst_SCRIPTS = $(SCRIPT_LIST)
 URCU_COMMON_LIB = $(top_builddir)/liburcu-common.la
 URCU_LIB = $(top_builddir)/liburcu.la
 URCU_QSBR_LIB = $(top_builddir)/liburcu-qsbr.la
@@ -619,7 +636,6 @@ URCU_SIGNAL_LIB = $(top_builddir)/liburcu-signal.la
 URCU_BP_LIB = $(top_builddir)/liburcu-bp.la
 URCU_CDS_LIB = $(top_builddir)/liburcu-cds.la
 DEBUG_YIELD_LIB = $(builddir)/../common/libdebug-yield.la
-EXTRA_DIST = *.sh
 test_urcu_SOURCES = test_urcu.c
 test_urcu_LDADD = $(URCU_LIB)
 test_urcu_dynamic_link_SOURCES = test_urcu.c
@@ -1473,7 +1489,7 @@ distdir: $(DISTFILES)
 	done
 check-am: all-am
 check: check-am
-all-am: Makefile $(PROGRAMS)
+all-am: Makefile $(PROGRAMS) $(SCRIPTS) all-local
 installdirs:
 install: install-am
 install-exec: install-exec-am
@@ -1507,7 +1523,7 @@ maintainer-clean-generic:
 	@echo "it deletes files that may require special tools to rebuild."
 clean: clean-am
 
-clean-am: clean-generic clean-libtool clean-noinstPROGRAMS \
+clean-am: clean-generic clean-libtool clean-local clean-noinstPROGRAMS \
 	mostlyclean-am
 
 distclean: distclean-am
@@ -1578,20 +1594,34 @@ uninstall-am:
 
 .MAKE: install-am install-strip
 
-.PHONY: CTAGS GTAGS TAGS all all-am check check-am clean clean-generic \
-	clean-libtool clean-noinstPROGRAMS cscopelist-am ctags \
-	ctags-am distclean distclean-compile distclean-generic \
-	distclean-libtool distclean-tags distdir dvi dvi-am html \
-	html-am info info-am install install-am install-data \
-	install-data-am install-dvi install-dvi-am install-exec \
-	install-exec-am install-html install-html-am install-info \
-	install-info-am install-man install-pdf install-pdf-am \
-	install-ps install-ps-am install-strip installcheck \
-	installcheck-am installdirs maintainer-clean \
+.PHONY: CTAGS GTAGS TAGS all all-am all-local check check-am clean \
+	clean-generic clean-libtool clean-local clean-noinstPROGRAMS \
+	cscopelist-am ctags ctags-am distclean distclean-compile \
+	distclean-generic distclean-libtool distclean-tags distdir dvi \
+	dvi-am html html-am info info-am install install-am \
+	install-data install-data-am install-dvi install-dvi-am \
+	install-exec install-exec-am install-html install-html-am \
+	install-info install-info-am install-man install-pdf \
+	install-pdf-am install-ps install-ps-am install-strip \
+	installcheck installcheck-am installdirs maintainer-clean \
 	maintainer-clean-generic mostlyclean mostlyclean-compile \
 	mostlyclean-generic mostlyclean-libtool pdf pdf-am ps ps-am \
 	tags tags-am uninstall uninstall-am
 
+
+all-local:
+	@if [ x"$(srcdir)" != x"$(builddir)" ]; then \
+		for script in $(SCRIPT_LIST); do \
+			cp -f $(srcdir)/$$script $(builddir); \
+		done; \
+	fi
+
+clean-local:
+	@if [ x"$(srcdir)" != x"$(builddir)" ]; then \
+		for script in $(SCRIPT_LIST); do \
+			rm -f $(builddir)/$$script; \
+		done; \
+	fi
 
 .PHONY: bench
 
