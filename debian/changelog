@@ -1,3 +1,10 @@
+liburcu (0.8.8-1) unstable; urgency=medium
+
+  [ Michael Jeanson ]
+  * [3f0830e] New upstream version 0.8.8
+
+ -- Jon Bernard <jbernard@debian.org>  Thu, 10 Sep 2015 20:08:02 +0000
+
 liburcu (0.8.7-2) unstable; urgency=medium
 
   [ Michael Jeanson ]
