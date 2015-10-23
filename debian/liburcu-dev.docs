@@ -1,6 +1,6 @@
-README
+README.md
 lgpl-relicensing.txt
-doc/cds-api.txt
-doc/rcu-api.txt
-doc/uatomic-api.txt
+doc/cds-api.md
+doc/rcu-api.md
+doc/uatomic-api.md
 doc/examples

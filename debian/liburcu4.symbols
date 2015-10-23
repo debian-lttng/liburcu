@@ -1,4 +1,4 @@
-liburcu-bp.so.2 liburcu2 #MINVER#
+liburcu-bp.so.4 liburcu4 #MINVER#
  call_rcu_after_fork_child_bp@Base 0.8.4
  call_rcu_after_fork_parent_bp@Base 0.8.4
  call_rcu_before_fork_bp@Base 0.8.4
@@ -41,7 +41,7 @@ liburcu-bp.so.2 liburcu2 #MINVER#
  set_cpu_call_rcu_data_bp@Base 0.8.4
  set_thread_call_rcu_data_bp@Base 0.8.4
  synchronize_rcu_bp@Base 0.8.4
-liburcu-cds.so.2 liburcu2 #MINVER#
+liburcu-cds.so.4 liburcu4 #MINVER#
  __cds_lfs_pop@Base 0.8.4
  __cds_lfs_pop_all@Base 0.8.4
  _cds_lfht_new@Base 0.8.4
@@ -81,7 +81,7 @@ liburcu-cds.so.2 liburcu2 #MINVER#
  cds_lfs_pop_unlock@Base 0.8.4
  cds_lfs_push@Base 0.8.4
  cds_lfs_push_rcu@Base 0.8.4
-liburcu-common.so.2 liburcu2 #MINVER#
+liburcu-common.so.4 liburcu4 #MINVER#
  __cds_wfcq_dequeue_blocking@Base 0.8.4
  __cds_wfcq_dequeue_nonblocking@Base 0.8.4
  __cds_wfcq_dequeue_with_state_blocking@Base 0.8.4
@@ -123,7 +123,7 @@ liburcu-common.so.2 liburcu2 #MINVER#
  cds_wfs_pop_unlock@Base 0.8.4
  cds_wfs_pop_with_state_blocking@Base 0.8.4
  cds_wfs_push@Base 0.8.4
-liburcu-mb.so.2 liburcu2 #MINVER#
+liburcu-mb.so.4 liburcu4 #MINVER#
  call_rcu_after_fork_child_mb@Base 0.8.4
  call_rcu_after_fork_parent_mb@Base 0.8.4
  call_rcu_before_fork_mb@Base 0.8.4
@@ -160,7 +160,7 @@ liburcu-mb.so.2 liburcu2 #MINVER#
  set_cpu_call_rcu_data_mb@Base 0.8.4
  set_thread_call_rcu_data_mb@Base 0.8.4
  synchronize_rcu_mb@Base 0.8.4
-liburcu-qsbr.so.2 liburcu2 #MINVER#
+liburcu-qsbr.so.4 liburcu4 #MINVER#
  call_rcu_after_fork_child_qsbr@Base 0.8.4
  call_rcu_after_fork_parent_qsbr@Base 0.8.4
  call_rcu_before_fork_qsbr@Base 0.8.4
@@ -200,7 +200,7 @@ liburcu-qsbr.so.2 liburcu2 #MINVER#
  set_cpu_call_rcu_data_qsbr@Base 0.8.4
  set_thread_call_rcu_data_qsbr@Base 0.8.4
  synchronize_rcu_qsbr@Base 0.8.4
-liburcu-signal.so.2 liburcu2 #MINVER#
+liburcu-signal.so.4 liburcu4 #MINVER#
  call_rcu_after_fork_child_sig@Base 0.8.4
  call_rcu_after_fork_parent_sig@Base 0.8.4
  call_rcu_before_fork_sig@Base 0.8.4
@@ -238,7 +238,7 @@ liburcu-signal.so.2 liburcu2 #MINVER#
  set_cpu_call_rcu_data_sig@Base 0.8.4
  set_thread_call_rcu_data_sig@Base 0.8.4
  synchronize_rcu_sig@Base 0.8.4
-liburcu.so.2 liburcu2 #MINVER#
+liburcu.so.4 liburcu4 #MINVER#
  call_rcu_after_fork_child_memb@Base 0.8.4
  call_rcu_after_fork_parent_memb@Base 0.8.4
  call_rcu_before_fork_memb@Base 0.8.4
