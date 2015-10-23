@@ -1,6 +1,3 @@
-regtest-without-bench.patch
 ignore-gcc-check.patch
-include-ppc64le-arch.patch
-include-aarch64-arch.patch
-include-hppa-arch.patch
 include-sh4-arch.patch
+regtest-without-bench.patch
