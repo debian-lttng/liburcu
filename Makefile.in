@@ -81,7 +81,7 @@ POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
 target_triplet = @target@
-@COMPAT_FUTEX_TRUE@am__append_1 = compat_futex.c
+@LIBC_INCLUDES_PTHREAD_FALSE@am__append_1 = -lpthread
 subdir = .
 DIST_COMMON = $(srcdir)/Makefile.in $(srcdir)/Makefile.am \
 	$(top_srcdir)/configure $(am__configure_deps) \
@@ -91,7 +91,7 @@ DIST_COMMON = $(srcdir)/Makefile.in $(srcdir)/Makefile.am \
 	$(srcdir)/liburcu-mb.pc.in $(srcdir)/liburcu-signal.pc.in \
 	$(top_srcdir)/config/depcomp $(dist_doc_DATA) \
 	$(dist_noinst_DATA) $(dist_noinst_HEADERS) $(include_HEADERS) \
-	$(nobase_dist_include_HEADERS) ChangeLog README config/compile \
+	$(nobase_dist_include_HEADERS) ChangeLog config/compile \
 	config/config.guess config/config.sub config/depcomp \
 	config/install-sh config/missing config/ltmain.sh \
 	$(top_srcdir)/config/compile $(top_srcdir)/config/config.guess \
@@ -99,12 +99,11 @@ DIST_COMMON = $(srcdir)/Makefile.in $(srcdir)/Makefile.am \
 	$(top_srcdir)/config/install-sh $(top_srcdir)/config/ltmain.sh \
 	$(top_srcdir)/config/missing
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
-am__aclocal_m4_deps = $(top_srcdir)/config/libtool.m4 \
-	$(top_srcdir)/config/ltoptions.m4 \
-	$(top_srcdir)/config/ltsugar.m4 \
-	$(top_srcdir)/config/ltversion.m4 \
-	$(top_srcdir)/config/lt~obsolete.m4 \
-	$(top_srcdir)/config/ax_tls.m4 $(top_srcdir)/configure.ac
+am__aclocal_m4_deps = $(top_srcdir)/m4/ax_c___attribute__.m4 \
+	$(top_srcdir)/m4/ax_pthread.m4 $(top_srcdir)/m4/ax_tls.m4 \
+	$(top_srcdir)/m4/libtool.m4 $(top_srcdir)/m4/ltoptions.m4 \
+	$(top_srcdir)/m4/ltsugar.m4 $(top_srcdir)/m4/ltversion.m4 \
+	$(top_srcdir)/m4/lt~obsolete.m4 $(top_srcdir)/configure.ac
 am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
 	$(ACLOCAL_M4)
 am__CONFIG_DISTCLEAN_FILES = config.status config.cache config.log \
@@ -149,11 +148,10 @@ LTLIBRARIES = $(lib_LTLIBRARIES)
 liburcu_bp_la_DEPENDENCIES = liburcu-common.la
 am__liburcu_bp_la_SOURCES_DIST = urcu-bp.c urcu-pointer.c \
 	compat_futex.c compat_arch_@ARCHTYPE@.c
-@COMPAT_FUTEX_TRUE@am__objects_1 = compat_futex.lo
-@COMPAT_ARCH_FALSE@am__objects_2 = $(am__objects_1)
-@COMPAT_ARCH_TRUE@am__objects_2 = compat_arch_@ARCHTYPE@.lo \
-@COMPAT_ARCH_TRUE@	$(am__objects_1)
-am_liburcu_bp_la_OBJECTS = urcu-bp.lo urcu-pointer.lo $(am__objects_2)
+@COMPAT_ARCH_FALSE@am__objects_1 = compat_futex.lo
+@COMPAT_ARCH_TRUE@am__objects_1 = compat_arch_@ARCHTYPE@.lo \
+@COMPAT_ARCH_TRUE@	compat_futex.lo
+am_liburcu_bp_la_OBJECTS = urcu-bp.lo urcu-pointer.lo $(am__objects_1)
 liburcu_bp_la_OBJECTS = $(am_liburcu_bp_la_OBJECTS)
 AM_V_lt = $(am__v_lt_@AM_V@)
 am__v_lt_ = $(am__v_lt_@AM_DEFAULT_V@)
@@ -163,27 +161,26 @@ liburcu_cds_la_DEPENDENCIES = liburcu-common.la
 am__liburcu_cds_la_SOURCES_DIST = rculfqueue.c rculfstack.c lfstack.c \
 	rculfhash.c rculfhash-mm-order.c rculfhash-mm-chunk.c \
 	rculfhash-mm-mmap.c compat_futex.c compat_arch_@ARCHTYPE@.c
-am__objects_3 = rculfhash.lo rculfhash-mm-order.lo \
+am__objects_2 = rculfhash.lo rculfhash-mm-order.lo \
 	rculfhash-mm-chunk.lo rculfhash-mm-mmap.lo
 am_liburcu_cds_la_OBJECTS = rculfqueue.lo rculfstack.lo lfstack.lo \
-	$(am__objects_3) $(am__objects_2)
+	$(am__objects_2) $(am__objects_1)
 liburcu_cds_la_OBJECTS = $(am_liburcu_cds_la_OBJECTS)
 liburcu_common_la_LIBADD =
 am__liburcu_common_la_SOURCES_DIST = wfqueue.c wfcqueue.c wfstack.c \
 	compat_futex.c compat_arch_@ARCHTYPE@.c
 am_liburcu_common_la_OBJECTS = wfqueue.lo wfcqueue.lo wfstack.lo \
-	$(am__objects_2)
+	$(am__objects_1)
 liburcu_common_la_OBJECTS = $(am_liburcu_common_la_OBJECTS)
 liburcu_mb_la_DEPENDENCIES = liburcu-common.la
 am__liburcu_mb_la_SOURCES_DIST = urcu.c urcu-pointer.c compat_futex.c \
 	compat_arch_@ARCHTYPE@.c
-@COMPAT_FUTEX_TRUE@am__objects_4 = liburcu_mb_la-compat_futex.lo
-@COMPAT_ARCH_FALSE@am__objects_5 = $(am__objects_4)
-@COMPAT_ARCH_TRUE@am__objects_5 =  \
+@COMPAT_ARCH_FALSE@am__objects_3 = liburcu_mb_la-compat_futex.lo
+@COMPAT_ARCH_TRUE@am__objects_3 =  \
 @COMPAT_ARCH_TRUE@	liburcu_mb_la-compat_arch_@ARCHTYPE@.lo \
-@COMPAT_ARCH_TRUE@	$(am__objects_4)
+@COMPAT_ARCH_TRUE@	liburcu_mb_la-compat_futex.lo
 am_liburcu_mb_la_OBJECTS = liburcu_mb_la-urcu.lo \
-	liburcu_mb_la-urcu-pointer.lo $(am__objects_5)
+	liburcu_mb_la-urcu-pointer.lo $(am__objects_3)
 liburcu_mb_la_OBJECTS = $(am_liburcu_mb_la_OBJECTS)
 liburcu_mb_la_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(liburcu_mb_la_CFLAGS) \
@@ -192,18 +189,17 @@ liburcu_qsbr_la_DEPENDENCIES = liburcu-common.la
 am__liburcu_qsbr_la_SOURCES_DIST = urcu-qsbr.c urcu-pointer.c \
 	compat_futex.c compat_arch_@ARCHTYPE@.c
 am_liburcu_qsbr_la_OBJECTS = urcu-qsbr.lo urcu-pointer.lo \
-	$(am__objects_2)
+	$(am__objects_1)
 liburcu_qsbr_la_OBJECTS = $(am_liburcu_qsbr_la_OBJECTS)
 liburcu_signal_la_DEPENDENCIES = liburcu-common.la
 am__liburcu_signal_la_SOURCES_DIST = urcu.c urcu-pointer.c \
 	compat_futex.c compat_arch_@ARCHTYPE@.c
-@COMPAT_FUTEX_TRUE@am__objects_6 = liburcu_signal_la-compat_futex.lo
-@COMPAT_ARCH_FALSE@am__objects_7 = $(am__objects_6)
-@COMPAT_ARCH_TRUE@am__objects_7 =  \
+@COMPAT_ARCH_FALSE@am__objects_4 = liburcu_signal_la-compat_futex.lo
+@COMPAT_ARCH_TRUE@am__objects_4 =  \
 @COMPAT_ARCH_TRUE@	liburcu_signal_la-compat_arch_@ARCHTYPE@.lo \
-@COMPAT_ARCH_TRUE@	$(am__objects_6)
+@COMPAT_ARCH_TRUE@	liburcu_signal_la-compat_futex.lo
 am_liburcu_signal_la_OBJECTS = liburcu_signal_la-urcu.lo \
-	liburcu_signal_la-urcu-pointer.lo $(am__objects_7)
+	liburcu_signal_la-urcu-pointer.lo $(am__objects_4)
 liburcu_signal_la_OBJECTS = $(am_liburcu_signal_la_OBJECTS)
 liburcu_signal_la_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC \
 	$(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=link $(CCLD) \
@@ -212,7 +208,7 @@ liburcu_signal_la_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC \
 liburcu_la_DEPENDENCIES = liburcu-common.la
 am__liburcu_la_SOURCES_DIST = urcu.c urcu-pointer.c compat_futex.c \
 	compat_arch_@ARCHTYPE@.c
-am_liburcu_la_OBJECTS = urcu.lo urcu-pointer.lo $(am__objects_2)
+am_liburcu_la_OBJECTS = urcu.lo urcu-pointer.lo $(am__objects_1)
 liburcu_la_OBJECTS = $(am_liburcu_la_OBJECTS)
 AM_V_P = $(am__v_P_@AM_V@)
 am__v_P_ = $(am__v_P_@AM_DEFAULT_V@)
@@ -388,11 +384,13 @@ LIBTOOL = @LIBTOOL@
 LIPO = @LIPO@
 LN_S = @LN_S@
 LTLIBOBJS = @LTLIBOBJS@
+MAINT = @MAINT@
 MAKEINFO = @MAKEINFO@
 MANIFEST_TOOL = @MANIFEST_TOOL@
 MKDIR_P = @MKDIR_P@
 NM = @NM@
 NMEDIT = @NMEDIT@
+NPROC = @NPROC@
 OBJDUMP = @OBJDUMP@
 OBJEXT = @OBJEXT@
 OTOOL = @OTOOL@
@@ -405,6 +403,9 @@ PACKAGE_TARNAME = @PACKAGE_TARNAME@
 PACKAGE_URL = @PACKAGE_URL@
 PACKAGE_VERSION = @PACKAGE_VERSION@
 PATH_SEPARATOR = @PATH_SEPARATOR@
+PTHREAD_CC = @PTHREAD_CC@
+PTHREAD_CFLAGS = @PTHREAD_CFLAGS@
+PTHREAD_LIBS = @PTHREAD_LIBS@
 RANLIB = @RANLIB@
 SED = @SED@
 SET_MAKE = @SET_MAKE@
@@ -425,6 +426,7 @@ am__leading_dot = @am__leading_dot@
 am__quote = @am__quote@
 am__tar = @am__tar@
 am__untar = @am__untar@
+ax_pthread_config = @ax_pthread_config@
 bindir = @bindir@
 build = @build@
 build_alias = @build_alias@
@@ -469,12 +471,12 @@ target_vendor = @target_vendor@
 top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
-ACLOCAL_AMFLAGS = -I config
+ACLOCAL_AMFLAGS = -I m4
 AM_CPPFLAGS = -I$(top_builddir)/urcu
 
 #Add the -version-info directly here since we are only building
 # library that use the version-info
-AM_LDFLAGS = -lpthread -version-info $(URCU_LIBRARY_VERSION)
+AM_LDFLAGS = -version-info $(URCU_LIBRARY_VERSION) $(am__append_1)
 AM_CFLAGS = -Wall
 SUBDIRS = . doc tests
 include_HEADERS = urcu.h urcu-bp.h urcu-call-rcu.h urcu-defer.h \
@@ -486,21 +488,22 @@ nobase_dist_include_HEADERS = urcu/compiler.h urcu/hlist.h urcu/list.h \
 		urcu/wfqueue.h urcu/rculfstack.h urcu/rculfqueue.h \
 		urcu/ref.h urcu/cds.h urcu/urcu_ref.h urcu/urcu-futex.h \
 		urcu/uatomic_arch.h urcu/rculfhash.h urcu/wfcqueue.h \
-		urcu/lfstack.h \
+		urcu/lfstack.h urcu/syscall-compat.h \
 		$(top_srcdir)/urcu/map/*.h \
 		$(top_srcdir)/urcu/static/*.h \
-		urcu/tls-compat.h
+		urcu/rand-compat.h \
+		urcu/tls-compat.h urcu/debug.h
 
 nobase_nodist_include_HEADERS = urcu/arch.h urcu/uatomic.h urcu/config.h
-dist_noinst_HEADERS = urcu-die.h urcu-wait.h
+dist_noinst_HEADERS = urcu-die.h urcu-wait.h compat-getcpu.h
 EXTRA_DIST = $(top_srcdir)/urcu/arch/*.h $(top_srcdir)/urcu/uatomic/*.h \
 		gpl-2.0.txt lgpl-2.1.txt lgpl-relicensing.txt \
 		LICENSE compat_arch_x86.c \
 		urcu-call-rcu-impl.h urcu-defer-impl.h \
 		rculfhash-internal.h
 
-@COMPAT_ARCH_FALSE@COMPAT = $(am__append_1)
-@COMPAT_ARCH_TRUE@COMPAT = compat_arch_@ARCHTYPE@.c $(am__append_1)
+@COMPAT_ARCH_FALSE@COMPAT = compat_futex.c
+@COMPAT_ARCH_TRUE@COMPAT = compat_arch_@ARCHTYPE@.c compat_futex.c
 RCULFHASH = rculfhash.c rculfhash-mm-order.c rculfhash-mm-chunk.c \
 		rculfhash-mm-mmap.c
 
@@ -535,7 +538,7 @@ pkgconfigdir = $(libdir)/pkgconfig
 pkgconfig_DATA = liburcu-cds.pc liburcu.pc liburcu-bp.pc liburcu-qsbr.pc \
 	liburcu-signal.pc liburcu-mb.pc
 
-dist_doc_DATA = README ChangeLog
+dist_doc_DATA = README.md ChangeLog
 dist_noinst_DATA = CodingStyle
 all: config.h
 	$(MAKE) $(AM_MAKEFLAGS) all-recursive
@@ -544,7 +547,7 @@ all: config.h
 .SUFFIXES: .c .lo .o .obj
 am--refresh: Makefile
 	@:
-$(srcdir)/Makefile.in:  $(srcdir)/Makefile.am  $(am__configure_deps)
+$(srcdir)/Makefile.in: @MAINTAINER_MODE_TRUE@ $(srcdir)/Makefile.am  $(am__configure_deps)
 	@for dep in $?; do \
 	  case '$(am__configure_deps)' in \
 	    *$$dep*) \
@@ -571,9 +574,9 @@ Makefile: $(srcdir)/Makefile.in $(top_builddir)/config.status
 $(top_builddir)/config.status: $(top_srcdir)/configure $(CONFIG_STATUS_DEPENDENCIES)
 	$(SHELL) ./config.status --recheck
 
-$(top_srcdir)/configure:  $(am__configure_deps)
+$(top_srcdir)/configure: @MAINTAINER_MODE_TRUE@ $(am__configure_deps)
 	$(am__cd) $(srcdir) && $(AUTOCONF)
-$(ACLOCAL_M4):  $(am__aclocal_m4_deps)
+$(ACLOCAL_M4): @MAINTAINER_MODE_TRUE@ $(am__aclocal_m4_deps)
 	$(am__cd) $(srcdir) && $(ACLOCAL) $(ACLOCAL_AMFLAGS)
 $(am__aclocal_m4_deps):
 
@@ -584,7 +587,7 @@ config.h: stamp-h1
 stamp-h1: $(srcdir)/config.h.in $(top_builddir)/config.status
 	@rm -f stamp-h1
 	cd $(top_builddir) && $(SHELL) ./config.status config.h
-$(srcdir)/config.h.in:  $(am__configure_deps) 
+$(srcdir)/config.h.in: @MAINTAINER_MODE_TRUE@ $(am__configure_deps) 
 	($(am__cd) $(top_srcdir) && $(AUTOHEADER))
 	rm -f stamp-h1
 	touch $@
@@ -1332,9 +1335,11 @@ uninstall-am: uninstall-dist_docDATA uninstall-includeHEADERS \
 	uninstall-nobase_nodist_includeHEADERS uninstall-pkgconfigDATA
 
 
-.PHONY: bench regtest
-bench:
-	cd tests && $(MAKE) $(AM_MAKEFLAGS) bench
+.PHONY: short_bench long_bench regtest
+short_bench:
+	cd tests && $(MAKE) $(AM_MAKEFLAGS) short_bench
+long_bench:
+	cd tests && $(MAKE) $(AM_MAKEFLAGS) long_bench
 regtest:
 	cd tests && $(MAKE) $(AM_MAKEFLAGS) regtest
 

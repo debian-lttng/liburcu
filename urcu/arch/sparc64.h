@@ -24,10 +24,11 @@
 
 #include <urcu/compiler.h>
 #include <urcu/config.h>
+#include <urcu/syscall-compat.h>
 
 #ifdef __cplusplus
 extern "C" {
-#endif 
+#endif
 
 #define CAA_CACHE_LINE_SIZE	256
 
@@ -44,14 +45,7 @@ __asm__ __volatile__("ba,pt %%xcc, 1f\n\t"	\
 #define cmm_rmb()	membar_safe("#LoadLoad")
 #define cmm_wmb()	membar_safe("#StoreStore")
 
-typedef unsigned long long cycles_t;
-
-static inline cycles_t caa_get_cycles (void)
-{
-	return 0;	/* unimplemented */
-}
-
-#ifdef __cplusplus 
+#ifdef __cplusplus
 }
 #endif
 

@@ -24,10 +24,12 @@
 
 #include <urcu/compiler.h>
 #include <urcu/config.h>
+#include <urcu/syscall-compat.h>
+#include <stdint.h>
 
 #ifdef __cplusplus
 extern "C" {
-#endif 
+#endif
 
 /* Include size of POWER5+ L3 cache lines: 256 bytes */
 #define CAA_CACHE_LINE_SIZE	256
@@ -81,15 +83,17 @@ extern "C" {
 		rval;					\
 	})
 
-typedef unsigned long long cycles_t;
+#define HAS_CAA_GET_CYCLES
+
+typedef uint64_t caa_cycles_t;
 
 #ifdef __powerpc64__
-static inline cycles_t caa_get_cycles(void)
+static inline caa_cycles_t caa_get_cycles(void)
 {
-	return (cycles_t) mftb();
+	return (caa_cycles_t) mftb();
 }
 #else
-static inline cycles_t caa_get_cycles(void)
+static inline caa_cycles_t caa_get_cycles(void)
 {
 	unsigned long h, l;
 
@@ -99,12 +103,20 @@ static inline cycles_t caa_get_cycles(void)
 		l = mftbl();
 		cmm_barrier();
 		if (mftbu() == h)
-			return (((cycles_t) h) << 32) + l;
+			return (((caa_cycles_t) h) << 32) + l;
 	}
 }
 #endif
 
-#ifdef __cplusplus 
+/*
+ * On Linux, define the membarrier system call number if not yet available in
+ * the system headers.
+ */
+#if (defined(__linux__) && !defined(__NR_membarrier))
+#define __NR_membarrier		365
+#endif
+
+#ifdef __cplusplus
 }
 #endif
 

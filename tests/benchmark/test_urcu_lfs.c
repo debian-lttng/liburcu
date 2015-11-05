@@ -50,6 +50,8 @@
 #include <urcu.h>
 #include <urcu/cds.h>
 
+#define POISON_PTR	((void *) 0x42UL)
+
 /*
  * External synchronization used.
  */
@@ -219,6 +221,7 @@ void do_test_pop(enum test_sync sync)
 	if (snode) {
 		struct test *node;
 
+		snode->next = POISON_PTR;
 		node = caa_container_of(snode,
 			struct test, list);
 		if (sync == TEST_SYNC_RCU)
@@ -241,6 +244,7 @@ void do_test_pop_all(enum test_sync sync)
 	cds_lfs_for_each_safe(head, snode, n) {
 		struct test *node;
 
+		snode->next = POISON_PTR;
 		node = caa_container_of(snode, struct test, list);
 		if (sync == TEST_SYNC_RCU)
 			call_rcu(&node->rcu, free_node_cb);
@@ -465,8 +469,10 @@ int main(int argc, char **argv)
 
 	for (i = 0; i < duration; i++) {
 		sleep(1);
-		if (verbose_mode)
-			write (1, ".", 1);
+		if (verbose_mode) {
+			fwrite(".", sizeof(char), 1, stdout);
+			fflush(stdout);
+		}
 	}
 
 	test_stop = 1;

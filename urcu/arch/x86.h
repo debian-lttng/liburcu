@@ -24,10 +24,12 @@
 
 #include <urcu/compiler.h>
 #include <urcu/config.h>
+#include <urcu/syscall-compat.h>
+#include <stdint.h>
 
 #ifdef __cplusplus
 extern "C" {
-#endif 
+#endif
 
 #define CAA_CACHE_LINE_SIZE	128
 
@@ -55,12 +57,20 @@ extern "C" {
  * IDT WinChip supports weak store ordering, and the kernel may enable it
  * under our feet; cmm_smp_wmb() ceases to be a nop for these processors.
  */
+#if (CAA_BITS_PER_LONG == 32)
 #define cmm_mb()    __asm__ __volatile__ ("lock; addl $0,0(%%esp)":::"memory")
-#define cmm_rmb()   __asm__ __volatile__ ("lock; addl $0,0(%%esp)":::"memory")
-#define cmm_wmb()   __asm__ __volatile__ ("lock; addl $0,0(%%esp)"::: "memory")
+#define cmm_rmb()    __asm__ __volatile__ ("lock; addl $0,0(%%esp)":::"memory")
+#define cmm_wmb()    __asm__ __volatile__ ("lock; addl $0,0(%%esp)":::"memory")
+#else
+#define cmm_mb()    __asm__ __volatile__ ("lock; addl $0,0(%%rsp)":::"memory")
+#define cmm_rmb()    __asm__ __volatile__ ("lock; addl $0,0(%%rsp)":::"memory")
+#define cmm_wmb()    __asm__ __volatile__ ("lock; addl $0,0(%%rsp)":::"memory")
+#endif
 #endif
 
 #define caa_cpu_relax()	__asm__ __volatile__ ("rep; nop" : : : "memory")
+
+#define HAS_CAA_GET_CYCLES
 
 #define rdtscll(val)							  \
 	do {						  		  \
@@ -70,17 +80,29 @@ extern "C" {
 			| (((unsigned long long)__d) << 32);		  \
 	} while(0)
 
-typedef unsigned long long cycles_t;
+typedef uint64_t caa_cycles_t;
 
-static inline cycles_t caa_get_cycles(void)
+static inline caa_cycles_t caa_get_cycles(void)
 {
-        cycles_t ret = 0;
+        caa_cycles_t ret = 0;
 
         rdtscll(ret);
         return ret;
 }
 
-#ifdef __cplusplus 
+/*
+ * On Linux, define the membarrier system call number if not yet available in
+ * the system headers.
+ */
+#if (defined(__linux__) && !defined(__NR_membarrier))
+#if (CAA_BITS_PER_LONG == 32)
+#define __NR_membarrier		375
+#else
+#define __NR_membarrier		324
+#endif
+#endif
+
+#ifdef __cplusplus
 }
 #endif
 

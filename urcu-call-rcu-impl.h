@@ -36,6 +36,7 @@
 #include <sched.h>
 
 #include "config.h"
+#include "compat-getcpu.h"
 #include "urcu/wfcqueue.h"
 #include "urcu-call-rcu.h"
 #include "urcu-pointer.h"
@@ -106,23 +107,7 @@ static struct call_rcu_data *default_call_rcu_data;
  * CPUs rather than only to specific threads.
  */
 
-#ifdef HAVE_SCHED_GETCPU
-
-static int urcu_sched_getcpu(void)
-{
-	return sched_getcpu();
-}
-
-#else /* #ifdef HAVE_SCHED_GETCPU */
-
-static int urcu_sched_getcpu(void)
-{
-	return -1;
-}
-
-#endif /* #else #ifdef HAVE_SCHED_GETCPU */
-
-#if defined(HAVE_SYSCONF) && defined(HAVE_SCHED_GETCPU)
+#if defined(HAVE_SYSCONF) && (defined(HAVE_SCHED_GETCPU) || defined(HAVE_GETCPUID))
 
 /*
  * Pointer to array of pointers to per-CPU call_rcu_data structures
@@ -362,7 +347,7 @@ static void *call_rcu_thread(void *arg)
 			cmm_smp_mb__before_uatomic_or();
 			uatomic_or(&crdp->flags, URCU_CALL_RCU_PAUSED);
 			while ((uatomic_read(&crdp->flags) & URCU_CALL_RCU_PAUSE) != 0)
-				poll(NULL, 0, 1);
+				(void) poll(NULL, 0, 1);
 			uatomic_and(&crdp->flags, ~URCU_CALL_RCU_PAUSED);
 			cmm_smp_mb__after_uatomic_and();
 			rcu_register_thread();
@@ -394,7 +379,7 @@ static void *call_rcu_thread(void *arg)
 			if (cds_wfcq_empty(&crdp->cbs_head,
 					&crdp->cbs_tail)) {
 				call_rcu_wait(crdp);
-				poll(NULL, 0, 10);
+				(void) poll(NULL, 0, 10);
 				uatomic_dec(&crdp->futex);
 				/*
 				 * Decrement futex before reading
@@ -402,10 +387,10 @@ static void *call_rcu_thread(void *arg)
 				 */
 				cmm_smp_mb();
 			} else {
-				poll(NULL, 0, 10);
+				(void) poll(NULL, 0, 10);
 			}
 		} else {
-			poll(NULL, 0, 10);
+			(void) poll(NULL, 0, 10);
 		}
 		rcu_thread_online();
 	}
@@ -764,7 +749,7 @@ void call_rcu_data_free(struct call_rcu_data *crdp)
 		uatomic_or(&crdp->flags, URCU_CALL_RCU_STOP);
 		wake_call_rcu_thread(crdp);
 		while ((uatomic_read(&crdp->flags) & URCU_CALL_RCU_STOPPED) == 0)
-			poll(NULL, 0, 1);
+			(void) poll(NULL, 0, 1);
 	}
 	if (!cds_wfcq_empty(&crdp->cbs_head, &crdp->cbs_tail)) {
 		/* Create default call rcu data if need be */
@@ -934,7 +919,7 @@ void call_rcu_before_fork(void)
 	}
 	cds_list_for_each_entry(crdp, &call_rcu_data_list, list) {
 		while ((uatomic_read(&crdp->flags) & URCU_CALL_RCU_PAUSED) == 0)
-			poll(NULL, 0, 1);
+			(void) poll(NULL, 0, 1);
 	}
 }
 
@@ -951,7 +936,7 @@ void call_rcu_after_fork_parent(void)
 		uatomic_and(&crdp->flags, ~URCU_CALL_RCU_PAUSE);
 	cds_list_for_each_entry(crdp, &call_rcu_data_list, list) {
 		while ((uatomic_read(&crdp->flags) & URCU_CALL_RCU_PAUSED) != 0)
-			poll(NULL, 0, 1);
+			(void) poll(NULL, 0, 1);
 	}
 	call_rcu_unlock(&call_rcu_mutex);
 }

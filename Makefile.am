@@ -1,10 +1,13 @@
-ACLOCAL_AMFLAGS=-I config
+ACLOCAL_AMFLAGS=-I m4
 
 AM_CPPFLAGS = -I$(top_builddir)/urcu
 
 #Add the -version-info directly here since we are only building
 # library that use the version-info
-AM_LDFLAGS=-lpthread -version-info $(URCU_LIBRARY_VERSION)
+AM_LDFLAGS=-version-info $(URCU_LIBRARY_VERSION)
+if !LIBC_INCLUDES_PTHREAD
+AM_LDFLAGS+=-lpthread
+endif
 AM_CFLAGS=-Wall
 
 SUBDIRS = . doc tests
@@ -17,13 +20,14 @@ nobase_dist_include_HEADERS = urcu/compiler.h urcu/hlist.h urcu/list.h \
 		urcu/wfqueue.h urcu/rculfstack.h urcu/rculfqueue.h \
 		urcu/ref.h urcu/cds.h urcu/urcu_ref.h urcu/urcu-futex.h \
 		urcu/uatomic_arch.h urcu/rculfhash.h urcu/wfcqueue.h \
-		urcu/lfstack.h \
+		urcu/lfstack.h urcu/syscall-compat.h \
 		$(top_srcdir)/urcu/map/*.h \
 		$(top_srcdir)/urcu/static/*.h \
-		urcu/tls-compat.h
+		urcu/rand-compat.h \
+		urcu/tls-compat.h urcu/debug.h
 nobase_nodist_include_HEADERS = urcu/arch.h urcu/uatomic.h urcu/config.h
 
-dist_noinst_HEADERS = urcu-die.h urcu-wait.h
+dist_noinst_HEADERS = urcu-die.h urcu-wait.h compat-getcpu.h
 
 EXTRA_DIST = $(top_srcdir)/urcu/arch/*.h $(top_srcdir)/urcu/uatomic/*.h \
 		gpl-2.0.txt lgpl-2.1.txt lgpl-relicensing.txt \
@@ -37,9 +41,7 @@ else
 COMPAT=
 endif
 
-if COMPAT_FUTEX
 COMPAT+=compat_futex.c
-endif
 
 RCULFHASH = rculfhash.c rculfhash-mm-order.c rculfhash-mm-chunk.c \
 		rculfhash-mm-mmap.c
@@ -80,12 +82,14 @@ pkgconfigdir = $(libdir)/pkgconfig
 pkgconfig_DATA = liburcu-cds.pc liburcu.pc liburcu-bp.pc liburcu-qsbr.pc \
 	liburcu-signal.pc liburcu-mb.pc
 
-dist_doc_DATA = README ChangeLog
+dist_doc_DATA = README.md ChangeLog
 
 dist_noinst_DATA = CodingStyle
 
-.PHONY: bench regtest
-bench:
-	cd tests && $(MAKE) $(AM_MAKEFLAGS) bench
+.PHONY: short_bench long_bench regtest
+short_bench:
+	cd tests && $(MAKE) $(AM_MAKEFLAGS) short_bench
+long_bench:
+	cd tests && $(MAKE) $(AM_MAKEFLAGS) long_bench
 regtest:
 	cd tests && $(MAKE) $(AM_MAKEFLAGS) regtest

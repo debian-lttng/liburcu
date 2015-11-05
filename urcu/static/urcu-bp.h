@@ -39,6 +39,7 @@
 #include <urcu/uatomic.h>
 #include <urcu/list.h>
 #include <urcu/tls-compat.h>
+#include <urcu/debug.h>
 
 /*
  * This code section can only be included in LGPL 2.1 compatible source code.
@@ -50,12 +51,6 @@
 
 #ifdef __cplusplus
 extern "C" {
-#endif
-
-#ifdef DEBUG_RCU
-#define rcu_assert(args...)	assert(args)
-#else
-#define rcu_assert(args...)
 #endif
 
 enum rcu_state {
@@ -107,6 +102,16 @@ struct rcu_reader {
  */
 extern DECLARE_URCU_TLS(struct rcu_reader *, rcu_reader);
 
+extern int urcu_bp_has_sys_membarrier;
+
+static inline void urcu_bp_smp_mb_slave(void)
+{
+	if (caa_likely(urcu_bp_has_sys_membarrier))
+		cmm_barrier();
+	else
+		cmm_smp_mb();
+}
+
 static inline enum rcu_state rcu_reader_state(unsigned long *ctr)
 {
 	unsigned long v;
@@ -136,7 +141,7 @@ static inline void _rcu_read_lock_update(unsigned long tmp)
 {
 	if (caa_likely(!(tmp & RCU_GP_CTR_NEST_MASK))) {
 		_CMM_STORE_SHARED(URCU_TLS(rcu_reader)->ctr, _CMM_LOAD_SHARED(rcu_gp.ctr));
-		cmm_smp_mb();
+		urcu_bp_smp_mb_slave();
 	} else
 		_CMM_STORE_SHARED(URCU_TLS(rcu_reader)->ctr, tmp + RCU_GP_COUNT);
 }
@@ -159,6 +164,7 @@ static inline void _rcu_read_lock(void)
 		rcu_bp_register(); /* If not yet registered. */
 	cmm_barrier();	/* Ensure the compiler does not reorder us with mutex */
 	tmp = URCU_TLS(rcu_reader)->ctr;
+	urcu_assert((tmp & RCU_GP_CTR_NEST_MASK) != RCU_GP_CTR_NEST_MASK);
 	_rcu_read_lock_update(tmp);
 }
 
@@ -169,11 +175,13 @@ static inline void _rcu_read_lock(void)
  */
 static inline void _rcu_read_unlock(void)
 {
-	/*
-	 * Finish using rcu before decrementing the pointer.
-	 */
-	cmm_smp_mb();
-	_CMM_STORE_SHARED(URCU_TLS(rcu_reader)->ctr, URCU_TLS(rcu_reader)->ctr - RCU_GP_COUNT);
+	unsigned long tmp;
+
+	tmp = URCU_TLS(rcu_reader)->ctr;
+	urcu_assert(tmp & RCU_GP_CTR_NEST_MASK);
+	/* Finish using rcu before decrementing the pointer. */
+	urcu_bp_smp_mb_slave();
+	_CMM_STORE_SHARED(URCU_TLS(rcu_reader)->ctr, tmp - RCU_GP_COUNT);
 	cmm_barrier();	/* Ensure the compiler does not reorder us with mutex */
 }
 
@@ -191,7 +199,7 @@ static inline int _rcu_read_ongoing(void)
 	return URCU_TLS(rcu_reader)->ctr & RCU_GP_CTR_NEST_MASK;
 }
 
-#ifdef __cplusplus 
+#ifdef __cplusplus
 }
 #endif
 

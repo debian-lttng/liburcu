@@ -24,28 +24,16 @@
 
 #include <urcu/compiler.h>
 #include <urcu/config.h>
+#include <urcu/syscall-compat.h>
 
 #ifdef __cplusplus
 extern "C" {
-#endif 
+#endif
 
 #include <stdlib.h>
 #include <sys/time.h>
 
-typedef unsigned long long cycles_t;
-
-static inline cycles_t caa_get_cycles (void)
-{
-	cycles_t thetime;
-	struct timeval tv;
-
-	if (gettimeofday(&tv, NULL) != 0)
-		return 0;
-	thetime = ((cycles_t)tv.tv_sec) * 1000000ULL + ((cycles_t)tv.tv_usec);
-	return (cycles_t)thetime;
-}
-
-#ifdef __cplusplus 
+#ifdef __cplusplus
 }
 #endif
 

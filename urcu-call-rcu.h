@@ -64,7 +64,7 @@ struct rcu_head {
 /*
  * Exported functions
  *
- * Important: see rcu-api.txt in userspace-rcu documentation for
+ * Important: see rcu-api.md in userspace-rcu documentation for
  * call_rcu family of functions usage detail, including the surrounding
  * RCU usage required when using these primitives.
  */
@@ -94,7 +94,7 @@ void call_rcu_after_fork_child(void);
 
 void rcu_barrier(void);
 
-#ifdef __cplusplus 
+#ifdef __cplusplus
 }
 #endif
 
