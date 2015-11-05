@@ -1,25 +1,23 @@
-#                                               -*- Autoconf -*-
-# Process this file with autoconf to produce a configure script.
-
-
-AC_INIT([userspace-rcu],[0.8.8],[mathieu dot desnoyers at efficios dot com])
+AC_PREREQ(2.59)
+AC_INIT([userspace-rcu],[0.9.1],[mathieu dot desnoyers at efficios dot com], [], [http://liburcu.org/])
 
 # Following the numbering scheme proposed by libtool for the library version
 # http://www.gnu.org/software/libtool/manual/html_node/Updating-version-info.html
-AC_SUBST([URCU_LIBRARY_VERSION], [2:0:0])
-
-AC_CONFIG_AUX_DIR([config])
-AC_CONFIG_MACRO_DIR([config])
-AC_CANONICAL_TARGET
-AC_CANONICAL_HOST
-AM_INIT_AUTOMAKE([foreign dist-bzip2 no-dist-gzip])
-m4_ifdef([AM_SILENT_RULES], [AM_SILENT_RULES([yes])])
-
-m4_include([config/ax_tls.m4])
+AC_SUBST([URCU_LIBRARY_VERSION], [4:0:0])
 
 AC_CONFIG_SRCDIR([urcu.h])
-
 AC_CONFIG_HEADERS([config.h urcu/config.h])
+AC_CONFIG_AUX_DIR([config])
+AC_CONFIG_MACRO_DIR([m4])
+
+AC_CANONICAL_TARGET
+AC_CANONICAL_HOST
+
+AM_INIT_AUTOMAKE([foreign dist-bzip2 no-dist-gzip])
+AM_MAINTAINER_MODE([enable])
+
+# Enable silent rules if available (Introduced in AM 1.11)
+m4_ifdef([AM_SILENT_RULES], [AM_SILENT_RULES([yes])])
 
 AH_TEMPLATE([CONFIG_RCU_SMP], [Enable SMP support. With SMP support enabled, uniprocessors are also supported. With SMP support disabled, UP systems work fine, but the behavior of SMP systems is undefined.])
 AH_TEMPLATE([CONFIG_RCU_HAVE_FENCE], [Defined when on a system that has memory fence instructions.])
@@ -43,20 +41,65 @@ AS_IF([test "x$def_tls_detect" = "x"],
 	[:],
 	[AC_DEFINE_UNQUOTED([CONFIG_RCU_TLS], $def_tls_detect)])
 
-# Checks for programs.
+# Checks for C compiler
+AC_USE_SYSTEM_EXTENSIONS
 AC_PROG_CC
+AC_PROG_CC_STDC
+
+# Checks for programs.
+AC_PROG_AWK
 AC_PROG_MAKE_SET
+AC_CHECK_PROGS(NPROC, [nproc gnproc])
 LT_INIT
 
 # Checks for typedefs, structures, and compiler characteristics.
 AC_C_INLINE
 AC_TYPE_PID_T
 AC_TYPE_SIZE_T
+AC_TYPE_SSIZE_T
+AC_TYPE_UINT16_T
+AC_TYPE_INT32_T
+AC_TYPE_UINT32_T
+AC_TYPE_UINT64_T
+AC_TYPE_UINT8_T
+
+AX_C___ATTRIBUTE__
+AS_IF([test "x$ax_cv___attribute__" = "xyes"],
+	[:],
+	[AC_MSG_ERROR([The compiler does not support __attribute__ extensions])])
+
+AX_PTHREAD(,[AC_MSG_ERROR([Could not configure pthreads support])])
+LIBS="$PTHREAD_LIBS $LIBS"
+CFLAGS="$CFLAGS $PTHREAD_CFLAGS"
+CC="$PTHREAD_CC"
 
 # Checks for library functions.
 AC_FUNC_MALLOC
 AC_FUNC_MMAP
-AC_CHECK_FUNCS([bzero gettimeofday munmap sched_getcpu strtoul sysconf])
+AC_FUNC_FORK
+AC_CHECK_FUNCS([ \
+	atexit \
+	clock_gettime \
+	getcpuid \
+	gettid \
+	gettimeofday \
+	memeset \
+	memset \
+	munmap \
+	sched_getcpu \
+	strerror \
+	strtoul \
+	sysconf \
+])
+
+# Check for headers
+AC_HEADER_STDBOOL
+AC_CHECK_HEADERS([ \
+	limits.h \
+	stddef.h \
+	sys/param.h \
+	sys/time.h \
+])
 
 # Find arch type
 AS_CASE([$host_cpu],
@@ -69,17 +112,25 @@ AS_CASE([$host_cpu],
 	[powerpc], [ARCHTYPE="ppc"],
 	[ppc64], [ARCHTYPE="ppc"],
 	[powerpc64], [ARCHTYPE="ppc"],
+	[powerpc64le], [ARCHTYPE="ppc"],
 	[ppc], [ARCHTYPE="ppc"],
 	[s390], [ARCHTYPE="s390"],
 	[s390x], [ARCHTYPE="s390"],
 	[sparc], [ARCHTYPE="sparc64"],
 	[sparc64], [ARCHTYPE="sparc64"],
 	[alpha*], [ARCHTYPE="alpha"],
-	[ia64], [ARCHTYPE="gcc"],
+	[ia64], [ARCHTYPE="ia64"],
 	[arm*], [ARCHTYPE="arm"],
+	[aarch64], [ARCHTYPE="aarch64"],
 	[mips*], [ARCHTYPE="mips"],
-	[tile*], [ARCHTYPE="gcc"],
+	[tile*], [ARCHTYPE="tile"],
+	[hppa*], [ARCHTYPE="hppa"],
 	[ARCHTYPE="unknown"]
+)
+
+AS_CASE([$host],[*-*-linux-androideabi],
+	[AM_CONDITIONAL(TARGET_IS_ANDROID, true)],
+	[AM_CONDITIONAL(TARGET_IS_ANDROID, false)]
 )
 
 AC_SUBST(ARCHTYPE)
@@ -135,7 +186,10 @@ AS_IF([test "x$ARCHTYPE" = "xx86"],[
 	#For now, using lock; addl compatibility mode even for i686, because the
 	#Pentium III is seen as a i686, but lacks mfence instruction.
 	#Only using fence for x86_64.
-	AS_IF([test "x$host_cpu" != "xi386" -a "x$host_cpu" != "xi486" -a "x$host_cpu" != "xi586" -a "x$host_cpu" != "xi686"],[
+	#
+	#k1om is the name for the Intel MIC family (Xeon Phi). It is an x86_64
+	#variant but lacks fence instructions.
+	AS_IF([test "x$host_cpu" != "xi386" -a "x$host_cpu" != "xi486" -a "x$host_cpu" != "xi586" -a "x$host_cpu" != "xi686" -a "x$host_vendor" != "xk1om"],[
 		AC_MSG_RESULT([yes])
 		AC_DEFINE([CONFIG_RCU_HAVE_FENCE], [1])
 	],[
@@ -159,6 +213,15 @@ AC_COMPILE_IFELSE([AC_LANG_SOURCE([[
 	AC_MSG_RESULT([no])
 	compat_futex_test=1
 ])
+
+# Check for pthread
+AC_CHECK_LIB([pthread], [pthread_create],
+	[AM_CONDITIONAL(LIBC_INCLUDES_PTHREAD, false)],
+	[AC_CHECK_LIB([c], [pthread_create],
+		[AM_CONDITIONAL(LIBC_INCLUDES_PTHREAD, true)],
+		[AC_MSG_ERROR([Cannot find libpthread. Use [LDFLAGS]=-Ldir to specify its location.])]
+	)]
+)
 
 AM_CONDITIONAL([COMPAT_FUTEX], [test "x$compat_futex_test" = "x1"])
 AM_CONDITIONAL([COMPAT_ARCH], [test "x$SUBARCHTYPE" = "xx86compat"])
@@ -297,6 +360,8 @@ AC_CONFIG_FILES([
 	tests/unit/Makefile
 	tests/benchmark/Makefile
 	tests/regression/Makefile
+	tests/regression/regression_tests
+	tests/utils/Makefile
 	liburcu.pc
 	liburcu-bp.pc
 	liburcu-cds.pc

@@ -1,8 +1,11 @@
+if !LIBC_INCLUDES_PTHREAD
 AM_LDFLAGS=-lpthread
+endif
 AM_CFLAGS=-I$(top_srcdir) -I$(top_builddir) -I$(top_srcdir)/tests/common -g
 
 SCRIPT_LIST = common.sh \
-	runall.sh \
+	run.sh \
+	run-urcu-tests.sh \
 	runhash.sh \
 	runtests.sh \
 	runpaul-phase1.sh \
@@ -16,6 +19,8 @@ SCRIPT_LIST = common.sh \
 	subphase4.sh
 
 dist_noinst_SCRIPTS = $(SCRIPT_LIST)
+
+dist_noinst_DATA = regression_tests short_bench_tests long_bench_tests
 
 noinst_PROGRAMS = test_urcu test_urcu_dynamic_link test_urcu_timing \
 	test_urcu_signal test_urcu_signal_dynamic_link test_urcu_signal_timing \
@@ -220,7 +225,13 @@ clean-local:
 		done; \
 	fi
 
-.PHONY: bench
+.PHONY: short_bench long_bench regtest
 
-bench:
-	./runall.sh
+short_bench:
+	./run.sh short_bench_tests
+
+long_bench:
+	./run.sh long_bench_tests
+
+regtest:
+	./run.sh regression_tests

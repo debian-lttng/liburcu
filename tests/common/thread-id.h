@@ -17,11 +17,18 @@
  * provided the above notices are retained, and a notice that the code was
  * modified is included with the above copyright notice.
  */
+#include <config.h>
 
 #ifdef __linux__
-# include <syscall.h>
+# include <urcu/syscall-compat.h>
 
-# if defined(_syscall0)
+# if defined(HAVE_GETTID)
+/*
+ * Do not redefine gettid() as it is already included
+ * in bionic through <unistd.h>. Some other libc
+ * may also already contain an implementation of gettid.
+ */
+# elif defined(_syscall0)
 _syscall0(pid_t, gettid)
 # elif defined(__NR_gettid)
 static inline pid_t gettid(void)
@@ -42,6 +49,14 @@ static inline
 unsigned long urcu_get_thread_id(void)
 {
 	return (unsigned long) pthread_getthreadid_np();
+}
+#elif defined(__sun__)
+#include <pthread.h>
+
+static inline
+unsigned long urcu_get_thread_id(void)
+{
+	return (unsigned long) pthread_self();
 }
 #else
 # warning "use pid as thread ID"

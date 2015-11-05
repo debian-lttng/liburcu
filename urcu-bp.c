@@ -36,6 +36,7 @@
 #include <unistd.h>
 #include <sys/mman.h>
 
+#include "urcu/arch.h"
 #include "urcu/wfcqueue.h"
 #include "urcu/map/urcu-bp.h"
 #include "urcu/static/urcu-bp.h"
@@ -94,10 +95,24 @@ void *mremap_wrapper(void *old_address, size_t old_size,
 static
 int rcu_bp_refcount;
 
+/* If the headers do not support membarrier system call, fall back smp_mb. */
+#ifdef __NR_membarrier
+# define membarrier(...)		syscall(__NR_membarrier, __VA_ARGS__)
+#else
+# define membarrier(...)		-ENOSYS
+#endif
+
+enum membarrier_cmd {
+	MEMBARRIER_CMD_QUERY = 0,
+	MEMBARRIER_CMD_SHARED = (1 << 0),
+};
+
 static
 void __attribute__((constructor)) rcu_bp_init(void);
 static
-void __attribute__((destructor)) _rcu_bp_exit(void);
+void __attribute__((destructor)) rcu_bp_exit(void);
+
+int urcu_bp_has_sys_membarrier;
 
 /*
  * rcu_gp_lock ensures mutual exclusion between threads calling
@@ -120,18 +135,13 @@ static int initialized;
 
 static pthread_key_t urcu_bp_key;
 
-#ifdef DEBUG_YIELD
-unsigned int rcu_yield_active;
-__DEFINE_URCU_TLS_GLOBAL(unsigned int, rcu_rand_yield);
-#endif
-
 struct rcu_gp rcu_gp = { .ctr = RCU_GP_COUNT };
 
 /*
  * Pointer to registry elements. Written to only by each individual reader. Read
  * by both the reader and the writers.
  */
-__DEFINE_URCU_TLS_GLOBAL(struct rcu_reader *, rcu_reader);
+DEFINE_URCU_TLS(struct rcu_reader *, rcu_reader);
 
 static CDS_LIST_HEAD(registry);
 
@@ -177,6 +187,14 @@ static void mutex_unlock(pthread_mutex_t *mutex)
 	ret = pthread_mutex_unlock(mutex);
 	if (ret)
 		urcu_die(ret);
+}
+
+static void smp_mb_master(void)
+{
+	if (caa_likely(urcu_bp_has_sys_membarrier))
+		(void) membarrier(MEMBARRIER_CMD_SHARED, 0);
+	else
+		cmm_smp_mb();
 }
 
 /*
@@ -259,7 +277,7 @@ void synchronize_rcu(void)
 	/* All threads should read qparity before accessing data structure
 	 * where new ptr points to. */
 	/* Write new ptr before changing the qparity */
-	cmm_smp_mb();
+	smp_mb_master();
 
 	/*
 	 * Wait for readers to observe original parity or be quiescent.
@@ -308,7 +326,7 @@ void synchronize_rcu(void)
 	 * Finish waiting for reader threads before letting the old ptr being
 	 * freed.
 	 */
-	cmm_smp_mb();
+	smp_mb_master();
 out:
 	mutex_unlock(&rcu_registry_lock);
 	mutex_unlock(&rcu_gp_lock);
@@ -361,7 +379,7 @@ void expand_arena(struct registry_arena *arena)
 			-1, 0);
 		if (new_chunk == MAP_FAILED)
 			abort();
-		bzero(new_chunk, new_chunk_len);
+		memset(new_chunk, 0, new_chunk_len);
 		new_chunk->data_len =
 			new_chunk_len - sizeof(struct registry_chunk);
 		cds_list_add_tail(&new_chunk->node, &arena->chunk_list);
@@ -381,7 +399,7 @@ void expand_arena(struct registry_arena *arena)
 	if (new_chunk != MAP_FAILED) {
 		/* Should not have moved. */
 		assert(new_chunk == last_chunk);
-		bzero((char *) last_chunk + old_chunk_len,
+		memset((char *) last_chunk + old_chunk_len, 0,
 			new_chunk_len - old_chunk_len);
 		last_chunk->data_len =
 			new_chunk_len - sizeof(struct registry_chunk);
@@ -395,7 +413,7 @@ void expand_arena(struct registry_arena *arena)
 		-1, 0);
 	if (new_chunk == MAP_FAILED)
 		abort();
-	bzero(new_chunk, new_chunk_len);
+	memset(new_chunk, 0, new_chunk_len);
 	new_chunk->data_len =
 		new_chunk_len - sizeof(struct registry_chunk);
 	cds_list_add_tail(&new_chunk->node, &arena->chunk_list);
@@ -548,7 +566,7 @@ void rcu_bp_unregister(struct rcu_reader *rcu_reader_reg)
 	ret = pthread_sigmask(SIG_SETMASK, &oldmask, NULL);
 	if (ret)
 		abort();
-	_rcu_bp_exit();
+	rcu_bp_exit();
 }
 
 /*
@@ -572,13 +590,17 @@ void rcu_bp_init(void)
 				urcu_bp_thread_exit_notifier);
 		if (ret)
 			abort();
+		ret = membarrier(MEMBARRIER_CMD_QUERY, 0);
+		if (ret >= 0 && (ret & MEMBARRIER_CMD_SHARED)) {
+			urcu_bp_has_sys_membarrier = 1;
+		}
 		initialized = 1;
 	}
 	mutex_unlock(&init_lock);
 }
 
 static
-void _rcu_bp_exit(void)
+void rcu_bp_exit(void)
 {
 	mutex_lock(&init_lock);
 	if (!--rcu_bp_refcount) {
@@ -595,15 +617,6 @@ void _rcu_bp_exit(void)
 			abort();
 	}
 	mutex_unlock(&init_lock);
-}
-
-/*
- * Keep ABI compability within stable versions. This has never been
- * exposed through a header, but needs to stay in the .so until the
- * soname is bumped.
- */
-void rcu_bp_exit(void)
-{
 }
 
 /*

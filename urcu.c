@@ -37,6 +37,7 @@
 #include <errno.h>
 #include <poll.h>
 
+#include "urcu/arch.h"
 #include "urcu/wfcqueue.h"
 #include "urcu/map/urcu.h"
 #include "urcu/static/urcu.h"
@@ -63,15 +64,17 @@
  */
 #define RCU_QS_ACTIVE_ATTEMPTS 100
 
-/*
- * The ABI of sys_membarrier changed after its original implementation.
- * Disable it for now. Use RCU_MB flavor instead.
- */
-#define membarrier(...)		-ENOSYS
+/* If the headers do not support membarrier system call, fall back on RCU_MB */
+#ifdef __NR_membarrier
+# define membarrier(...)		syscall(__NR_membarrier, __VA_ARGS__)
+#else
+# define membarrier(...)		-ENOSYS
+#endif
 
-#define MEMBARRIER_EXPEDITED		(1 << 0)
-#define MEMBARRIER_DELAYED		(1 << 1)
-#define MEMBARRIER_QUERY		(1 << 16)
+enum membarrier_cmd {
+	MEMBARRIER_CMD_QUERY = 0,
+	MEMBARRIER_CMD_SHARED = (1 << 0),
+};
 
 #ifdef RCU_MEMBARRIER
 static int init_done;
@@ -114,7 +117,7 @@ struct rcu_gp rcu_gp = { .ctr = RCU_GP_COUNT };
  * Written to only by each individual reader. Read by both the reader and the
  * writers.
  */
-__DEFINE_URCU_TLS_GLOBAL(struct rcu_reader, rcu_reader);
+DEFINE_URCU_TLS(struct rcu_reader, rcu_reader);
 
 static CDS_LIST_HEAD(registry);
 
@@ -141,7 +144,7 @@ static void mutex_lock(pthread_mutex_t *mutex)
 			_CMM_STORE_SHARED(URCU_TLS(rcu_reader).need_mb, 0);
 			cmm_smp_mb();
 		}
-		poll(NULL,0,10);
+		(void) poll(NULL, 0, 10);
 	}
 #endif /* #else #ifndef DISTRUST_SIGNALS_EXTREME */
 }
@@ -156,17 +159,17 @@ static void mutex_unlock(pthread_mutex_t *mutex)
 }
 
 #ifdef RCU_MEMBARRIER
-static void smp_mb_master(int group)
+static void smp_mb_master(void)
 {
 	if (caa_likely(rcu_has_sys_membarrier))
-		(void) membarrier(MEMBARRIER_EXPEDITED);
+		(void) membarrier(MEMBARRIER_CMD_SHARED, 0);
 	else
 		cmm_smp_mb();
 }
 #endif
 
 #ifdef RCU_MB
-static void smp_mb_master(int group)
+static void smp_mb_master(void)
 {
 	cmm_smp_mb();
 }
@@ -209,13 +212,13 @@ static void force_mb_all_readers(void)
 	cds_list_for_each_entry(index, &registry, node) {
 		while (CMM_LOAD_SHARED(index->need_mb)) {
 			pthread_kill(index->tid, SIGRCU);
-			poll(NULL, 0, 1);
+			(void) poll(NULL, 0, 1);
 		}
 	}
 	cmm_smp_mb();	/* read ->need_mb before ending the barrier */
 }
 
-static void smp_mb_master(int group)
+static void smp_mb_master(void)
 {
 	force_mb_all_readers();
 }
@@ -227,7 +230,7 @@ static void smp_mb_master(int group)
 static void wait_gp(void)
 {
 	/* Read reader_gp before read futex */
-	smp_mb_master(RCU_MB_GROUP);
+	smp_mb_master();
 	if (uatomic_read(&rcu_gp.futex) != -1)
 		return;
 	while (futex_async(&rcu_gp.futex, FUTEX_WAIT, -1,
@@ -271,7 +274,7 @@ static void wait_for_readers(struct cds_list_head *input_readers,
 		if (wait_loops >= RCU_QS_ACTIVE_ATTEMPTS) {
 			uatomic_dec(&rcu_gp.futex);
 			/* Write futex before read reader_gp */
-			smp_mb_master(RCU_MB_GROUP);
+			smp_mb_master();
 		}
 
 		cds_list_for_each_entry_safe(index, tmp, input_readers, node) {
@@ -301,7 +304,7 @@ static void wait_for_readers(struct cds_list_head *input_readers,
 		if (cds_list_empty(input_readers)) {
 			if (wait_loops >= RCU_QS_ACTIVE_ATTEMPTS) {
 				/* Read reader_gp before write futex */
-				smp_mb_master(RCU_MB_GROUP);
+				smp_mb_master();
 				uatomic_set(&rcu_gp.futex, 0);
 			}
 			break;
@@ -324,13 +327,13 @@ static void wait_for_readers(struct cds_list_head *input_readers,
 		if (cds_list_empty(input_readers)) {
 			if (wait_loops >= RCU_QS_ACTIVE_ATTEMPTS) {
 				/* Read reader_gp before write futex */
-				smp_mb_master(RCU_MB_GROUP);
+				smp_mb_master();
 				uatomic_set(&rcu_gp.futex, 0);
 			}
 			break;
 		} else {
 			if (wait_gp_loops == KICK_READER_LOOPS) {
-				smp_mb_master(RCU_MB_GROUP);
+				smp_mb_master();
 				wait_gp_loops = 0;
 			}
 			/* Temporarily unlock the registry lock. */
@@ -391,7 +394,7 @@ void synchronize_rcu(void)
 	 * because it iterates on reader threads.
 	 */
 	/* Write new ptr before changing the qparity */
-	smp_mb_master(RCU_MB_GROUP);
+	smp_mb_master();
 
 	/*
 	 * Wait for readers to observe original parity or be quiescent.
@@ -452,7 +455,7 @@ void synchronize_rcu(void)
 	 * being freed. Must be done within rcu_registry_lock because it
 	 * iterates on reader threads.
 	 */
-	smp_mb_master(RCU_MB_GROUP);
+	smp_mb_master();
 out:
 	mutex_unlock(&rcu_registry_lock);
 	mutex_unlock(&rcu_gp_lock);
@@ -491,6 +494,8 @@ void rcu_register_thread(void)
 	assert(!(URCU_TLS(rcu_reader).ctr & RCU_GP_CTR_NEST_MASK));
 
 	mutex_lock(&rcu_registry_lock);
+	assert(!URCU_TLS(rcu_reader).registered);
+	URCU_TLS(rcu_reader).registered = 1;
 	rcu_init();	/* In case gcc does not support constructor attribute */
 	cds_list_add(&URCU_TLS(rcu_reader).node, &registry);
 	mutex_unlock(&rcu_registry_lock);
@@ -499,6 +504,8 @@ void rcu_register_thread(void)
 void rcu_unregister_thread(void)
 {
 	mutex_lock(&rcu_registry_lock);
+	assert(URCU_TLS(rcu_reader).registered);
+	URCU_TLS(rcu_reader).registered = 0;
 	cds_list_del(&URCU_TLS(rcu_reader).node);
 	mutex_unlock(&rcu_registry_lock);
 }
@@ -506,11 +513,15 @@ void rcu_unregister_thread(void)
 #ifdef RCU_MEMBARRIER
 void rcu_init(void)
 {
+	int ret;
+
 	if (init_done)
 		return;
 	init_done = 1;
-	if (!membarrier(MEMBARRIER_EXPEDITED | MEMBARRIER_QUERY))
+	ret = membarrier(MEMBARRIER_CMD_QUERY, 0);
+	if (ret >= 0 && (ret & MEMBARRIER_CMD_SHARED)) {
 		rcu_has_sys_membarrier = 1;
+	}
 }
 #endif
 

@@ -90,12 +90,11 @@ DIST_COMMON = $(srcdir)/Makefile.in $(srcdir)/Makefile.am \
 	$(dist_doc_examples_wfcqueue_DATA) \
 	$(dist_doc_examples_wfstack_DATA)
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
-am__aclocal_m4_deps = $(top_srcdir)/config/libtool.m4 \
-	$(top_srcdir)/config/ltoptions.m4 \
-	$(top_srcdir)/config/ltsugar.m4 \
-	$(top_srcdir)/config/ltversion.m4 \
-	$(top_srcdir)/config/lt~obsolete.m4 \
-	$(top_srcdir)/config/ax_tls.m4 $(top_srcdir)/configure.ac
+am__aclocal_m4_deps = $(top_srcdir)/m4/ax_c___attribute__.m4 \
+	$(top_srcdir)/m4/ax_pthread.m4 $(top_srcdir)/m4/ax_tls.m4 \
+	$(top_srcdir)/m4/libtool.m4 $(top_srcdir)/m4/ltoptions.m4 \
+	$(top_srcdir)/m4/ltsugar.m4 $(top_srcdir)/m4/ltversion.m4 \
+	$(top_srcdir)/m4/lt~obsolete.m4 $(top_srcdir)/configure.ac
 am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
 	$(ACLOCAL_M4)
 mkinstalldirs = $(install_sh) -d
@@ -207,11 +206,13 @@ LIBTOOL = @LIBTOOL@
 LIPO = @LIPO@
 LN_S = @LN_S@
 LTLIBOBJS = @LTLIBOBJS@
+MAINT = @MAINT@
 MAKEINFO = @MAKEINFO@
 MANIFEST_TOOL = @MANIFEST_TOOL@
 MKDIR_P = @MKDIR_P@
 NM = @NM@
 NMEDIT = @NMEDIT@
+NPROC = @NPROC@
 OBJDUMP = @OBJDUMP@
 OBJEXT = @OBJEXT@
 OTOOL = @OTOOL@
@@ -224,6 +225,9 @@ PACKAGE_TARNAME = @PACKAGE_TARNAME@
 PACKAGE_URL = @PACKAGE_URL@
 PACKAGE_VERSION = @PACKAGE_VERSION@
 PATH_SEPARATOR = @PATH_SEPARATOR@
+PTHREAD_CC = @PTHREAD_CC@
+PTHREAD_CFLAGS = @PTHREAD_CFLAGS@
+PTHREAD_LIBS = @PTHREAD_LIBS@
 RANLIB = @RANLIB@
 SED = @SED@
 SET_MAKE = @SET_MAKE@
@@ -244,6 +248,7 @@ am__leading_dot = @am__leading_dot@
 am__quote = @am__quote@
 am__tar = @am__tar@
 am__untar = @am__untar@
+ax_pthread_config = @ax_pthread_config@
 bindir = @bindir@
 build = @build@
 build_alias = @build_alias@
@@ -401,7 +406,7 @@ dist_doc_examples_rculfhash_DATA = \
 all: all-am
 
 .SUFFIXES:
-$(srcdir)/Makefile.in:  $(srcdir)/Makefile.am  $(am__configure_deps)
+$(srcdir)/Makefile.in: @MAINTAINER_MODE_TRUE@ $(srcdir)/Makefile.am  $(am__configure_deps)
 	@for dep in $?; do \
 	  case '$(am__configure_deps)' in \
 	    *$$dep*) \
@@ -426,9 +431,9 @@ Makefile: $(srcdir)/Makefile.in $(top_builddir)/config.status
 $(top_builddir)/config.status: $(top_srcdir)/configure $(CONFIG_STATUS_DEPENDENCIES)
 	cd $(top_builddir) && $(MAKE) $(AM_MAKEFLAGS) am--refresh
 
-$(top_srcdir)/configure:  $(am__configure_deps)
+$(top_srcdir)/configure: @MAINTAINER_MODE_TRUE@ $(am__configure_deps)
 	cd $(top_builddir) && $(MAKE) $(AM_MAKEFLAGS) am--refresh
-$(ACLOCAL_M4):  $(am__aclocal_m4_deps)
+$(ACLOCAL_M4): @MAINTAINER_MODE_TRUE@ $(am__aclocal_m4_deps)
 	cd $(top_builddir) && $(MAKE) $(AM_MAKEFLAGS) am--refresh
 $(am__aclocal_m4_deps):
 
@@ -825,21 +830,21 @@ uninstall-am: uninstall-dist_doc_examplesDATA \
 @NO_SHARED_FALSE@			cp -pfR $(srcdir)/$$subdir $(builddir); \
 @NO_SHARED_FALSE@		done; \
 @NO_SHARED_FALSE@	fi; \
-@NO_SHARED_FALSE@	if [ x"$(shell echo "$(top_srcdir)" | grep "^/" | wc -l)" = x"1" ]; then \
+@NO_SHARED_FALSE@	if [ x"$(shell echo "$(top_srcdir)" | $(GREP) "^/" | wc -l)" = x"1" ]; then \
 @NO_SHARED_FALSE@		echo "Examples: absolute top_srcdir path $(top_srcdir)"; \
 @NO_SHARED_FALSE@		rel_src_subdir=""; \
 @NO_SHARED_FALSE@	else \
 @NO_SHARED_FALSE@		echo "Examples: relative top_srcdir path $(top_srcdir)"; \
 @NO_SHARED_FALSE@		rel_src_subdir="../"; \
 @NO_SHARED_FALSE@	fi; \
-@NO_SHARED_FALSE@	if [ x"$(shell echo "$(top_builddir)" | grep "^/" | wc -l)" = x"1" ]; then \
+@NO_SHARED_FALSE@	if [ x"$(shell echo "$(top_builddir)" | $(GREP) "^/" | wc -l)" = x"1" ]; then \
 @NO_SHARED_FALSE@		echo "Examples: absolute top_builddir path $(top_builddir)"; \
 @NO_SHARED_FALSE@		rel_build_subdir=""; \
 @NO_SHARED_FALSE@	else \
 @NO_SHARED_FALSE@		echo "Examples: relative top_builddir path $(top_builddir)"; \
 @NO_SHARED_FALSE@		rel_build_subdir="../"; \
 @NO_SHARED_FALSE@	fi; \
-@NO_SHARED_FALSE@	$(MAKE) -f dist-files/Makefile AM_CC="$(CC)" AM_CPPFLAGS="$(CPPFLAGS) -I$$rel_src_subdir/$(top_srcdir)/ -I$$rel_build_subdir$(top_builddir)/" AM_CFLAGS='$(CFLAGS)' AM_LDFLAGS='$(LDFLAGS) -L../../../.libs/ -Wl,-rpath="$(PWD)/../../.libs/"' $(AM_MAKEFLAGS) all;
+@NO_SHARED_FALSE@	$(MAKE) -f dist-files/Makefile AM_CC="$(CC)" AM_CPPFLAGS="$(CPPFLAGS) -I$$rel_src_subdir/$(top_srcdir)/ -I$$rel_build_subdir$(top_builddir)/" AM_CFLAGS='$(CFLAGS)' AM_LDFLAGS='$(LDFLAGS) -L../../../.libs/ -Wl,-rpath "$(PWD)/../../.libs/"' $(AM_MAKEFLAGS) all;
 
 @NO_SHARED_FALSE@clean-local:
 @NO_SHARED_FALSE@	@$(MAKE) -f dist-files/Makefile $(AM_MAKEFLAGS) clean; \

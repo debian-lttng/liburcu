@@ -24,6 +24,7 @@
 
 #include <urcu/compiler.h>
 #include <urcu/config.h>
+#include <urcu/syscall-compat.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -34,13 +35,6 @@ extern "C" {
 					"	sync			\n" \
 					"	.set	mips0		\n" \
 					:::"memory")
-
-typedef unsigned long long cycles_t;
-
-static inline cycles_t caa_get_cycles(void)
-{
-	return 0;	/* not supported */
-}
 
 #ifdef __cplusplus
 }

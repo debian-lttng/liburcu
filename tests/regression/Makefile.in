@@ -15,6 +15,8 @@
 @SET_MAKE@
 
 
+
+
 VPATH = @srcdir@
 am__is_gnu_make = test -n '$(MAKEFILE_LIST)' && test -n '$(MAKELEVEL)'
 am__make_running_with_option = \
@@ -85,24 +87,25 @@ noinst_PROGRAMS = test_urcu_fork$(EXEEXT) rcutorture_urcu$(EXEEXT) \
 	rcutorture_urcu_bp$(EXEEXT) rcutorture_urcu_qsbr$(EXEEXT)
 subdir = tests/regression
 DIST_COMMON = $(srcdir)/Makefile.in $(srcdir)/Makefile.am \
-	$(top_srcdir)/config/depcomp $(noinst_HEADERS)
+	$(srcdir)/regression_tests.in $(dist_noinst_SCRIPTS) \
+	$(top_srcdir)/config/depcomp $(dist_noinst_DATA) \
+	$(noinst_HEADERS)
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
-am__aclocal_m4_deps = $(top_srcdir)/config/libtool.m4 \
-	$(top_srcdir)/config/ltoptions.m4 \
-	$(top_srcdir)/config/ltsugar.m4 \
-	$(top_srcdir)/config/ltversion.m4 \
-	$(top_srcdir)/config/lt~obsolete.m4 \
-	$(top_srcdir)/config/ax_tls.m4 $(top_srcdir)/configure.ac
+am__aclocal_m4_deps = $(top_srcdir)/m4/ax_c___attribute__.m4 \
+	$(top_srcdir)/m4/ax_pthread.m4 $(top_srcdir)/m4/ax_tls.m4 \
+	$(top_srcdir)/m4/libtool.m4 $(top_srcdir)/m4/ltoptions.m4 \
+	$(top_srcdir)/m4/ltsugar.m4 $(top_srcdir)/m4/ltversion.m4 \
+	$(top_srcdir)/m4/lt~obsolete.m4 $(top_srcdir)/configure.ac
 am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
 	$(ACLOCAL_M4)
 mkinstalldirs = $(install_sh) -d
 CONFIG_HEADER = $(top_builddir)/config.h $(top_builddir)/urcu/config.h
-CONFIG_CLEAN_FILES =
+CONFIG_CLEAN_FILES = regression_tests
 CONFIG_CLEAN_VPATH_FILES =
 PROGRAMS = $(noinst_PROGRAMS)
 am_rcutorture_urcu_OBJECTS = rcutorture_urcu-urcutorture.$(OBJEXT)
 rcutorture_urcu_OBJECTS = $(am_rcutorture_urcu_OBJECTS)
-rcutorture_urcu_DEPENDENCIES = $(URCU_LIB)
+rcutorture_urcu_DEPENDENCIES = $(URCU_LIB) $(TAP_LIB)
 AM_V_lt = $(am__v_lt_@AM_V@)
 am__v_lt_ = $(am__v_lt_@AM_DEFAULT_V@)
 am__v_lt_0 = --silent
@@ -114,7 +117,7 @@ rcutorture_urcu_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC \
 am_rcutorture_urcu_bp_OBJECTS =  \
 	rcutorture_urcu_bp-urcutorture.$(OBJEXT)
 rcutorture_urcu_bp_OBJECTS = $(am_rcutorture_urcu_bp_OBJECTS)
-rcutorture_urcu_bp_DEPENDENCIES = $(URCU_BP_LIB)
+rcutorture_urcu_bp_DEPENDENCIES = $(URCU_BP_LIB) $(TAP_LIB)
 rcutorture_urcu_bp_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC \
 	$(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=link $(CCLD) \
 	$(rcutorture_urcu_bp_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) \
@@ -122,7 +125,7 @@ rcutorture_urcu_bp_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC \
 am_rcutorture_urcu_mb_OBJECTS =  \
 	rcutorture_urcu_mb-urcutorture.$(OBJEXT)
 rcutorture_urcu_mb_OBJECTS = $(am_rcutorture_urcu_mb_OBJECTS)
-rcutorture_urcu_mb_DEPENDENCIES = $(URCU_MB_LIB)
+rcutorture_urcu_mb_DEPENDENCIES = $(URCU_MB_LIB) $(TAP_LIB)
 rcutorture_urcu_mb_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC \
 	$(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=link $(CCLD) \
 	$(rcutorture_urcu_mb_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) \
@@ -130,7 +133,7 @@ rcutorture_urcu_mb_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC \
 am_rcutorture_urcu_qsbr_OBJECTS =  \
 	rcutorture_urcu_qsbr-urcutorture.$(OBJEXT)
 rcutorture_urcu_qsbr_OBJECTS = $(am_rcutorture_urcu_qsbr_OBJECTS)
-rcutorture_urcu_qsbr_DEPENDENCIES = $(URCU_QSBR_LIB)
+rcutorture_urcu_qsbr_DEPENDENCIES = $(URCU_QSBR_LIB) $(TAP_LIB)
 rcutorture_urcu_qsbr_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC \
 	$(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=link $(CCLD) \
 	$(rcutorture_urcu_qsbr_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) \
@@ -138,14 +141,15 @@ rcutorture_urcu_qsbr_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC \
 am_rcutorture_urcu_signal_OBJECTS =  \
 	rcutorture_urcu_signal-urcutorture.$(OBJEXT)
 rcutorture_urcu_signal_OBJECTS = $(am_rcutorture_urcu_signal_OBJECTS)
-rcutorture_urcu_signal_DEPENDENCIES = $(URCU_SIGNAL_LIB)
+rcutorture_urcu_signal_DEPENDENCIES = $(URCU_SIGNAL_LIB) $(TAP_LIB)
 rcutorture_urcu_signal_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC \
 	$(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=link $(CCLD) \
 	$(rcutorture_urcu_signal_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) \
 	$(LDFLAGS) -o $@
 am_test_urcu_fork_OBJECTS = test_urcu_fork.$(OBJEXT)
 test_urcu_fork_OBJECTS = $(am_test_urcu_fork_OBJECTS)
-test_urcu_fork_DEPENDENCIES = $(URCU_LIB)
+test_urcu_fork_DEPENDENCIES = $(URCU_LIB) $(TAP_LIB)
+SCRIPTS = $(dist_noinst_SCRIPTS)
 AM_V_P = $(am__v_P_@AM_V@)
 am__v_P_ = $(am__v_P_@AM_DEFAULT_V@)
 am__v_P_0 = false
@@ -192,6 +196,7 @@ am__can_run_installinfo = \
     n|no|NO) false;; \
     *) (install-info --version) >/dev/null 2>&1;; \
   esac
+DATA = $(dist_noinst_DATA)
 HEADERS = $(noinst_HEADERS)
 am__tagged_files = $(HEADERS) $(SOURCES) $(TAGS_FILES) $(LISP)
 # Read a list of newline-separated strings from the standard input,
@@ -253,11 +258,13 @@ LIBTOOL = @LIBTOOL@
 LIPO = @LIPO@
 LN_S = @LN_S@
 LTLIBOBJS = @LTLIBOBJS@
+MAINT = @MAINT@
 MAKEINFO = @MAKEINFO@
 MANIFEST_TOOL = @MANIFEST_TOOL@
 MKDIR_P = @MKDIR_P@
 NM = @NM@
 NMEDIT = @NMEDIT@
+NPROC = @NPROC@
 OBJDUMP = @OBJDUMP@
 OBJEXT = @OBJEXT@
 OTOOL = @OTOOL@
@@ -270,6 +277,9 @@ PACKAGE_TARNAME = @PACKAGE_TARNAME@
 PACKAGE_URL = @PACKAGE_URL@
 PACKAGE_VERSION = @PACKAGE_VERSION@
 PATH_SEPARATOR = @PATH_SEPARATOR@
+PTHREAD_CC = @PTHREAD_CC@
+PTHREAD_CFLAGS = @PTHREAD_CFLAGS@
+PTHREAD_LIBS = @PTHREAD_LIBS@
 RANLIB = @RANLIB@
 SED = @SED@
 SET_MAKE = @SET_MAKE@
@@ -290,6 +300,7 @@ am__leading_dot = @am__leading_dot@
 am__quote = @am__quote@
 am__tar = @am__tar@
 am__untar = @am__untar@
+ax_pthread_config = @ax_pthread_config@
 bindir = @bindir@
 build = @build@
 build_alias = @build_alias@
@@ -334,8 +345,11 @@ target_vendor = @target_vendor@
 top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
-AM_LDFLAGS = -lpthread
-AM_CFLAGS = -I$(top_srcdir) -I$(top_builddir) -I$(top_srcdir)/tests/common -g
+@LIBC_INCLUDES_PTHREAD_FALSE@AM_LDFLAGS = -lpthread
+AM_CFLAGS = -I$(top_srcdir) -I$(top_builddir) -I$(top_srcdir)/tests/utils -I$(top_srcdir)/tests/common -g
+SCRIPT_LIST = run.sh
+dist_noinst_SCRIPTS = $(SCRIPT_LIST)
+dist_noinst_DATA = regression_tests.in
 noinst_HEADERS = rcutorture.h
 URCU_COMMON_LIB = $(top_builddir)/liburcu-common.la
 URCU_LIB = $(top_builddir)/liburcu.la
@@ -344,28 +358,29 @@ URCU_MB_LIB = $(top_builddir)/liburcu-mb.la
 URCU_SIGNAL_LIB = $(top_builddir)/liburcu-signal.la
 URCU_BP_LIB = $(top_builddir)/liburcu-bp.la
 URCU_CDS_LIB = $(top_builddir)/liburcu-cds.la
+TAP_LIB = $(top_builddir)/tests/utils/libtap.a
 test_urcu_fork_SOURCES = test_urcu_fork.c
-test_urcu_fork_LDADD = $(URCU_LIB)
+test_urcu_fork_LDADD = $(URCU_LIB) $(TAP_LIB)
 rcutorture_urcu_SOURCES = urcutorture.c
 rcutorture_urcu_CFLAGS = -DRCU_MEMBARRIER $(AM_CFLAGS)
-rcutorture_urcu_LDADD = $(URCU_LIB)
+rcutorture_urcu_LDADD = $(URCU_LIB) $(TAP_LIB)
 rcutorture_urcu_mb_SOURCES = urcutorture.c
 rcutorture_urcu_mb_CFLAGS = -DRCU_MB $(AM_CFLAGS)
-rcutorture_urcu_mb_LDADD = $(URCU_MB_LIB)
+rcutorture_urcu_mb_LDADD = $(URCU_MB_LIB)  $(TAP_LIB)
 rcutorture_urcu_qsbr_SOURCES = urcutorture.c
 rcutorture_urcu_qsbr_CFLAGS = -DTORTURE_QSBR -DRCU_QSBR $(AM_CFLAGS)
-rcutorture_urcu_qsbr_LDADD = $(URCU_QSBR_LIB)
+rcutorture_urcu_qsbr_LDADD = $(URCU_QSBR_LIB) $(TAP_LIB)
 rcutorture_urcu_signal_SOURCES = urcutorture.c
 rcutorture_urcu_signal_CFLAGS = -DRCU_SIGNAL $(AM_CFLAGS)
-rcutorture_urcu_signal_LDADD = $(URCU_SIGNAL_LIB)
+rcutorture_urcu_signal_LDADD = $(URCU_SIGNAL_LIB) $(TAP_LIB)
 rcutorture_urcu_bp_SOURCES = urcutorture.c
 rcutorture_urcu_bp_CFLAGS = -DRCU_BP $(AM_CFLAGS)
-rcutorture_urcu_bp_LDADD = $(URCU_BP_LIB)
+rcutorture_urcu_bp_LDADD = $(URCU_BP_LIB) $(TAP_LIB)
 all: all-am
 
 .SUFFIXES:
 .SUFFIXES: .c .lo .o .obj
-$(srcdir)/Makefile.in:  $(srcdir)/Makefile.am  $(am__configure_deps)
+$(srcdir)/Makefile.in: @MAINTAINER_MODE_TRUE@ $(srcdir)/Makefile.am  $(am__configure_deps)
 	@for dep in $?; do \
 	  case '$(am__configure_deps)' in \
 	    *$$dep*) \
@@ -390,11 +405,13 @@ Makefile: $(srcdir)/Makefile.in $(top_builddir)/config.status
 $(top_builddir)/config.status: $(top_srcdir)/configure $(CONFIG_STATUS_DEPENDENCIES)
 	cd $(top_builddir) && $(MAKE) $(AM_MAKEFLAGS) am--refresh
 
-$(top_srcdir)/configure:  $(am__configure_deps)
+$(top_srcdir)/configure: @MAINTAINER_MODE_TRUE@ $(am__configure_deps)
 	cd $(top_builddir) && $(MAKE) $(AM_MAKEFLAGS) am--refresh
-$(ACLOCAL_M4):  $(am__aclocal_m4_deps)
+$(ACLOCAL_M4): @MAINTAINER_MODE_TRUE@ $(am__aclocal_m4_deps)
 	cd $(top_builddir) && $(MAKE) $(AM_MAKEFLAGS) am--refresh
 $(am__aclocal_m4_deps):
+regression_tests: $(top_builddir)/config.status $(srcdir)/regression_tests.in
+	cd $(top_builddir) && $(SHELL) ./config.status $(subdir)/$@
 
 clean-noinstPROGRAMS:
 	@list='$(noinst_PROGRAMS)'; test -n "$$list" || exit 0; \
@@ -623,7 +640,7 @@ distdir: $(DISTFILES)
 	done
 check-am: all-am
 check: check-am
-all-am: Makefile $(PROGRAMS) $(HEADERS)
+all-am: Makefile $(PROGRAMS) $(SCRIPTS) $(DATA) $(HEADERS) all-local
 installdirs:
 install: install-am
 install-exec: install-exec-am
@@ -657,7 +674,7 @@ maintainer-clean-generic:
 	@echo "it deletes files that may require special tools to rebuild."
 clean: clean-am
 
-clean-am: clean-generic clean-libtool clean-noinstPROGRAMS \
+clean-am: clean-generic clean-libtool clean-local clean-noinstPROGRAMS \
 	mostlyclean-am
 
 distclean: distclean-am
@@ -728,16 +745,16 @@ uninstall-am:
 
 .MAKE: install-am install-strip
 
-.PHONY: CTAGS GTAGS TAGS all all-am check check-am clean clean-generic \
-	clean-libtool clean-noinstPROGRAMS cscopelist-am ctags \
-	ctags-am distclean distclean-compile distclean-generic \
-	distclean-libtool distclean-tags distdir dvi dvi-am html \
-	html-am info info-am install install-am install-data \
-	install-data-am install-dvi install-dvi-am install-exec \
-	install-exec-am install-html install-html-am install-info \
-	install-info-am install-man install-pdf install-pdf-am \
-	install-ps install-ps-am install-strip installcheck \
-	installcheck-am installdirs maintainer-clean \
+.PHONY: CTAGS GTAGS TAGS all all-am all-local check check-am clean \
+	clean-generic clean-libtool clean-local clean-noinstPROGRAMS \
+	cscopelist-am ctags ctags-am distclean distclean-compile \
+	distclean-generic distclean-libtool distclean-tags distdir dvi \
+	dvi-am html html-am info info-am install install-am \
+	install-data install-data-am install-dvi install-dvi-am \
+	install-exec install-exec-am install-html install-html-am \
+	install-info install-info-am install-man install-pdf \
+	install-pdf-am install-ps install-ps-am install-strip \
+	installcheck installcheck-am installdirs maintainer-clean \
 	maintainer-clean-generic mostlyclean mostlyclean-compile \
 	mostlyclean-generic mostlyclean-libtool pdf pdf-am ps ps-am \
 	tags tags-am uninstall uninstall-am
@@ -745,18 +762,24 @@ uninstall-am:
 
 urcutorture.c: ../common/api.h
 
+all-local:
+	@if [ x"$(srcdir)" != x"$(builddir)" ]; then \
+		for script in $(SCRIPT_LIST); do \
+			cp -f $(srcdir)/$$script $(builddir); \
+		done; \
+	fi
+
+clean-local:
+	@if [ x"$(srcdir)" != x"$(builddir)" ]; then \
+		for script in $(SCRIPT_LIST); do \
+			rm -f $(builddir)/$$script; \
+		done; \
+	fi
+
 .PHONY: regtest
 
-# For now, run the benchmarks too as regression tests.
-# TODO: split benchmarks from regression tests
 regtest:
-	./test_urcu_fork
-	./rcutorture_urcu
-	./rcutorture_urcu_signal
-	./rcutorture_urcu_mb
-	./rcutorture_urcu_bp
-	./rcutorture_urcu_qsbr
-	cd ../benchmark && ./runall.sh && cd ..
+	./run.sh regression_tests
 
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.

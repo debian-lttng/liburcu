@@ -23,6 +23,7 @@
 
 #include <urcu/compiler.h>
 #include <urcu/config.h>
+#include <urcu/syscall-compat.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -61,7 +62,7 @@ extern "C" {
 /*
  * Architectures without cache coherency need something like the following:
  *
- * #define cmm_mc()	arch_cache_flush() 
+ * #define cmm_mc()	arch_cache_flush()
  * #define cmm_rmc()	arch_cache_flush_read()
  * #define cmm_wmc()	arch_cache_flush_write()
  *
@@ -148,6 +149,24 @@ extern "C" {
 #ifndef caa_cpu_relax
 #define caa_cpu_relax()		cmm_barrier()
 #endif
+
+#ifndef HAS_CAA_GET_CYCLES
+#define HAS_CAA_GET_CYCLES
+
+#include <time.h>
+#include <stdint.h>
+
+typedef uint64_t caa_cycles_t;
+
+static inline caa_cycles_t caa_get_cycles (void)
+{
+	struct timespec ts;
+
+	if (caa_unlikely(clock_gettime(CLOCK_MONOTONIC, &ts)))
+		return -1ULL;
+	return ((uint64_t) ts.tv_sec * 1000000000ULL) + ts.tv_nsec;
+}
+#endif /* HAS_CAA_GET_CYCLES */
 
 #ifdef __cplusplus
 }
