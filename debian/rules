@@ -7,7 +7,7 @@ ifeq ($(DEB_HOST_ARCH_CPU), sparc)
 endif
 
 %:
-	dh $@ --with autoreconf --with quilt
+	dh $@ --with autoreconf
 
 override_dh_auto_build:
 	dh_auto_build -- V=1
