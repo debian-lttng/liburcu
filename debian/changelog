@@ -1,3 +1,17 @@
+liburcu (0.9.1-1) unstable; urgency=medium
+
+  [ Jon Bernard ]
+  * [60bd23e] Imported Upstream version 0.9.1
+  * [1f23084] Drop quilt build dependency and --with quilt call
+    (Closes: #803495)
+  * [4200adb] Update liburcu4 symbols file
+
+  [ Michael Jeanson ]
+  * [bc65996] Drop and refresh patches for 0.9
+  * [9d9757c] Bump liburcu SONAME to 4
+
+ -- Jon Bernard <jbernard@debian.org>  Tue, 10 Nov 2015 03:06:39 +0000
+
 liburcu (0.8.8-1) unstable; urgency=medium
 
   [ Michael Jeanson ]
