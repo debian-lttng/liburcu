@@ -1,0 +1,116 @@
+From fca9fb961ecf6726769035fd41bc8a9a054aafb7 Mon Sep 17 00:00:00 2001
+From: Mathieu Desnoyers <mathieu.desnoyers@efficios.com>
+Date: Fri, 30 Oct 2015 17:11:55 -0400
+Subject: [PATCH] Fix: urcu-signal: smp_mb_master() needs registry lock
+
+The signal-based urcu flavor calls smp_mb_master() within the wait_gp()
+function. Since commit "Fix: deadlock when thread join is issued in
+read-side C.S.", wait_gp() is called without the registry lock held.
+
+Ensure that the registry lock is only released around the wait per se,
+not around the call to smp_mb_master(), otherwise we end up iterating on
+a non-consistent thread registry in smp_mb_master().
+
+Signed-off-by: Mathieu Desnoyers <mathieu.desnoyers@efficios.com>
+---
+ urcu.c | 48 +++++++++++++++++++++++++++++++++++-------------
+ 1 file changed, 35 insertions(+), 13 deletions(-)
+
+diff --git a/urcu.c b/urcu.c
+index a620b76..a5568bd 100644
+--- a/urcu.c
++++ b/urcu.c
+@@ -226,19 +226,27 @@ static void smp_mb_master(void)
+ 
+ /*
+  * synchronize_rcu() waiting. Single thread.
++ * Always called with rcu_registry lock held. Releases this lock and
++ * grabs it again. Holds the lock when it returns.
+  */
+ static void wait_gp(void)
+ {
+-	/* Read reader_gp before read futex */
++	/*
++	 * Read reader_gp before read futex. smp_mb_master() needs to
++	 * be called with the rcu registry lock held in RCU_SIGNAL
++	 * flavor.
++	 */
+ 	smp_mb_master();
++	/* Temporarily unlock the registry lock. */
++	mutex_unlock(&rcu_registry_lock);
+ 	if (uatomic_read(&rcu_gp.futex) != -1)
+-		return;
++		goto end;
+ 	while (futex_async(&rcu_gp.futex, FUTEX_WAIT, -1,
+ 			NULL, NULL, 0)) {
+ 		switch (errno) {
+ 		case EWOULDBLOCK:
+ 			/* Value already changed. */
+-			return;
++			goto end;
+ 		case EINTR:
+ 			/* Retry if interrupted by signal. */
+ 			break;	/* Get out of switch. */
+@@ -247,6 +255,11 @@ static void wait_gp(void)
+ 			urcu_die(errno);
+ 		}
+ 	}
++end:
++	/*
++	 * Re-lock the registry lock before the next loop.
++	 */
++	mutex_lock(&rcu_registry_lock);
+ }
+ 
+ /*
+@@ -309,14 +322,19 @@ static void wait_for_readers(struct cds_list_head *input_readers,
+ 			}
+ 			break;
+ 		} else {
+-			/* Temporarily unlock the registry lock. */
+-			mutex_unlock(&rcu_registry_lock);
+-			if (wait_loops >= RCU_QS_ACTIVE_ATTEMPTS)
++			if (wait_loops >= RCU_QS_ACTIVE_ATTEMPTS) {
++				/* wait_gp unlocks/locks registry lock. */
+ 				wait_gp();
+-			else
++			} else {
++				/* Temporarily unlock the registry lock. */
++				mutex_unlock(&rcu_registry_lock);
+ 				caa_cpu_relax();
+-			/* Re-lock the registry lock before the next loop. */
+-			mutex_lock(&rcu_registry_lock);
++				/*
++				 * Re-lock the registry lock before the
++				 * next loop.
++				 */
++				mutex_lock(&rcu_registry_lock);
++			}
+ 		}
+ #else /* #ifndef HAS_INCOHERENT_CACHES */
+ 		/*
+@@ -336,16 +354,20 @@ static void wait_for_readers(struct cds_list_head *input_readers,
+ 				smp_mb_master();
+ 				wait_gp_loops = 0;
+ 			}
+-			/* Temporarily unlock the registry lock. */
+-			mutex_unlock(&rcu_registry_lock);
+ 			if (wait_loops >= RCU_QS_ACTIVE_ATTEMPTS) {
++				/* wait_gp unlocks/locks registry lock. */
+ 				wait_gp();
+ 				wait_gp_loops++;
+ 			} else {
++				/* Temporarily unlock the registry lock. */
++				mutex_unlock(&rcu_registry_lock);
+ 				caa_cpu_relax();
++				/*
++				 * Re-lock the registry lock before the
++				 * next loop.
++				 */
++				mutex_lock(&rcu_registry_lock);
+ 			}
+-			/* Re-lock the registry lock before the next loop. */
+-			mutex_lock(&rcu_registry_lock);
+ 		}
+ #endif /* #else #ifndef HAS_INCOHERENT_CACHES */
+ 	}
