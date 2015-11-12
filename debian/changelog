@@ -1,3 +1,10 @@
+liburcu (0.9.1-2) unstable; urgency=medium
+
+  [ Michael Jeanson ]
+  * [bbdf92d] Fix regtest hang (Closes: #804726)
+
+ -- Jon Bernard <jbernard@debian.org>  Thu, 12 Nov 2015 02:53:27 +0000
+
 liburcu (0.9.1-1) unstable; urgency=medium
 
   [ Jon Bernard ]
