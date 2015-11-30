@@ -2,3 +2,4 @@ ignore-gcc-check.patch
 include-sh4-arch.patch
 regtest-without-bench.patch
 fca9fb961ecf6726769035fd41bc8a9a054aafb7.patch
+81593390d63393f14f2d41523797636bdad19ae5.patch
