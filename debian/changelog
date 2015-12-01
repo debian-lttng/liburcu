@@ -1,3 +1,11 @@
+liburcu (0.9.1-3) unstable; urgency=medium
+
+  [ Michael Jeanson ]
+  * [24dc2c0] Fix build on kfreebsd
+  * [12f50c6] Disable sys_futex on mips (Closes: #804726)
+
+ -- Jon Bernard <jbernard@debian.org>  Tue, 01 Dec 2015 19:49:35 +0000
+
 liburcu (0.9.1-2) unstable; urgency=medium
 
   [ Michael Jeanson ]
