@@ -1,6 +1,6 @@
 --- a/tests/benchmark/Makefile.am
 +++ b/tests/benchmark/Makefile.am
-@@ -225,13 +225,10 @@
+@@ -229,13 +229,10 @@
  		done; \
  	fi
  
