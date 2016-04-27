@@ -23,9 +23,6 @@
 /* Define to 1 if you have the `atexit' function. */
 #undef HAVE_ATEXIT
 
-/* Define to 1 if you have the `clock_gettime' function. */
-#undef HAVE_CLOCK_GETTIME
-
 /* Defined to 1 if we have CPU_SET and it works */
 #undef HAVE_CPU_SET
 

@@ -1,5 +1,5 @@
 AC_PREREQ(2.59)
-AC_INIT([userspace-rcu],[0.9.1],[mathieu dot desnoyers at efficios dot com], [], [http://liburcu.org/])
+AC_INIT([userspace-rcu],[0.9.2],[mathieu dot desnoyers at efficios dot com], [], [http://liburcu.org/])
 
 # Following the numbering scheme proposed by libtool for the library version
 # http://www.gnu.org/software/libtool/manual/html_node/Updating-version-info.html
@@ -79,7 +79,6 @@ AC_FUNC_MMAP
 AC_FUNC_FORK
 AC_CHECK_FUNCS([ \
 	atexit \
-	clock_gettime \
 	getcpuid \
 	gettid \
 	gettimeofday \
@@ -103,6 +102,7 @@ AC_CHECK_HEADERS([ \
 
 # Find arch type
 AS_CASE([$host_cpu],
+	[k1om], [ARCHTYPE="x86"],
 	[i386], [ARCHTYPE="x86" && SUBARCHTYPE="x86compat"],
 	[i486], [ARCHTYPE="x86"],
 	[i586], [ARCHTYPE="x86"],
@@ -189,7 +189,7 @@ AS_IF([test "x$ARCHTYPE" = "xx86"],[
 	#
 	#k1om is the name for the Intel MIC family (Xeon Phi). It is an x86_64
 	#variant but lacks fence instructions.
-	AS_IF([test "x$host_cpu" != "xi386" -a "x$host_cpu" != "xi486" -a "x$host_cpu" != "xi586" -a "x$host_cpu" != "xi686" -a "x$host_vendor" != "xk1om"],[
+	AS_IF([test "x$host_cpu" != "xi386" -a "x$host_cpu" != "xi486" -a "x$host_cpu" != "xi586" -a "x$host_cpu" != "xi686" -a "x$host_vendor" != "xk1om" -a "x$host_cpu" != "xk1om"],[
 		AC_MSG_RESULT([yes])
 		AC_DEFINE([CONFIG_RCU_HAVE_FENCE], [1])
 	],[
@@ -213,6 +213,11 @@ AC_COMPILE_IFELSE([AC_LANG_SOURCE([[
 	AC_MSG_RESULT([no])
 	compat_futex_test=1
 ])
+
+# Search for clock_gettime
+AC_SEARCH_LIBS([clock_gettime], [rt], [],
+	[AC_MSG_ERROR([Cannot find clock_gettime function.])]
+)
 
 # Check for pthread
 AC_CHECK_LIB([pthread], [pthread_create],

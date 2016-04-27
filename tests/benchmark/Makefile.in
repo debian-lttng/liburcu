@@ -637,7 +637,11 @@ SCRIPT_LIST = common.sh \
 	subphase4.sh
 
 dist_noinst_SCRIPTS = $(SCRIPT_LIST)
-dist_noinst_DATA = regression_tests short_bench_tests long_bench_tests
+TEST_LIST = regression_tests \
+	short_bench_tests \
+	long_bench_tests
+
+dist_noinst_DATA = $(TEST_LIST)
 URCU_COMMON_LIB = $(top_builddir)/liburcu-common.la
 URCU_LIB = $(top_builddir)/liburcu.la
 URCU_QSBR_LIB = $(top_builddir)/liburcu-qsbr.la
@@ -1621,14 +1625,14 @@ uninstall-am:
 
 all-local:
 	@if [ x"$(srcdir)" != x"$(builddir)" ]; then \
-		for script in $(SCRIPT_LIST); do \
+		for script in $(SCRIPT_LIST) $(TEST_LIST); do \
 			cp -f $(srcdir)/$$script $(builddir); \
 		done; \
 	fi
 
 clean-local:
 	@if [ x"$(srcdir)" != x"$(builddir)" ]; then \
-		for script in $(SCRIPT_LIST); do \
+		for script in $(SCRIPT_LIST) $(TEST_LIST); do \
 			rm -f $(builddir)/$$script; \
 		done; \
 	fi
