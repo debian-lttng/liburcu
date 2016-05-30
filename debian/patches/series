@@ -2,3 +2,4 @@ ignore-gcc-check.patch
 include-sh4-arch.patch
 regtest-without-bench.patch
 disable-sys-futex-on-mips-and-hppa.patch
+add-gnu-hurd-to-syscall-compat-h.patch
