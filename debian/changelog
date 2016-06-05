@@ -1,3 +1,11 @@
+liburcu (0.9.2-2) unstable; urgency=medium
+
+  [ Michael Jeanson ]
+  * [b8201d0] Fix build on the hurd
+  * [cd9476c] Fix watch file
+
+ -- Jon Bernard <jbernard@debian.org>  Sun, 05 Jun 2016 22:03:05 +0000
+
 liburcu (0.9.2-1) unstable; urgency=medium
 
   [ Michael Jeanson ]
