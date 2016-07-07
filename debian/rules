@@ -17,3 +17,6 @@ override_dh_makeshlibs:
 
 override_dh_auto_test:
 	dh_auto_test -- regtest
+
+override_dh_installdocs:
+	dh_installdocs -Xexamples/Makefile
