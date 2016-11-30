@@ -192,6 +192,7 @@ ECHO_T = @ECHO_T@
 EGREP = @EGREP@
 EXEEXT = @EXEEXT@
 FGREP = @FGREP@
+GETCONF = @GETCONF@
 GREP = @GREP@
 INSTALL = @INSTALL@
 INSTALL_DATA = @INSTALL_DATA@
@@ -213,6 +214,7 @@ MKDIR_P = @MKDIR_P@
 NM = @NM@
 NMEDIT = @NMEDIT@
 NPROC = @NPROC@
+NPROC_CMD = @NPROC_CMD@
 OBJDUMP = @OBJDUMP@
 OBJEXT = @OBJEXT@
 OTOOL = @OTOOL@
@@ -825,9 +827,12 @@ uninstall-am: uninstall-dist_doc_examplesDATA \
 @NO_SHARED_FALSE@all-local:
 @NO_SHARED_FALSE@	@if [ x"$(srcdir)" != x"$(builddir)" ]; then \
 @NO_SHARED_FALSE@		cp -pfR $(srcdir)/dist-files $(builddir); \
+@NO_SHARED_FALSE@		chmod -R u+w $(builddir)/dist-files; \
 @NO_SHARED_FALSE@		cp -pf $(srcdir)/Makefile.examples.template $(builddir); \
+@NO_SHARED_FALSE@		chmod u+w $(builddir)/Makefile.examples.template; \
 @NO_SHARED_FALSE@		for subdir in $(SUBDIRS_PROXY); do \
 @NO_SHARED_FALSE@			cp -pfR $(srcdir)/$$subdir $(builddir); \
+@NO_SHARED_FALSE@			chmod -R u+w $(builddir)/$$subdir; \
 @NO_SHARED_FALSE@		done; \
 @NO_SHARED_FALSE@	fi; \
 @NO_SHARED_FALSE@	if [ x"$(shell echo "$(top_srcdir)" | $(GREP) "^/" | wc -l)" = x"1" ]; then \
