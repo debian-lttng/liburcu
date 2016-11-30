@@ -27,10 +27,14 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-#if defined(__ANDROID__) || defined(__sun__)
+#if defined(__ANDROID__) || defined(__sun__) || defined(__GNU__)
 #include <sys/syscall.h>
 #elif defined(__linux__) || defined(__GLIBC__)
 #include <syscall.h>
+
+#elif defined(__CYGWIN__) || defined(__APPLE__)
+/* Don't include anything on Cygwin or MacOSX. */
+
 #else
 #error "Add platform support to urcu/syscall-compat.h"
 #endif

@@ -230,6 +230,7 @@ ECHO_T = @ECHO_T@
 EGREP = @EGREP@
 EXEEXT = @EXEEXT@
 FGREP = @FGREP@
+GETCONF = @GETCONF@
 GREP = @GREP@
 INSTALL = @INSTALL@
 INSTALL_DATA = @INSTALL_DATA@
@@ -251,6 +252,7 @@ MKDIR_P = @MKDIR_P@
 NM = @NM@
 NMEDIT = @NMEDIT@
 NPROC = @NPROC@
+NPROC_CMD = @NPROC_CMD@
 OBJDUMP = @OBJDUMP@
 OBJEXT = @OBJEXT@
 OTOOL = @OTOOL@
@@ -332,7 +334,11 @@ top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 SUBDIRS = examples
-dist_doc_DATA = rcu-api.md cds-api.md uatomic-api.md
+dist_doc_DATA = rcu-api.md \
+		cds-api.md \
+		solaris-build.md \
+		uatomic-api.md
+
 all: all-recursive
 
 .SUFFIXES:

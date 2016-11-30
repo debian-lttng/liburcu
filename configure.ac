@@ -1,9 +1,9 @@
 AC_PREREQ(2.59)
-AC_INIT([userspace-rcu],[0.9.2],[mathieu dot desnoyers at efficios dot com], [], [http://liburcu.org/])
+AC_INIT([userspace-rcu],[0.9.3],[mathieu dot desnoyers at efficios dot com], [], [http://liburcu.org/])
 
 # Following the numbering scheme proposed by libtool for the library version
 # http://www.gnu.org/software/libtool/manual/html_node/Updating-version-info.html
-AC_SUBST([URCU_LIBRARY_VERSION], [4:0:0])
+AC_SUBST([URCU_LIBRARY_VERSION], [5:0:1])
 
 AC_CONFIG_SRCDIR([urcu.h])
 AC_CONFIG_HEADERS([config.h urcu/config.h])
@@ -25,6 +25,7 @@ AH_TEMPLATE([CONFIG_RCU_HAVE_FUTEX], [Defined when on a system with futex suppor
 AH_TEMPLATE([CONFIG_RCU_COMPAT_ARCH], [Compatibility mode for i386 which lacks cmpxchg instruction.])
 AH_TEMPLATE([CONFIG_RCU_ARM_HAVE_DMB], [Use the dmb instruction if available for use on ARM.])
 AH_TEMPLATE([CONFIG_RCU_TLS], [TLS provided by the compiler.])
+AH_TEMPLATE([CONFIG_RCU_HAVE_CLOCK_GETTIME], [clock_gettime() is detected.])
 
 # Allow overriding storage used for TLS variables.
 AC_ARG_ENABLE([compiler-tls],
@@ -50,6 +51,16 @@ AC_PROG_CC_STDC
 AC_PROG_AWK
 AC_PROG_MAKE_SET
 AC_CHECK_PROGS(NPROC, [nproc gnproc])
+AC_CHECK_PROGS(GETCONF, [getconf])
+AS_IF([test "x$NPROC" != "x"],
+	[NPROC_CMD=$NPROC],
+	[AS_IF([test "x$GETCONF" != "x"],
+		[NPROC_CMD="$GETCONF _NPROCESSORS_ONLN"],
+		[NPROC_CMD="echo 1"]
+	)]
+)
+AC_SUBST([NPROC_CMD], [$NPROC_CMD])
+
 LT_INIT
 
 # Checks for typedefs, structures, and compiler characteristics.
@@ -74,7 +85,6 @@ CFLAGS="$CFLAGS $PTHREAD_CFLAGS"
 CC="$PTHREAD_CC"
 
 # Checks for library functions.
-AC_FUNC_MALLOC
 AC_FUNC_MMAP
 AC_FUNC_FORK
 AC_CHECK_FUNCS([ \
@@ -90,6 +100,9 @@ AC_CHECK_FUNCS([ \
 	strtoul \
 	sysconf \
 ])
+
+# AC_FUNC_MALLOC causes problems when cross-compiling.
+#AC_FUNC_MALLOC
 
 # Check for headers
 AC_HEADER_STDBOOL
@@ -121,7 +134,7 @@ AS_CASE([$host_cpu],
 	[alpha*], [ARCHTYPE="alpha"],
 	[ia64], [ARCHTYPE="ia64"],
 	[arm*], [ARCHTYPE="arm"],
-	[aarch64], [ARCHTYPE="aarch64"],
+	[aarch64*], [ARCHTYPE="aarch64"],
 	[mips*], [ARCHTYPE="mips"],
 	[tile*], [ARCHTYPE="tile"],
 	[hppa*], [ARCHTYPE="hppa"],
@@ -131,6 +144,11 @@ AS_CASE([$host_cpu],
 AS_CASE([$host],[*-*-linux-androideabi],
 	[AM_CONDITIONAL(TARGET_IS_ANDROID, true)],
 	[AM_CONDITIONAL(TARGET_IS_ANDROID, false)]
+)
+
+AS_CASE([$host],[*-cygwin*],
+	[AM_CONDITIONAL(USE_CYGWIN, true)],
+	[AM_CONDITIONAL(USE_CYGWIN, false)]
 )
 
 AC_SUBST(ARCHTYPE)
@@ -215,9 +233,9 @@ AC_COMPILE_IFELSE([AC_LANG_SOURCE([[
 ])
 
 # Search for clock_gettime
-AC_SEARCH_LIBS([clock_gettime], [rt], [],
-	[AC_MSG_ERROR([Cannot find clock_gettime function.])]
-)
+AC_SEARCH_LIBS([clock_gettime], [rt], [
+	AC_DEFINE([CONFIG_RCU_HAVE_CLOCK_GETTIME], [1])
+], [])
 
 # Check for pthread
 AC_CHECK_LIB([pthread], [pthread_create],
