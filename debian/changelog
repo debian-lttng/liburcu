@@ -1,3 +1,11 @@
+liburcu (0.9.3-1) unstable; urgency=medium
+
+  * [d4444ca] New upstream version 0.9.3
+  * [8b7b1b7] Refreshed patches for 0.9.3
+  * [ed871ba] Update symbols for 0.9.3
+
+ -- Michael Jeanson <mjeanson@ubuntu.com>  Wed, 30 Nov 2016 16:46:54 -0500
+
 liburcu (0.9.2-3) unstable; urgency=medium
 
   * [8ea4379] Make build reproducible
