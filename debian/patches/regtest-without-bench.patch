@@ -1,3 +1,5 @@
+Remove the benchmarks from the regtest target, they timeout on the buildds.
+
 --- a/tests/benchmark/Makefile.am
 +++ b/tests/benchmark/Makefile.am
 @@ -229,13 +229,10 @@
