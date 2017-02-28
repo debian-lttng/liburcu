@@ -1,6 +1,7 @@
 #!/usr/bin/make -f
 
 DEB_HOST_ARCH_CPU := $(shell dpkg-architecture -qDEB_HOST_ARCH_CPU)
+DEB_HOST_MULTIARCH := $(shell dpkg-architecture -qDEB_HOST_MULTIARCH)
 
 ifeq ($(DEB_HOST_ARCH_CPU), sparc)
 	DEB_CFLAGS_MAINT_APPEND += -Wa,-Av9a
@@ -8,6 +9,10 @@ endif
 
 %:
 	dh $@ --with autoreconf
+
+override_dh_auto_configure:
+	dh_auto_configure -- \
+		--includedir=/usr/include/$(DEB_HOST_MULTIARCH)
 
 override_dh_auto_build:
 	dh_auto_build -- V=1

@@ -12,6 +12,7 @@ Homepage: http://liburcu.org/
 Package: liburcu-dev
 Section: libdevel
 Architecture: any
+Multi-Arch: same
 Depends: ${misc:Depends}, liburcu4 (= ${binary:Version})
 Description: userspace RCU (read-copy-update) library - development files
  This data synchronization library provides read-side access which scales
