@@ -7,12 +7,18 @@ ifeq ($(DEB_HOST_ARCH_CPU), sparc)
 	DEB_CFLAGS_MAINT_APPEND += -Wa,-Av9a
 endif
 
+ifeq ($(DEB_HOST_ARCH_CPU), m68k)
+	# GCC on m68k generates invalid asm when TLS is enabled
+	ADD_CONFIG_FLAGS = --disable-compiler-tls
+endif
+
 %:
 	dh $@ --with autoreconf
 
 override_dh_auto_configure:
 	dh_auto_configure -- \
-		--includedir=/usr/include/$(DEB_HOST_MULTIARCH)
+		--includedir=/usr/include/$(DEB_HOST_MULTIARCH) \
+		$(ADD_CONFIG_FLAGS)
 
 override_dh_auto_build:
 	dh_auto_build -- V=1
