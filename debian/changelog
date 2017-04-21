@@ -1,3 +1,9 @@
+liburcu (0.9.3-4) experimental; urgency=medium
+
+  * [10d6807] Enable m68k architecture using gcc atomic (Closes: #860154)
+
+ -- Michael Jeanson <mjeanson@ubuntu.com>  Fri, 21 Apr 2017 17:11:12 -0400
+
 liburcu (0.9.3-3) unstable; urgency=medium
 
   * Re-upload to unstable
