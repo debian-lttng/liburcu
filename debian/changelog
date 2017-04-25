@@ -1,3 +1,9 @@
+liburcu (0.9.3-5) experimental; urgency=medium
+
+  * [6056906] Update symbols for m68k arch
+
+ -- Michael Jeanson <mjeanson@ubuntu.com>  Tue, 25 Apr 2017 15:08:40 -0400
+
 liburcu (0.9.3-4) experimental; urgency=medium
 
   * [10d6807] Enable m68k architecture using gcc atomic (Closes: #860154)
