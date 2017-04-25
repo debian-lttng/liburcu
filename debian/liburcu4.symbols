@@ -1,4 +1,5 @@
 liburcu-bp.so.4 liburcu4 #MINVER#
+ (arch=m68k)__tls_access_rcu_reader_bp@Base 0.9.3
  __urcu_compat_futex_cond@Base 0.9.1
  __urcu_compat_futex_lock@Base 0.9.1
  call_rcu_after_fork_child_bp@Base 0.8.4
@@ -37,7 +38,7 @@ liburcu-bp.so.4 liburcu4 #MINVER#
  rcu_read_lock_bp@Base 0.8.4
  rcu_read_ongoing_bp@Base 0.8.4
  rcu_read_unlock_bp@Base 0.8.4
- rcu_reader_bp@Base 0.8.4
+ (arch=!m68k)rcu_reader_bp@Base 0.8.4
  rcu_set_pointer_sym@Base 0.8.4
  rcu_set_pointer_sym_bp@Base 0.8.4
  rcu_xchg_pointer_sym@Base 0.8.4
@@ -144,6 +145,7 @@ liburcu-common.so.4 liburcu4 #MINVER#
  compat_futex_async@Base 0.9.1
  compat_futex_noasync@Base 0.9.1
 liburcu-mb.so.4 liburcu4 #MINVER#
+ (arch=m68k)__tls_access_rcu_reader_mb@Base 0.9.3
  __urcu_compat_futex_cond@Base 0.9.1
  __urcu_compat_futex_lock@Base 0.9.1
  call_rcu_after_fork_child_mb@Base 0.8.4
@@ -176,7 +178,7 @@ liburcu-mb.so.4 liburcu4 #MINVER#
  rcu_read_lock_mb@Base 0.8.4
  rcu_read_ongoing_mb@Base 0.8.4
  rcu_read_unlock_mb@Base 0.8.4
- rcu_reader_mb@Base 0.8.4
+ (arch=!m68k)rcu_reader_mb@Base 0.8.4
  rcu_register_thread_mb@Base 0.8.4
  rcu_set_pointer_sym@Base 0.8.4
  rcu_unregister_thread_mb@Base 0.8.4
@@ -185,6 +187,7 @@ liburcu-mb.so.4 liburcu4 #MINVER#
  set_thread_call_rcu_data_mb@Base 0.8.4
  synchronize_rcu_mb@Base 0.8.4
 liburcu-qsbr.so.4 liburcu4 #MINVER#
+ (arch=m68k)__tls_access_rcu_reader_qsbr@Base 0.9.3
  __urcu_compat_futex_cond@Base 0.9.1
  __urcu_compat_futex_lock@Base 0.9.1
  call_rcu_after_fork_child_qsbr@Base 0.8.4
@@ -218,7 +221,7 @@ liburcu-qsbr.so.4 liburcu4 #MINVER#
  rcu_read_lock_qsbr@Base 0.8.4
  rcu_read_ongoing_qsbr@Base 0.8.4
  rcu_read_unlock_qsbr@Base 0.8.4
- rcu_reader_qsbr@Base 0.8.4
+ (arch=!m68k)rcu_reader_qsbr@Base 0.8.4
  rcu_register_thread_qsbr@Base 0.8.4
  rcu_set_pointer_sym@Base 0.8.4
  rcu_thread_offline_qsbr@Base 0.8.4
@@ -229,6 +232,7 @@ liburcu-qsbr.so.4 liburcu4 #MINVER#
  set_thread_call_rcu_data_qsbr@Base 0.8.4
  synchronize_rcu_qsbr@Base 0.8.4
 liburcu-signal.so.4 liburcu4 #MINVER#
+ (arch=m68k)__tls_access_rcu_reader_sig@Base 0.9.3
  __urcu_compat_futex_cond@Base 0.9.1
  __urcu_compat_futex_lock@Base 0.9.1
  call_rcu_after_fork_child_sig@Base 0.8.4
@@ -262,7 +266,7 @@ liburcu-signal.so.4 liburcu4 #MINVER#
  rcu_read_lock_sig@Base 0.8.4
  rcu_read_ongoing_sig@Base 0.8.4
  rcu_read_unlock_sig@Base 0.8.4
- rcu_reader_sig@Base 0.8.4
+ (arch=!m68k)rcu_reader_sig@Base 0.8.4
  rcu_register_thread_sig@Base 0.8.4
  rcu_set_pointer_sym@Base 0.8.4
  rcu_unregister_thread_sig@Base 0.8.4
@@ -271,6 +275,7 @@ liburcu-signal.so.4 liburcu4 #MINVER#
  set_thread_call_rcu_data_sig@Base 0.8.4
  synchronize_rcu_sig@Base 0.8.4
 liburcu.so.4 liburcu4 #MINVER#
+ (arch=m68k)__tls_access_rcu_reader_memb@Base 0.9.3
  __urcu_compat_futex_cond@Base 0.9.1
  __urcu_compat_futex_lock@Base 0.9.1
  call_rcu_after_fork_child_memb@Base 0.8.4
@@ -304,7 +309,7 @@ liburcu.so.4 liburcu4 #MINVER#
  rcu_read_lock_memb@Base 0.8.4
  rcu_read_ongoing_memb@Base 0.8.4
  rcu_read_unlock_memb@Base 0.8.4
- rcu_reader_memb@Base 0.8.4
+ (arch=!m68k)rcu_reader_memb@Base 0.8.4
  rcu_register_thread_memb@Base 0.8.4
  rcu_set_pointer_sym@Base 0.8.4
  rcu_unregister_thread_memb@Base 0.8.4
