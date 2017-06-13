@@ -14,8 +14,6 @@
 
 @SET_MAKE@
 
-
-
 VPATH = @srcdir@
 am__is_gnu_make = test -n '$(MAKEFILE_LIST)' && test -n '$(MAKELEVEL)'
 am__make_running_with_option = \
@@ -81,18 +79,11 @@ POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
 target_triplet = @target@
-@LIBC_INCLUDES_PTHREAD_FALSE@am__append_1 = -lpthread
-@USE_CYGWIN_TRUE@am__append_2 = -no-undefined
 subdir = .
 DIST_COMMON = $(srcdir)/Makefile.in $(srcdir)/Makefile.am \
 	$(top_srcdir)/configure $(am__configure_deps) \
-	$(srcdir)/config.h.in $(top_srcdir)/urcu/config.h.in \
-	$(srcdir)/liburcu.pc.in $(srcdir)/liburcu-bp.pc.in \
-	$(srcdir)/liburcu-cds.pc.in $(srcdir)/liburcu-qsbr.pc.in \
-	$(srcdir)/liburcu-mb.pc.in $(srcdir)/liburcu-signal.pc.in \
-	$(top_srcdir)/config/depcomp $(dist_doc_DATA) \
-	$(dist_noinst_DATA) $(dist_noinst_HEADERS) $(include_HEADERS) \
-	$(nobase_dist_include_HEADERS) ChangeLog config/compile \
+	$(top_srcdir)/include/urcu/config.h.in $(dist_doc_DATA) \
+	$(dist_noinst_DATA) ChangeLog config/compile \
 	config/config.guess config/config.sub config/depcomp \
 	config/install-sh config/missing config/ltmain.sh \
 	$(top_srcdir)/config/compile $(top_srcdir)/config/config.guess \
@@ -104,17 +95,44 @@ am__aclocal_m4_deps = $(top_srcdir)/m4/ax_c___attribute__.m4 \
 	$(top_srcdir)/m4/ax_pthread.m4 $(top_srcdir)/m4/ax_tls.m4 \
 	$(top_srcdir)/m4/libtool.m4 $(top_srcdir)/m4/ltoptions.m4 \
 	$(top_srcdir)/m4/ltsugar.m4 $(top_srcdir)/m4/ltversion.m4 \
-	$(top_srcdir)/m4/lt~obsolete.m4 $(top_srcdir)/configure.ac
+	$(top_srcdir)/m4/lt~obsolete.m4 $(top_srcdir)/m4/pprint.m4 \
+	$(top_srcdir)/configure.ac
 am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
 	$(ACLOCAL_M4)
 am__CONFIG_DISTCLEAN_FILES = config.status config.cache config.log \
  configure.lineno config.status.lineno
 mkinstalldirs = $(install_sh) -d
-CONFIG_HEADER = config.h $(top_builddir)/urcu/config.h
-CONFIG_CLEAN_FILES = liburcu.pc liburcu-bp.pc liburcu-cds.pc \
-	liburcu-qsbr.pc liburcu-mb.pc liburcu-signal.pc urcu/arch.h \
-	urcu/uatomic.h
+CONFIG_HEADER = $(top_builddir)/include/config.h \
+	$(top_builddir)/include/urcu/config.h
+CONFIG_CLEAN_FILES = include/urcu/arch.h include/urcu/uatomic.h
 CONFIG_CLEAN_VPATH_FILES =
+AM_V_P = $(am__v_P_@AM_V@)
+am__v_P_ = $(am__v_P_@AM_DEFAULT_V@)
+am__v_P_0 = false
+am__v_P_1 = :
+AM_V_GEN = $(am__v_GEN_@AM_V@)
+am__v_GEN_ = $(am__v_GEN_@AM_DEFAULT_V@)
+am__v_GEN_0 = @echo "  GEN     " $@;
+am__v_GEN_1 = 
+AM_V_at = $(am__v_at_@AM_V@)
+am__v_at_ = $(am__v_at_@AM_DEFAULT_V@)
+am__v_at_0 = @
+am__v_at_1 = 
+SOURCES =
+DIST_SOURCES =
+RECURSIVE_TARGETS = all-recursive check-recursive cscopelist-recursive \
+	ctags-recursive dvi-recursive html-recursive info-recursive \
+	install-data-recursive install-dvi-recursive \
+	install-exec-recursive install-html-recursive \
+	install-info-recursive install-pdf-recursive \
+	install-ps-recursive install-recursive installcheck-recursive \
+	installdirs-recursive pdf-recursive ps-recursive \
+	tags-recursive uninstall-recursive
+am__can_run_installinfo = \
+  case $$AM_UPDATE_INFO_DIR in \
+    n|no|NO) false;; \
+    *) (install-info --version) >/dev/null 2>&1;; \
+  esac
 am__vpath_adj_setup = srcdirstrip=`echo "$(srcdir)" | sed 's|.|.|g'`;
 am__vpath_adj = case $$p in \
     $(srcdir)/*) f=`echo "$$p" | sed "s|^$$srcdirstrip/||"`;; \
@@ -142,137 +160,8 @@ am__uninstall_files_from_dir = { \
     || { echo " ( cd '$$dir' && rm -f" $$files ")"; \
          $(am__cd) "$$dir" && rm -f $$files; }; \
   }
-am__installdirs = "$(DESTDIR)$(libdir)" "$(DESTDIR)$(docdir)" \
-	"$(DESTDIR)$(pkgconfigdir)" "$(DESTDIR)$(includedir)" \
-	"$(DESTDIR)$(includedir)" "$(DESTDIR)$(includedir)"
-LTLIBRARIES = $(lib_LTLIBRARIES)
-liburcu_bp_la_DEPENDENCIES = liburcu-common.la
-am__liburcu_bp_la_SOURCES_DIST = urcu-bp.c urcu-pointer.c \
-	compat_futex.c compat_arch_@ARCHTYPE@.c
-@COMPAT_ARCH_FALSE@am__objects_1 = compat_futex.lo
-@COMPAT_ARCH_TRUE@am__objects_1 = compat_arch_@ARCHTYPE@.lo \
-@COMPAT_ARCH_TRUE@	compat_futex.lo
-am_liburcu_bp_la_OBJECTS = urcu-bp.lo urcu-pointer.lo $(am__objects_1)
-liburcu_bp_la_OBJECTS = $(am_liburcu_bp_la_OBJECTS)
-AM_V_lt = $(am__v_lt_@AM_V@)
-am__v_lt_ = $(am__v_lt_@AM_DEFAULT_V@)
-am__v_lt_0 = --silent
-am__v_lt_1 = 
-liburcu_cds_la_DEPENDENCIES = liburcu-common.la
-am__liburcu_cds_la_SOURCES_DIST = rculfqueue.c rculfstack.c lfstack.c \
-	rculfhash.c rculfhash-mm-order.c rculfhash-mm-chunk.c \
-	rculfhash-mm-mmap.c compat_futex.c compat_arch_@ARCHTYPE@.c
-am__objects_2 = rculfhash.lo rculfhash-mm-order.lo \
-	rculfhash-mm-chunk.lo rculfhash-mm-mmap.lo
-am_liburcu_cds_la_OBJECTS = rculfqueue.lo rculfstack.lo lfstack.lo \
-	$(am__objects_2) $(am__objects_1)
-liburcu_cds_la_OBJECTS = $(am_liburcu_cds_la_OBJECTS)
-liburcu_common_la_LIBADD =
-am__liburcu_common_la_SOURCES_DIST = wfqueue.c wfcqueue.c wfstack.c \
-	compat_futex.c compat_arch_@ARCHTYPE@.c
-am_liburcu_common_la_OBJECTS = wfqueue.lo wfcqueue.lo wfstack.lo \
-	$(am__objects_1)
-liburcu_common_la_OBJECTS = $(am_liburcu_common_la_OBJECTS)
-liburcu_mb_la_DEPENDENCIES = liburcu-common.la
-am__liburcu_mb_la_SOURCES_DIST = urcu.c urcu-pointer.c compat_futex.c \
-	compat_arch_@ARCHTYPE@.c
-@COMPAT_ARCH_FALSE@am__objects_3 = liburcu_mb_la-compat_futex.lo
-@COMPAT_ARCH_TRUE@am__objects_3 =  \
-@COMPAT_ARCH_TRUE@	liburcu_mb_la-compat_arch_@ARCHTYPE@.lo \
-@COMPAT_ARCH_TRUE@	liburcu_mb_la-compat_futex.lo
-am_liburcu_mb_la_OBJECTS = liburcu_mb_la-urcu.lo \
-	liburcu_mb_la-urcu-pointer.lo $(am__objects_3)
-liburcu_mb_la_OBJECTS = $(am_liburcu_mb_la_OBJECTS)
-liburcu_mb_la_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
-	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(liburcu_mb_la_CFLAGS) \
-	$(CFLAGS) $(AM_LDFLAGS) $(LDFLAGS) -o $@
-liburcu_qsbr_la_DEPENDENCIES = liburcu-common.la
-am__liburcu_qsbr_la_SOURCES_DIST = urcu-qsbr.c urcu-pointer.c \
-	compat_futex.c compat_arch_@ARCHTYPE@.c
-am_liburcu_qsbr_la_OBJECTS = urcu-qsbr.lo urcu-pointer.lo \
-	$(am__objects_1)
-liburcu_qsbr_la_OBJECTS = $(am_liburcu_qsbr_la_OBJECTS)
-liburcu_signal_la_DEPENDENCIES = liburcu-common.la
-am__liburcu_signal_la_SOURCES_DIST = urcu.c urcu-pointer.c \
-	compat_futex.c compat_arch_@ARCHTYPE@.c
-@COMPAT_ARCH_FALSE@am__objects_4 = liburcu_signal_la-compat_futex.lo
-@COMPAT_ARCH_TRUE@am__objects_4 =  \
-@COMPAT_ARCH_TRUE@	liburcu_signal_la-compat_arch_@ARCHTYPE@.lo \
-@COMPAT_ARCH_TRUE@	liburcu_signal_la-compat_futex.lo
-am_liburcu_signal_la_OBJECTS = liburcu_signal_la-urcu.lo \
-	liburcu_signal_la-urcu-pointer.lo $(am__objects_4)
-liburcu_signal_la_OBJECTS = $(am_liburcu_signal_la_OBJECTS)
-liburcu_signal_la_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC \
-	$(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=link $(CCLD) \
-	$(liburcu_signal_la_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) $(LDFLAGS) \
-	-o $@
-liburcu_la_DEPENDENCIES = liburcu-common.la
-am__liburcu_la_SOURCES_DIST = urcu.c urcu-pointer.c compat_futex.c \
-	compat_arch_@ARCHTYPE@.c
-am_liburcu_la_OBJECTS = urcu.lo urcu-pointer.lo $(am__objects_1)
-liburcu_la_OBJECTS = $(am_liburcu_la_OBJECTS)
-AM_V_P = $(am__v_P_@AM_V@)
-am__v_P_ = $(am__v_P_@AM_DEFAULT_V@)
-am__v_P_0 = false
-am__v_P_1 = :
-AM_V_GEN = $(am__v_GEN_@AM_V@)
-am__v_GEN_ = $(am__v_GEN_@AM_DEFAULT_V@)
-am__v_GEN_0 = @echo "  GEN     " $@;
-am__v_GEN_1 = 
-AM_V_at = $(am__v_at_@AM_V@)
-am__v_at_ = $(am__v_at_@AM_DEFAULT_V@)
-am__v_at_0 = @
-am__v_at_1 = 
-DEFAULT_INCLUDES = -I.@am__isrc@ -I$(top_builddir)/urcu
-depcomp = $(SHELL) $(top_srcdir)/config/depcomp
-am__depfiles_maybe = depfiles
-am__mv = mv -f
-COMPILE = $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) \
-	$(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)
-LTCOMPILE = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
-	$(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) \
-	$(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) \
-	$(AM_CFLAGS) $(CFLAGS)
-AM_V_CC = $(am__v_CC_@AM_V@)
-am__v_CC_ = $(am__v_CC_@AM_DEFAULT_V@)
-am__v_CC_0 = @echo "  CC      " $@;
-am__v_CC_1 = 
-CCLD = $(CC)
-LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
-	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
-	$(AM_LDFLAGS) $(LDFLAGS) -o $@
-AM_V_CCLD = $(am__v_CCLD_@AM_V@)
-am__v_CCLD_ = $(am__v_CCLD_@AM_DEFAULT_V@)
-am__v_CCLD_0 = @echo "  CCLD    " $@;
-am__v_CCLD_1 = 
-SOURCES = $(liburcu_bp_la_SOURCES) $(liburcu_cds_la_SOURCES) \
-	$(liburcu_common_la_SOURCES) $(liburcu_mb_la_SOURCES) \
-	$(liburcu_qsbr_la_SOURCES) $(liburcu_signal_la_SOURCES) \
-	$(liburcu_la_SOURCES)
-DIST_SOURCES = $(am__liburcu_bp_la_SOURCES_DIST) \
-	$(am__liburcu_cds_la_SOURCES_DIST) \
-	$(am__liburcu_common_la_SOURCES_DIST) \
-	$(am__liburcu_mb_la_SOURCES_DIST) \
-	$(am__liburcu_qsbr_la_SOURCES_DIST) \
-	$(am__liburcu_signal_la_SOURCES_DIST) \
-	$(am__liburcu_la_SOURCES_DIST)
-RECURSIVE_TARGETS = all-recursive check-recursive cscopelist-recursive \
-	ctags-recursive dvi-recursive html-recursive info-recursive \
-	install-data-recursive install-dvi-recursive \
-	install-exec-recursive install-html-recursive \
-	install-info-recursive install-pdf-recursive \
-	install-ps-recursive install-recursive installcheck-recursive \
-	installdirs-recursive pdf-recursive ps-recursive \
-	tags-recursive uninstall-recursive
-am__can_run_installinfo = \
-  case $$AM_UPDATE_INFO_DIR in \
-    n|no|NO) false;; \
-    *) (install-info --version) >/dev/null 2>&1;; \
-  esac
-DATA = $(dist_doc_DATA) $(dist_noinst_DATA) $(pkgconfig_DATA)
-HEADERS = $(dist_noinst_HEADERS) $(include_HEADERS) \
-	$(nobase_dist_include_HEADERS) \
-	$(nobase_nodist_include_HEADERS)
+am__installdirs = "$(DESTDIR)$(docdir)"
+DATA = $(dist_doc_DATA) $(dist_noinst_DATA)
 RECURSIVE_CLEAN_TARGETS = mostlyclean-recursive clean-recursive	\
   distclean-recursive maintainer-clean-recursive
 am__recursive_targets = \
@@ -281,8 +170,7 @@ am__recursive_targets = \
   $(am__extra_recursive_targets)
 AM_RECURSIVE_TARGETS = $(am__recursive_targets:-recursive=) TAGS CTAGS \
 	cscope distdir dist dist-all distcheck
-am__tagged_files = $(HEADERS) $(SOURCES) $(TAGS_FILES) \
-	$(LISP)config.h.in
+am__tagged_files = $(HEADERS) $(SOURCES) $(TAGS_FILES) $(LISP)
 # Read a list of newline-separated strings from the standard input,
 # and print each of them once, without duplicates.  Input order is
 # *not* preserved.
@@ -347,6 +235,8 @@ am__distuninstallcheck_listfiles = $(distuninstallcheck_listfiles) \
 distcleancheck_listfiles = find . -type f -print
 ACLOCAL = @ACLOCAL@
 AMTAR = @AMTAR@
+AM_CFLAGS = @AM_CFLAGS@
+AM_CPPFLAGS = @AM_CPPFLAGS@
 AM_DEFAULT_VERBOSITY = @AM_DEFAULT_VERBOSITY@
 AR = @AR@
 ARCHTYPE = @ARCHTYPE@
@@ -459,6 +349,7 @@ mandir = @mandir@
 mkdir_p = @mkdir_p@
 oldincludedir = @oldincludedir@
 pdfdir = @pdfdir@
+pprint_tput = @pprint_tput@
 prefix = @prefix@
 program_transform_name = @program_transform_name@
 psdir = @psdir@
@@ -475,80 +366,18 @@ top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 ACLOCAL_AMFLAGS = -I m4
-AM_CPPFLAGS = -I$(top_builddir)/urcu
+SUBDIRS = include src doc tests
+dist_doc_DATA = LICENSE \
+		README.md
 
-#Add the -version-info directly here since we are only building
-# library that use the version-info
-AM_LDFLAGS = -version-info $(URCU_LIBRARY_VERSION) $(am__append_1) \
-	$(am__append_2)
-AM_CFLAGS = -Wall
-SUBDIRS = . doc tests
-include_HEADERS = urcu.h urcu-bp.h urcu-call-rcu.h urcu-defer.h \
-		urcu-pointer.h urcu-qsbr.h urcu-flavor.h
-
-nobase_dist_include_HEADERS = urcu/compiler.h urcu/hlist.h urcu/list.h \
-		urcu/rculist.h urcu/rcuhlist.h urcu/system.h urcu/futex.h \
-		urcu/uatomic/generic.h urcu/arch/generic.h urcu/wfstack.h \
-		urcu/wfqueue.h urcu/rculfstack.h urcu/rculfqueue.h \
-		urcu/ref.h urcu/cds.h urcu/urcu_ref.h urcu/urcu-futex.h \
-		urcu/uatomic_arch.h urcu/rculfhash.h urcu/wfcqueue.h \
-		urcu/lfstack.h urcu/syscall-compat.h \
-		$(top_srcdir)/urcu/map/*.h \
-		$(top_srcdir)/urcu/static/*.h \
-		urcu/rand-compat.h \
-		urcu/tls-compat.h urcu/debug.h
-
-nobase_nodist_include_HEADERS = urcu/arch.h urcu/uatomic.h urcu/config.h
-dist_noinst_HEADERS = urcu-die.h urcu-wait.h compat-getcpu.h
-EXTRA_DIST = $(top_srcdir)/urcu/arch/*.h $(top_srcdir)/urcu/uatomic/*.h \
-		gpl-2.0.txt lgpl-2.1.txt lgpl-relicensing.txt \
-		LICENSE compat_arch_x86.c \
-		urcu-call-rcu-impl.h urcu-defer-impl.h \
-		rculfhash-internal.h
-
-@COMPAT_ARCH_FALSE@COMPAT = compat_futex.c
-@COMPAT_ARCH_TRUE@COMPAT = compat_arch_@ARCHTYPE@.c compat_futex.c
-RCULFHASH = rculfhash.c rculfhash-mm-order.c rculfhash-mm-chunk.c \
-		rculfhash-mm-mmap.c
-
-lib_LTLIBRARIES = liburcu-common.la \
-		liburcu.la liburcu-qsbr.la \
-		liburcu-mb.la liburcu-signal.la liburcu-bp.la \
-		liburcu-cds.la
-
-
-#
-# liburcu-common contains wait-free queues (needed by call_rcu) as well
-# as futex fallbacks.
-#
-liburcu_common_la_SOURCES = wfqueue.c wfcqueue.c wfstack.c $(COMPAT)
-liburcu_la_SOURCES = urcu.c urcu-pointer.c $(COMPAT)
-liburcu_la_LIBADD = liburcu-common.la
-liburcu_qsbr_la_SOURCES = urcu-qsbr.c urcu-pointer.c $(COMPAT)
-liburcu_qsbr_la_LIBADD = liburcu-common.la
-liburcu_mb_la_SOURCES = urcu.c urcu-pointer.c $(COMPAT)
-liburcu_mb_la_CFLAGS = -DRCU_MB
-liburcu_mb_la_LIBADD = liburcu-common.la
-liburcu_signal_la_SOURCES = urcu.c urcu-pointer.c $(COMPAT)
-liburcu_signal_la_CFLAGS = -DRCU_SIGNAL
-liburcu_signal_la_LIBADD = liburcu-common.la
-liburcu_bp_la_SOURCES = urcu-bp.c urcu-pointer.c $(COMPAT)
-liburcu_bp_la_LIBADD = liburcu-common.la
-liburcu_cds_la_SOURCES = rculfqueue.c rculfstack.c lfstack.c \
-	$(RCULFHASH) $(COMPAT)
-
-liburcu_cds_la_LIBADD = liburcu-common.la
-pkgconfigdir = $(libdir)/pkgconfig
-pkgconfig_DATA = liburcu-cds.pc liburcu.pc liburcu-bp.pc liburcu-qsbr.pc \
-	liburcu-signal.pc liburcu-mb.pc
-
-dist_doc_DATA = README.md ChangeLog
 dist_noinst_DATA = CodingStyle
-all: config.h
-	$(MAKE) $(AM_MAKEFLAGS) all-recursive
+EXTRA_DIST = gpl-2.0.txt \
+	lgpl-2.1.txt \
+	lgpl-relicensing.txt
+
+all: all-recursive
 
 .SUFFIXES:
-.SUFFIXES: .c .lo .o .obj
 am--refresh: Makefile
 	@:
 $(srcdir)/Makefile.in: @MAINTAINER_MODE_TRUE@ $(srcdir)/Makefile.am  $(am__configure_deps)
@@ -584,204 +413,16 @@ $(ACLOCAL_M4): @MAINTAINER_MODE_TRUE@ $(am__aclocal_m4_deps)
 	$(am__cd) $(srcdir) && $(ACLOCAL) $(ACLOCAL_AMFLAGS)
 $(am__aclocal_m4_deps):
 
-config.h: stamp-h1
-	@test -f $@ || rm -f stamp-h1
-	@test -f $@ || $(MAKE) $(AM_MAKEFLAGS) stamp-h1
+include/urcu/config.h: include/urcu/stamp-h2
+	@test -f $@ || rm -f include/urcu/stamp-h2
+	@test -f $@ || $(MAKE) $(AM_MAKEFLAGS) include/urcu/stamp-h2
 
-stamp-h1: $(srcdir)/config.h.in $(top_builddir)/config.status
-	@rm -f stamp-h1
-	cd $(top_builddir) && $(SHELL) ./config.status config.h
-$(srcdir)/config.h.in: @MAINTAINER_MODE_TRUE@ $(am__configure_deps) 
-	($(am__cd) $(top_srcdir) && $(AUTOHEADER))
-	rm -f stamp-h1
-	touch $@
-
-urcu/config.h: urcu/stamp-h2
-	@test -f $@ || rm -f urcu/stamp-h2
-	@test -f $@ || $(MAKE) $(AM_MAKEFLAGS) urcu/stamp-h2
-
-urcu/stamp-h2: $(top_srcdir)/urcu/config.h.in $(top_builddir)/config.status
-	@rm -f urcu/stamp-h2
-	cd $(top_builddir) && $(SHELL) ./config.status urcu/config.h
+include/urcu/stamp-h2: $(top_srcdir)/include/urcu/config.h.in $(top_builddir)/config.status
+	@rm -f include/urcu/stamp-h2
+	cd $(top_builddir) && $(SHELL) ./config.status include/urcu/config.h
 
 distclean-hdr:
-	-rm -f config.h stamp-h1 urcu/config.h urcu/stamp-h2
-liburcu.pc: $(top_builddir)/config.status $(srcdir)/liburcu.pc.in
-	cd $(top_builddir) && $(SHELL) ./config.status $@
-liburcu-bp.pc: $(top_builddir)/config.status $(srcdir)/liburcu-bp.pc.in
-	cd $(top_builddir) && $(SHELL) ./config.status $@
-liburcu-cds.pc: $(top_builddir)/config.status $(srcdir)/liburcu-cds.pc.in
-	cd $(top_builddir) && $(SHELL) ./config.status $@
-liburcu-qsbr.pc: $(top_builddir)/config.status $(srcdir)/liburcu-qsbr.pc.in
-	cd $(top_builddir) && $(SHELL) ./config.status $@
-liburcu-mb.pc: $(top_builddir)/config.status $(srcdir)/liburcu-mb.pc.in
-	cd $(top_builddir) && $(SHELL) ./config.status $@
-liburcu-signal.pc: $(top_builddir)/config.status $(srcdir)/liburcu-signal.pc.in
-	cd $(top_builddir) && $(SHELL) ./config.status $@
-
-install-libLTLIBRARIES: $(lib_LTLIBRARIES)
-	@$(NORMAL_INSTALL)
-	@list='$(lib_LTLIBRARIES)'; test -n "$(libdir)" || list=; \
-	list2=; for p in $$list; do \
-	  if test -f $$p; then \
-	    list2="$$list2 $$p"; \
-	  else :; fi; \
-	done; \
-	test -z "$$list2" || { \
-	  echo " $(MKDIR_P) '$(DESTDIR)$(libdir)'"; \
-	  $(MKDIR_P) "$(DESTDIR)$(libdir)" || exit 1; \
-	  echo " $(LIBTOOL) $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=install $(INSTALL) $(INSTALL_STRIP_FLAG) $$list2 '$(DESTDIR)$(libdir)'"; \
-	  $(LIBTOOL) $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=install $(INSTALL) $(INSTALL_STRIP_FLAG) $$list2 "$(DESTDIR)$(libdir)"; \
-	}
-
-uninstall-libLTLIBRARIES:
-	@$(NORMAL_UNINSTALL)
-	@list='$(lib_LTLIBRARIES)'; test -n "$(libdir)" || list=; \
-	for p in $$list; do \
-	  $(am__strip_dir) \
-	  echo " $(LIBTOOL) $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=uninstall rm -f '$(DESTDIR)$(libdir)/$$f'"; \
-	  $(LIBTOOL) $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=uninstall rm -f "$(DESTDIR)$(libdir)/$$f"; \
-	done
-
-clean-libLTLIBRARIES:
-	-test -z "$(lib_LTLIBRARIES)" || rm -f $(lib_LTLIBRARIES)
-	@list='$(lib_LTLIBRARIES)'; \
-	locs=`for p in $$list; do echo $$p; done | \
-	      sed 's|^[^/]*$$|.|; s|/[^/]*$$||; s|$$|/so_locations|' | \
-	      sort -u`; \
-	test -z "$$locs" || { \
-	  echo rm -f $${locs}; \
-	  rm -f $${locs}; \
-	}
-
-liburcu-bp.la: $(liburcu_bp_la_OBJECTS) $(liburcu_bp_la_DEPENDENCIES) $(EXTRA_liburcu_bp_la_DEPENDENCIES) 
-	$(AM_V_CCLD)$(LINK) -rpath $(libdir) $(liburcu_bp_la_OBJECTS) $(liburcu_bp_la_LIBADD) $(LIBS)
-
-liburcu-cds.la: $(liburcu_cds_la_OBJECTS) $(liburcu_cds_la_DEPENDENCIES) $(EXTRA_liburcu_cds_la_DEPENDENCIES) 
-	$(AM_V_CCLD)$(LINK) -rpath $(libdir) $(liburcu_cds_la_OBJECTS) $(liburcu_cds_la_LIBADD) $(LIBS)
-
-liburcu-common.la: $(liburcu_common_la_OBJECTS) $(liburcu_common_la_DEPENDENCIES) $(EXTRA_liburcu_common_la_DEPENDENCIES) 
-	$(AM_V_CCLD)$(LINK) -rpath $(libdir) $(liburcu_common_la_OBJECTS) $(liburcu_common_la_LIBADD) $(LIBS)
-
-liburcu-mb.la: $(liburcu_mb_la_OBJECTS) $(liburcu_mb_la_DEPENDENCIES) $(EXTRA_liburcu_mb_la_DEPENDENCIES) 
-	$(AM_V_CCLD)$(liburcu_mb_la_LINK) -rpath $(libdir) $(liburcu_mb_la_OBJECTS) $(liburcu_mb_la_LIBADD) $(LIBS)
-
-liburcu-qsbr.la: $(liburcu_qsbr_la_OBJECTS) $(liburcu_qsbr_la_DEPENDENCIES) $(EXTRA_liburcu_qsbr_la_DEPENDENCIES) 
-	$(AM_V_CCLD)$(LINK) -rpath $(libdir) $(liburcu_qsbr_la_OBJECTS) $(liburcu_qsbr_la_LIBADD) $(LIBS)
-
-liburcu-signal.la: $(liburcu_signal_la_OBJECTS) $(liburcu_signal_la_DEPENDENCIES) $(EXTRA_liburcu_signal_la_DEPENDENCIES) 
-	$(AM_V_CCLD)$(liburcu_signal_la_LINK) -rpath $(libdir) $(liburcu_signal_la_OBJECTS) $(liburcu_signal_la_LIBADD) $(LIBS)
-
-liburcu.la: $(liburcu_la_OBJECTS) $(liburcu_la_DEPENDENCIES) $(EXTRA_liburcu_la_DEPENDENCIES) 
-	$(AM_V_CCLD)$(LINK) -rpath $(libdir) $(liburcu_la_OBJECTS) $(liburcu_la_LIBADD) $(LIBS)
-
-mostlyclean-compile:
-	-rm -f *.$(OBJEXT)
-
-distclean-compile:
-	-rm -f *.tab.c
-
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/compat_arch_@ARCHTYPE@.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/compat_futex.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/lfstack.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/liburcu_mb_la-compat_arch_@ARCHTYPE@.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/liburcu_mb_la-compat_futex.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/liburcu_mb_la-urcu-pointer.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/liburcu_mb_la-urcu.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/liburcu_signal_la-compat_arch_@ARCHTYPE@.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/liburcu_signal_la-compat_futex.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/liburcu_signal_la-urcu-pointer.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/liburcu_signal_la-urcu.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rculfhash-mm-chunk.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rculfhash-mm-mmap.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rculfhash-mm-order.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rculfhash.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rculfqueue.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/rculfstack.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/urcu-bp.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/urcu-pointer.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/urcu-qsbr.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/urcu.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/wfcqueue.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/wfqueue.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/wfstack.Plo@am__quote@
-
-.c.o:
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(COMPILE) -MT $@ -MD -MP -MF $(DEPDIR)/$*.Tpo -c -o $@ $<
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/$*.Tpo $(DEPDIR)/$*.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='$<' object='$@' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(COMPILE) -c -o $@ $<
-
-.c.obj:
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(COMPILE) -MT $@ -MD -MP -MF $(DEPDIR)/$*.Tpo -c -o $@ `$(CYGPATH_W) '$<'`
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/$*.Tpo $(DEPDIR)/$*.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='$<' object='$@' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(COMPILE) -c -o $@ `$(CYGPATH_W) '$<'`
-
-.c.lo:
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(LTCOMPILE) -MT $@ -MD -MP -MF $(DEPDIR)/$*.Tpo -c -o $@ $<
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/$*.Tpo $(DEPDIR)/$*.Plo
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='$<' object='$@' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LTCOMPILE) -c -o $@ $<
-
-liburcu_mb_la-urcu.lo: urcu.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(liburcu_mb_la_CFLAGS) $(CFLAGS) -MT liburcu_mb_la-urcu.lo -MD -MP -MF $(DEPDIR)/liburcu_mb_la-urcu.Tpo -c -o liburcu_mb_la-urcu.lo `test -f 'urcu.c' || echo '$(srcdir)/'`urcu.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/liburcu_mb_la-urcu.Tpo $(DEPDIR)/liburcu_mb_la-urcu.Plo
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='urcu.c' object='liburcu_mb_la-urcu.lo' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(liburcu_mb_la_CFLAGS) $(CFLAGS) -c -o liburcu_mb_la-urcu.lo `test -f 'urcu.c' || echo '$(srcdir)/'`urcu.c
-
-liburcu_mb_la-urcu-pointer.lo: urcu-pointer.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(liburcu_mb_la_CFLAGS) $(CFLAGS) -MT liburcu_mb_la-urcu-pointer.lo -MD -MP -MF $(DEPDIR)/liburcu_mb_la-urcu-pointer.Tpo -c -o liburcu_mb_la-urcu-pointer.lo `test -f 'urcu-pointer.c' || echo '$(srcdir)/'`urcu-pointer.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/liburcu_mb_la-urcu-pointer.Tpo $(DEPDIR)/liburcu_mb_la-urcu-pointer.Plo
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='urcu-pointer.c' object='liburcu_mb_la-urcu-pointer.lo' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(liburcu_mb_la_CFLAGS) $(CFLAGS) -c -o liburcu_mb_la-urcu-pointer.lo `test -f 'urcu-pointer.c' || echo '$(srcdir)/'`urcu-pointer.c
-
-liburcu_mb_la-compat_futex.lo: compat_futex.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(liburcu_mb_la_CFLAGS) $(CFLAGS) -MT liburcu_mb_la-compat_futex.lo -MD -MP -MF $(DEPDIR)/liburcu_mb_la-compat_futex.Tpo -c -o liburcu_mb_la-compat_futex.lo `test -f 'compat_futex.c' || echo '$(srcdir)/'`compat_futex.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/liburcu_mb_la-compat_futex.Tpo $(DEPDIR)/liburcu_mb_la-compat_futex.Plo
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='compat_futex.c' object='liburcu_mb_la-compat_futex.lo' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(liburcu_mb_la_CFLAGS) $(CFLAGS) -c -o liburcu_mb_la-compat_futex.lo `test -f 'compat_futex.c' || echo '$(srcdir)/'`compat_futex.c
-
-liburcu_mb_la-compat_arch_@ARCHTYPE@.lo: compat_arch_@ARCHTYPE@.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(liburcu_mb_la_CFLAGS) $(CFLAGS) -MT liburcu_mb_la-compat_arch_@ARCHTYPE@.lo -MD -MP -MF $(DEPDIR)/liburcu_mb_la-compat_arch_@ARCHTYPE@.Tpo -c -o liburcu_mb_la-compat_arch_@ARCHTYPE@.lo `test -f 'compat_arch_@ARCHTYPE@.c' || echo '$(srcdir)/'`compat_arch_@ARCHTYPE@.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/liburcu_mb_la-compat_arch_@ARCHTYPE@.Tpo $(DEPDIR)/liburcu_mb_la-compat_arch_@ARCHTYPE@.Plo
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='compat_arch_@ARCHTYPE@.c' object='liburcu_mb_la-compat_arch_@ARCHTYPE@.lo' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(liburcu_mb_la_CFLAGS) $(CFLAGS) -c -o liburcu_mb_la-compat_arch_@ARCHTYPE@.lo `test -f 'compat_arch_@ARCHTYPE@.c' || echo '$(srcdir)/'`compat_arch_@ARCHTYPE@.c
-
-liburcu_signal_la-urcu.lo: urcu.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(liburcu_signal_la_CFLAGS) $(CFLAGS) -MT liburcu_signal_la-urcu.lo -MD -MP -MF $(DEPDIR)/liburcu_signal_la-urcu.Tpo -c -o liburcu_signal_la-urcu.lo `test -f 'urcu.c' || echo '$(srcdir)/'`urcu.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/liburcu_signal_la-urcu.Tpo $(DEPDIR)/liburcu_signal_la-urcu.Plo
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='urcu.c' object='liburcu_signal_la-urcu.lo' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(liburcu_signal_la_CFLAGS) $(CFLAGS) -c -o liburcu_signal_la-urcu.lo `test -f 'urcu.c' || echo '$(srcdir)/'`urcu.c
-
-liburcu_signal_la-urcu-pointer.lo: urcu-pointer.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(liburcu_signal_la_CFLAGS) $(CFLAGS) -MT liburcu_signal_la-urcu-pointer.lo -MD -MP -MF $(DEPDIR)/liburcu_signal_la-urcu-pointer.Tpo -c -o liburcu_signal_la-urcu-pointer.lo `test -f 'urcu-pointer.c' || echo '$(srcdir)/'`urcu-pointer.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/liburcu_signal_la-urcu-pointer.Tpo $(DEPDIR)/liburcu_signal_la-urcu-pointer.Plo
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='urcu-pointer.c' object='liburcu_signal_la-urcu-pointer.lo' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(liburcu_signal_la_CFLAGS) $(CFLAGS) -c -o liburcu_signal_la-urcu-pointer.lo `test -f 'urcu-pointer.c' || echo '$(srcdir)/'`urcu-pointer.c
-
-liburcu_signal_la-compat_futex.lo: compat_futex.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(liburcu_signal_la_CFLAGS) $(CFLAGS) -MT liburcu_signal_la-compat_futex.lo -MD -MP -MF $(DEPDIR)/liburcu_signal_la-compat_futex.Tpo -c -o liburcu_signal_la-compat_futex.lo `test -f 'compat_futex.c' || echo '$(srcdir)/'`compat_futex.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/liburcu_signal_la-compat_futex.Tpo $(DEPDIR)/liburcu_signal_la-compat_futex.Plo
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='compat_futex.c' object='liburcu_signal_la-compat_futex.lo' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(liburcu_signal_la_CFLAGS) $(CFLAGS) -c -o liburcu_signal_la-compat_futex.lo `test -f 'compat_futex.c' || echo '$(srcdir)/'`compat_futex.c
-
-liburcu_signal_la-compat_arch_@ARCHTYPE@.lo: compat_arch_@ARCHTYPE@.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(liburcu_signal_la_CFLAGS) $(CFLAGS) -MT liburcu_signal_la-compat_arch_@ARCHTYPE@.lo -MD -MP -MF $(DEPDIR)/liburcu_signal_la-compat_arch_@ARCHTYPE@.Tpo -c -o liburcu_signal_la-compat_arch_@ARCHTYPE@.lo `test -f 'compat_arch_@ARCHTYPE@.c' || echo '$(srcdir)/'`compat_arch_@ARCHTYPE@.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/liburcu_signal_la-compat_arch_@ARCHTYPE@.Tpo $(DEPDIR)/liburcu_signal_la-compat_arch_@ARCHTYPE@.Plo
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='compat_arch_@ARCHTYPE@.c' object='liburcu_signal_la-compat_arch_@ARCHTYPE@.lo' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(liburcu_signal_la_CFLAGS) $(CFLAGS) -c -o liburcu_signal_la-compat_arch_@ARCHTYPE@.lo `test -f 'compat_arch_@ARCHTYPE@.c' || echo '$(srcdir)/'`compat_arch_@ARCHTYPE@.c
+	-rm -f include/urcu/config.h include/urcu/stamp-h2
 
 mostlyclean-libtool:
 	-rm -f *.lo
@@ -812,96 +453,6 @@ uninstall-dist_docDATA:
 	@list='$(dist_doc_DATA)'; test -n "$(docdir)" || list=; \
 	files=`for p in $$list; do echo $$p; done | sed -e 's|^.*/||'`; \
 	dir='$(DESTDIR)$(docdir)'; $(am__uninstall_files_from_dir)
-install-pkgconfigDATA: $(pkgconfig_DATA)
-	@$(NORMAL_INSTALL)
-	@list='$(pkgconfig_DATA)'; test -n "$(pkgconfigdir)" || list=; \
-	if test -n "$$list"; then \
-	  echo " $(MKDIR_P) '$(DESTDIR)$(pkgconfigdir)'"; \
-	  $(MKDIR_P) "$(DESTDIR)$(pkgconfigdir)" || exit 1; \
-	fi; \
-	for p in $$list; do \
-	  if test -f "$$p"; then d=; else d="$(srcdir)/"; fi; \
-	  echo "$$d$$p"; \
-	done | $(am__base_list) | \
-	while read files; do \
-	  echo " $(INSTALL_DATA) $$files '$(DESTDIR)$(pkgconfigdir)'"; \
-	  $(INSTALL_DATA) $$files "$(DESTDIR)$(pkgconfigdir)" || exit $$?; \
-	done
-
-uninstall-pkgconfigDATA:
-	@$(NORMAL_UNINSTALL)
-	@list='$(pkgconfig_DATA)'; test -n "$(pkgconfigdir)" || list=; \
-	files=`for p in $$list; do echo $$p; done | sed -e 's|^.*/||'`; \
-	dir='$(DESTDIR)$(pkgconfigdir)'; $(am__uninstall_files_from_dir)
-install-includeHEADERS: $(include_HEADERS)
-	@$(NORMAL_INSTALL)
-	@list='$(include_HEADERS)'; test -n "$(includedir)" || list=; \
-	if test -n "$$list"; then \
-	  echo " $(MKDIR_P) '$(DESTDIR)$(includedir)'"; \
-	  $(MKDIR_P) "$(DESTDIR)$(includedir)" || exit 1; \
-	fi; \
-	for p in $$list; do \
-	  if test -f "$$p"; then d=; else d="$(srcdir)/"; fi; \
-	  echo "$$d$$p"; \
-	done | $(am__base_list) | \
-	while read files; do \
-	  echo " $(INSTALL_HEADER) $$files '$(DESTDIR)$(includedir)'"; \
-	  $(INSTALL_HEADER) $$files "$(DESTDIR)$(includedir)" || exit $$?; \
-	done
-
-uninstall-includeHEADERS:
-	@$(NORMAL_UNINSTALL)
-	@list='$(include_HEADERS)'; test -n "$(includedir)" || list=; \
-	files=`for p in $$list; do echo $$p; done | sed -e 's|^.*/||'`; \
-	dir='$(DESTDIR)$(includedir)'; $(am__uninstall_files_from_dir)
-install-nobase_dist_includeHEADERS: $(nobase_dist_include_HEADERS)
-	@$(NORMAL_INSTALL)
-	@list='$(nobase_dist_include_HEADERS)'; test -n "$(includedir)" || list=; \
-	if test -n "$$list"; then \
-	  echo " $(MKDIR_P) '$(DESTDIR)$(includedir)'"; \
-	  $(MKDIR_P) "$(DESTDIR)$(includedir)" || exit 1; \
-	fi; \
-	$(am__nobase_list) | while read dir files; do \
-	  xfiles=; for file in $$files; do \
-	    if test -f "$$file"; then xfiles="$$xfiles $$file"; \
-	    else xfiles="$$xfiles $(srcdir)/$$file"; fi; done; \
-	  test -z "$$xfiles" || { \
-	    test "x$$dir" = x. || { \
-	      echo " $(MKDIR_P) '$(DESTDIR)$(includedir)/$$dir'"; \
-	      $(MKDIR_P) "$(DESTDIR)$(includedir)/$$dir"; }; \
-	    echo " $(INSTALL_HEADER) $$xfiles '$(DESTDIR)$(includedir)/$$dir'"; \
-	    $(INSTALL_HEADER) $$xfiles "$(DESTDIR)$(includedir)/$$dir" || exit $$?; }; \
-	done
-
-uninstall-nobase_dist_includeHEADERS:
-	@$(NORMAL_UNINSTALL)
-	@list='$(nobase_dist_include_HEADERS)'; test -n "$(includedir)" || list=; \
-	$(am__nobase_strip_setup); files=`$(am__nobase_strip)`; \
-	dir='$(DESTDIR)$(includedir)'; $(am__uninstall_files_from_dir)
-install-nobase_nodist_includeHEADERS: $(nobase_nodist_include_HEADERS)
-	@$(NORMAL_INSTALL)
-	@list='$(nobase_nodist_include_HEADERS)'; test -n "$(includedir)" || list=; \
-	if test -n "$$list"; then \
-	  echo " $(MKDIR_P) '$(DESTDIR)$(includedir)'"; \
-	  $(MKDIR_P) "$(DESTDIR)$(includedir)" || exit 1; \
-	fi; \
-	$(am__nobase_list) | while read dir files; do \
-	  xfiles=; for file in $$files; do \
-	    if test -f "$$file"; then xfiles="$$xfiles $$file"; \
-	    else xfiles="$$xfiles $(srcdir)/$$file"; fi; done; \
-	  test -z "$$xfiles" || { \
-	    test "x$$dir" = x. || { \
-	      echo " $(MKDIR_P) '$(DESTDIR)$(includedir)/$$dir'"; \
-	      $(MKDIR_P) "$(DESTDIR)$(includedir)/$$dir"; }; \
-	    echo " $(INSTALL_HEADER) $$xfiles '$(DESTDIR)$(includedir)/$$dir'"; \
-	    $(INSTALL_HEADER) $$xfiles "$(DESTDIR)$(includedir)/$$dir" || exit $$?; }; \
-	done
-
-uninstall-nobase_nodist_includeHEADERS:
-	@$(NORMAL_UNINSTALL)
-	@list='$(nobase_nodist_include_HEADERS)'; test -n "$(includedir)" || list=; \
-	$(am__nobase_strip_setup); files=`$(am__nobase_strip)`; \
-	dir='$(DESTDIR)$(includedir)'; $(am__uninstall_files_from_dir)
 
 # This directory's subdirectories are mostly independent; you can cd
 # into them and run 'make' without going through this Makefile.
@@ -1198,10 +749,10 @@ distcleancheck: distclean
 	       exit 1; } >&2
 check-am: all-am
 check: check-recursive
-all-am: Makefile $(LTLIBRARIES) $(DATA) $(HEADERS) config.h
+all-am: Makefile $(DATA)
 installdirs: installdirs-recursive
 installdirs-am:
-	for dir in "$(DESTDIR)$(libdir)" "$(DESTDIR)$(docdir)" "$(DESTDIR)$(pkgconfigdir)" "$(DESTDIR)$(includedir)" "$(DESTDIR)$(includedir)" "$(DESTDIR)$(includedir)"; do \
+	for dir in "$(DESTDIR)$(docdir)"; do \
 	  test -z "$$dir" || $(MKDIR_P) "$$dir"; \
 	done
 install: install-recursive
@@ -1236,15 +787,13 @@ maintainer-clean-generic:
 	@echo "it deletes files that may require special tools to rebuild."
 clean: clean-recursive
 
-clean-am: clean-generic clean-libLTLIBRARIES clean-libtool \
-	mostlyclean-am
+clean-am: clean-generic clean-libtool mostlyclean-am
 
 distclean: distclean-recursive
 	-rm -f $(am__CONFIG_DISTCLEAN_FILES)
-	-rm -rf ./$(DEPDIR)
 	-rm -f Makefile
-distclean-am: clean-am distclean-compile distclean-generic \
-	distclean-hdr distclean-libtool distclean-tags
+distclean-am: clean-am distclean-generic distclean-hdr \
+	distclean-libtool distclean-tags
 
 dvi: dvi-recursive
 
@@ -1258,15 +807,13 @@ info: info-recursive
 
 info-am:
 
-install-data-am: install-dist_docDATA install-includeHEADERS \
-	install-nobase_dist_includeHEADERS \
-	install-nobase_nodist_includeHEADERS install-pkgconfigDATA
+install-data-am: install-dist_docDATA
 
 install-dvi: install-dvi-recursive
 
 install-dvi-am:
 
-install-exec-am: install-libLTLIBRARIES
+install-exec-am:
 
 install-html: install-html-recursive
 
@@ -1291,14 +838,12 @@ installcheck-am:
 maintainer-clean: maintainer-clean-recursive
 	-rm -f $(am__CONFIG_DISTCLEAN_FILES)
 	-rm -rf $(top_srcdir)/autom4te.cache
-	-rm -rf ./$(DEPDIR)
 	-rm -f Makefile
 maintainer-clean-am: distclean-am maintainer-clean-generic
 
 mostlyclean: mostlyclean-recursive
 
-mostlyclean-am: mostlyclean-compile mostlyclean-generic \
-	mostlyclean-libtool
+mostlyclean-am: mostlyclean-generic mostlyclean-libtool
 
 pdf: pdf-recursive
 
@@ -1308,35 +853,26 @@ ps: ps-recursive
 
 ps-am:
 
-uninstall-am: uninstall-dist_docDATA uninstall-includeHEADERS \
-	uninstall-libLTLIBRARIES uninstall-nobase_dist_includeHEADERS \
-	uninstall-nobase_nodist_includeHEADERS uninstall-pkgconfigDATA
+uninstall-am: uninstall-dist_docDATA
 
-.MAKE: $(am__recursive_targets) all install-am install-strip
+.MAKE: $(am__recursive_targets) install-am install-strip
 
 .PHONY: $(am__recursive_targets) CTAGS GTAGS TAGS all all-am \
 	am--refresh check check-am clean clean-cscope clean-generic \
-	clean-libLTLIBRARIES clean-libtool cscope cscopelist-am ctags \
-	ctags-am dist dist-all dist-bzip2 dist-gzip dist-lzip \
-	dist-shar dist-tarZ dist-xz dist-zip distcheck distclean \
-	distclean-compile distclean-generic distclean-hdr \
-	distclean-libtool distclean-tags distcleancheck distdir \
-	distuninstallcheck dvi dvi-am html html-am info info-am \
-	install install-am install-data install-data-am \
+	clean-libtool cscope cscopelist-am ctags ctags-am dist \
+	dist-all dist-bzip2 dist-gzip dist-lzip dist-shar dist-tarZ \
+	dist-xz dist-zip distcheck distclean distclean-generic \
+	distclean-hdr distclean-libtool distclean-tags distcleancheck \
+	distdir distuninstallcheck dvi dvi-am html html-am info \
+	info-am install install-am install-data install-data-am \
 	install-dist_docDATA install-dvi install-dvi-am install-exec \
-	install-exec-am install-html install-html-am \
-	install-includeHEADERS install-info install-info-am \
-	install-libLTLIBRARIES install-man \
-	install-nobase_dist_includeHEADERS \
-	install-nobase_nodist_includeHEADERS install-pdf \
-	install-pdf-am install-pkgconfigDATA install-ps install-ps-am \
-	install-strip installcheck installcheck-am installdirs \
-	installdirs-am maintainer-clean maintainer-clean-generic \
-	mostlyclean mostlyclean-compile mostlyclean-generic \
+	install-exec-am install-html install-html-am install-info \
+	install-info-am install-man install-pdf install-pdf-am \
+	install-ps install-ps-am install-strip installcheck \
+	installcheck-am installdirs installdirs-am maintainer-clean \
+	maintainer-clean-generic mostlyclean mostlyclean-generic \
 	mostlyclean-libtool pdf pdf-am ps ps-am tags tags-am uninstall \
-	uninstall-am uninstall-dist_docDATA uninstall-includeHEADERS \
-	uninstall-libLTLIBRARIES uninstall-nobase_dist_includeHEADERS \
-	uninstall-nobase_nodist_includeHEADERS uninstall-pkgconfigDATA
+	uninstall-am uninstall-dist_docDATA
 
 
 .PHONY: short_bench long_bench regtest
