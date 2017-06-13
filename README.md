@@ -43,6 +43,7 @@ Currently, the following architectures are supported:
   - S390, S390x
   - ARM 32/64
   - MIPS
+  - NIOS2
   - Alpha
   - ia64
   - Sparcv9 32/64
@@ -158,7 +159,11 @@ This is the preferred version of the library, in terms of
 grace-period detection speed, read-side speed and flexibility.
 Dynamically detects kernel support for `sys_membarrier()`. Falls back
 on `urcu-mb` scheme if support is not present, which has slower
-read-side.
+read-side. Use the --disable-sys-membarrier-fallback configure option
+to disable the fall back, thus requiring `sys_membarrier()` to be
+available. This gives a small speedup when `sys_membarrier()` is
+supported by the kernel, and aborts in the library constructor if not
+supported.
 
 
 ### Usage of `liburcu-qsbr`
@@ -353,12 +358,19 @@ can be forced by specifying `--disable-compiler-tls` as configure
 argument.
 
 
-### Usage of `DEBUG_RCU`
+### Usage of `DEBUG_RCU` & `--enable-rcu-debug`
 
-`DEBUG_RCU` is used to add internal debugging self-checks to the
-RCU library. This define adds a performance penalty when enabled.
-Can be enabled by uncommenting the corresponding line in
-`Makefile.build.inc`.
+By default the library is configured with internal debugging
+self-checks disabled.
+
+For always-on debugging self-checks:
+	./configure --enable-rcu-debug
+
+For fine grained enabling of debugging self-checks, build
+urserspace-rcu with DEBUG_RCU defined and compile dependent
+applications with DEBUG_RCU defined when necessary.
+
+Warning: Enabling this feature result in a performance penalty.
 
 
 ### Usage of `DEBUG_YIELD`

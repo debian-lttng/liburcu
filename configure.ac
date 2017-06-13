@@ -1,19 +1,18 @@
 AC_PREREQ(2.59)
-AC_INIT([userspace-rcu],[0.9.3],[mathieu dot desnoyers at efficios dot com], [], [http://liburcu.org/])
+AC_INIT([userspace-rcu],[0.10.0],[mathieu dot desnoyers at efficios dot com], [], [http://liburcu.org/])
 
 # Following the numbering scheme proposed by libtool for the library version
 # http://www.gnu.org/software/libtool/manual/html_node/Updating-version-info.html
-AC_SUBST([URCU_LIBRARY_VERSION], [5:0:1])
+AC_SUBST([URCU_LIBRARY_VERSION], [6:0:0])
 
-AC_CONFIG_SRCDIR([urcu.h])
-AC_CONFIG_HEADERS([config.h urcu/config.h])
+AC_CONFIG_HEADERS([include/config.h include/urcu/config.h])
 AC_CONFIG_AUX_DIR([config])
 AC_CONFIG_MACRO_DIR([m4])
 
 AC_CANONICAL_TARGET
 AC_CANONICAL_HOST
 
-AM_INIT_AUTOMAKE([foreign dist-bzip2 no-dist-gzip])
+AM_INIT_AUTOMAKE([foreign dist-bzip2 no-dist-gzip nostdinc])
 AM_MAINTAINER_MODE([enable])
 
 # Enable silent rules if available (Introduced in AM 1.11)
@@ -26,6 +25,16 @@ AH_TEMPLATE([CONFIG_RCU_COMPAT_ARCH], [Compatibility mode for i386 which lacks c
 AH_TEMPLATE([CONFIG_RCU_ARM_HAVE_DMB], [Use the dmb instruction if available for use on ARM.])
 AH_TEMPLATE([CONFIG_RCU_TLS], [TLS provided by the compiler.])
 AH_TEMPLATE([CONFIG_RCU_HAVE_CLOCK_GETTIME], [clock_gettime() is detected.])
+AH_TEMPLATE([CONFIG_RCU_FORCE_SYS_MEMBARRIER], [Require the operating system to support the membarrier system call for default and bulletproof flavors.])
+AH_TEMPLATE([CONFIG_RCU_DEBUG], [Enable internal debugging self-checks. Introduce performance penalty.])
+
+# Allow requiring the operating system to support the membarrier system
+# call. Applies to default and bulletproof flavors.
+AC_ARG_ENABLE([sys-membarrier-fallback],
+	AS_HELP_STRING([--disable-sys-membarrier-fallback], [Abort if sys-membarrier is needed but not available rather than using a fallback.]),
+	[def_sys_membarrier_fallback=$enableval],
+	[def_sys_membarrier_fallback="yes"])
+AS_IF([test "x$def_sys_membarrier_fallback" != "xyes"], [AC_DEFINE([CONFIG_RCU_FORCE_SYS_MEMBARRIER], [1])])
 
 # Allow overriding storage used for TLS variables.
 AC_ARG_ENABLE([compiler-tls],
@@ -80,9 +89,8 @@ AS_IF([test "x$ax_cv___attribute__" = "xyes"],
 	[AC_MSG_ERROR([The compiler does not support __attribute__ extensions])])
 
 AX_PTHREAD(,[AC_MSG_ERROR([Could not configure pthreads support])])
-LIBS="$PTHREAD_LIBS $LIBS"
-CFLAGS="$CFLAGS $PTHREAD_CFLAGS"
-CC="$PTHREAD_CC"
+
+AM_CFLAGS="$AM_CFLAGS $PTHREAD_CFLAGS"
 
 # Checks for library functions.
 AC_FUNC_MMAP
@@ -95,6 +103,7 @@ AC_CHECK_FUNCS([ \
 	memeset \
 	memset \
 	munmap \
+	rand_r \
 	sched_getcpu \
 	strerror \
 	strtoul \
@@ -136,14 +145,11 @@ AS_CASE([$host_cpu],
 	[arm*], [ARCHTYPE="arm"],
 	[aarch64*], [ARCHTYPE="aarch64"],
 	[mips*], [ARCHTYPE="mips"],
+	[nios2*], [ARCHTYPE="nios2"],
 	[tile*], [ARCHTYPE="tile"],
 	[hppa*], [ARCHTYPE="hppa"],
+	[m68k], [ARCHTYPE="m68k"],
 	[ARCHTYPE="unknown"]
-)
-
-AS_CASE([$host],[*-*-linux-androideabi],
-	[AM_CONDITIONAL(TARGET_IS_ANDROID, true)],
-	[AM_CONDITIONAL(TARGET_IS_ANDROID, false)]
 )
 
 AS_CASE([$host],[*-cygwin*],
@@ -154,15 +160,15 @@ AS_CASE([$host],[*-cygwin*],
 AC_SUBST(ARCHTYPE)
 AC_SUBST(SUBARCHTYPE)
 
-UATOMICSRC=urcu/uatomic/$ARCHTYPE.h
-ARCHSRC=urcu/arch/$ARCHTYPE.h
+UATOMICSRC=include/urcu/uatomic/$ARCHTYPE.h
+ARCHSRC=include/urcu/arch/$ARCHTYPE.h
 
 AS_IF([test "x$SUBARCHTYPE" = xx86compat],[
 	AC_DEFINE([CONFIG_RCU_COMPAT_ARCH], [1])
 ])
 
 AS_IF([test "$host_cpu" = "armv7l"],[
-	CFLAGS="$CFLAGS -mcpu=cortex-a9 -mtune=cortex-a9 -O1"
+	AM_CFLAGS="$AM_CFLAGS -mcpu=cortex-a9 -mtune=cortex-a9 -O1"
 ])
 
 # ARM-specific checks
@@ -210,8 +216,10 @@ AS_IF([test "x$ARCHTYPE" = "xx86"],[
 	AS_IF([test "x$host_cpu" != "xi386" -a "x$host_cpu" != "xi486" -a "x$host_cpu" != "xi586" -a "x$host_cpu" != "xi686" -a "x$host_vendor" != "xk1om" -a "x$host_cpu" != "xk1om"],[
 		AC_MSG_RESULT([yes])
 		AC_DEFINE([CONFIG_RCU_HAVE_FENCE], [1])
+		config_rcu_have_fence=yes
 	],[
 		AC_MSG_RESULT([no])
+		config_rcu_have_fence=no
 	])
 ])
 
@@ -235,16 +243,8 @@ AC_COMPILE_IFELSE([AC_LANG_SOURCE([[
 # Search for clock_gettime
 AC_SEARCH_LIBS([clock_gettime], [rt], [
 	AC_DEFINE([CONFIG_RCU_HAVE_CLOCK_GETTIME], [1])
+	config_rcu_have_clock_gettime=yes
 ], [])
-
-# Check for pthread
-AC_CHECK_LIB([pthread], [pthread_create],
-	[AM_CONDITIONAL(LIBC_INCLUDES_PTHREAD, false)],
-	[AC_CHECK_LIB([c], [pthread_create],
-		[AM_CONDITIONAL(LIBC_INCLUDES_PTHREAD, true)],
-		[AC_MSG_ERROR([Cannot find libpthread. Use [LDFLAGS]=-Ldir to specify its location.])]
-	)]
-)
 
 AM_CONDITIONAL([COMPAT_FUTEX], [test "x$compat_futex_test" = "x1"])
 AM_CONDITIONAL([COMPAT_ARCH], [test "x$SUBARCHTYPE" = "xx86compat"])
@@ -257,6 +257,13 @@ AC_ARG_ENABLE([smp-support],
 	[def_smp_support="yes"])
 AS_IF([test "x$def_smp_support" = "xyes"], [AC_DEFINE([CONFIG_RCU_SMP], [1])])
 
+# RCU debugging option
+AC_ARG_ENABLE([rcu-debug],
+      AS_HELP_STRING([--enable-rcu-debug], [Enable internal debugging
+		      self-checks. Introduce performance penalty.]))
+AS_IF([test "x$enable_rcu_debug" = "xyes"], [
+       AC_DEFINE([CONFIG_RCU_DEBUG], [1])
+])
 
 # From the sched_setaffinity(2)'s man page:
 # ~~~~
@@ -284,12 +291,6 @@ AS_IF([test "x$def_smp_support" = "xyes"], [AC_DEFINE([CONFIG_RCU_SMP], [1])])
 #  int sched_setaffinity (pid_t __pid, const cpu_set_t *__mask);
 # ~~~~
 
-# Since we define _GNU_SOURCE in the sources, must do so too in the
-# autoconf tests, as defining _GNU_SOURCE or not exposes
-# sched_setaffinity bits differently.
-saved_CFLAGS=$CFLAGS
-CFLAGS="$CFLAGS -D_GNU_SOURCE"
-
 AC_CHECK_TYPES([cpu_set_t],
 	[have_cpu_set_t="yes"],
 	[have_cpu_set_t="no"],
@@ -299,7 +300,6 @@ AC_CHECK_TYPES([cpu_set_t],
 AC_MSG_CHECKING([whether CPU_ZERO works])
 AH_TEMPLATE([HAVE_CPU_ZERO], [Defined to 1 if we have CPU_ZERO and it works])
 AC_COMPILE_IFELSE([AC_LANG_SOURCE([[
-		#define _GNU_SOURCE
 		#include <sched.h>
 		int main()
 		{
@@ -318,7 +318,6 @@ AC_COMPILE_IFELSE([AC_LANG_SOURCE([[
 AC_MSG_CHECKING([whether CPU_SET works])
 AH_TEMPLATE([HAVE_CPU_SET], [Defined to 1 if we have CPU_SET and it works])
 AC_COMPILE_IFELSE([AC_LANG_SOURCE([[
-		#define _GNU_SOURCE
 		#include <sched.h>
 		int main()
 		{
@@ -368,16 +367,22 @@ AC_CHECK_FUNCS([sched_setaffinity],[
 	])
 ])
 
-CFLAGS=$saved_CFLAGS
+AM_CPPFLAGS="-include config.h"
+AC_SUBST(AM_CPPFLAGS)
+
+AM_CFLAGS="-Wall $AM_CFLAGS"
+AC_SUBST(AM_CFLAGS)
 
 AC_CONFIG_LINKS([
-	urcu/arch.h:$ARCHSRC
-	urcu/uatomic.h:$UATOMICSRC
+	include/urcu/arch.h:$ARCHSRC
+	include/urcu/uatomic.h:$UATOMICSRC
 ])
 AC_CONFIG_FILES([
 	Makefile
 	doc/Makefile
 	doc/examples/Makefile
+	include/Makefile
+	src/Makefile
 	tests/Makefile
 	tests/common/Makefile
 	tests/unit/Makefile
@@ -385,24 +390,65 @@ AC_CONFIG_FILES([
 	tests/regression/Makefile
 	tests/regression/regression_tests
 	tests/utils/Makefile
-	liburcu.pc
-	liburcu-bp.pc
-	liburcu-cds.pc
-	liburcu-qsbr.pc
-	liburcu-mb.pc
-	liburcu-signal.pc
+	src/liburcu.pc
+	src/liburcu-bp.pc
+	src/liburcu-cds.pc
+	src/liburcu-qsbr.pc
+	src/liburcu-mb.pc
+	src/liburcu-signal.pc
 ])
 AC_OUTPUT
 
-# Report on selected configure options
-AS_IF([test "x$def_smp_support" = "xyes"],[
-	AS_ECHO("SMP support enabled.")
-],[
-	AS_ECHO("SMP support disabled.")
-])
+#
+# Mini-report on what will be built.
+#
 
-AS_IF([test "x$def_tls_detect" = "x"],[
-	AS_ECHO("Thread Local Storage (TLS): pthread_getspecific().")
-],[
-	AS_ECHO("Thread Local Storage (TLS): $def_tls_detect.")
-])
+PPRINT_INIT
+PPRINT_SET_INDENT(1)
+PPRINT_SET_TS(38)
+
+AS_ECHO
+AS_ECHO("${PPRINT_COLOR_BLDBLU}Userspace-RCU $PACKAGE_VERSION${PPRINT_COLOR_RST}")
+AS_ECHO
+
+PPRINT_SUBTITLE([Features])
+
+PPRINT_PROP_STRING([Target architecture], $host_cpu)
+
+# SMP support enabled/disabled
+test "x$def_smp_support" = "xyes" && value=1 || value=0
+PPRINT_PROP_BOOL([SMP support], $value)
+
+# Memory fence support available
+test "x$config_rcu_have_fence" = "xyes" && value=1 || value=0
+PPRINT_PROP_BOOL([Memory fence instructions], $value)
+
+# Futex support available
+test "x$compat_futex_test" = "x0" && value=1 || value=0
+PPRINT_PROP_BOOL([Futex support], $value)
+
+# TLS
+test "x$def_tls_detect" = "x" && value="pthread_getspecific()" || value="$def_tls_detect"
+PPRINT_PROP_STRING([Thread Local Storage (TLS)], [$value])
+
+# clock_gettime() available
+test "x$config_rcu_have_clock_gettime" = "xyes" && value=1 || value=0
+PPRINT_PROP_BOOL([clock_gettime()], $value)
+
+# Require membarrier
+test "x$def_sys_membarrier_fallback" != "xyes" && value=1 || value=0
+PPRINT_PROP_BOOL([Require membarrier], $value)
+
+# RCU debug enabled/disabled
+test "x$enable_rcu_debug" = "xyes" && value=1 || value=0
+PPRINT_PROP_BOOL([Internal debugging], $value)
+
+report_bindir="`eval eval echo $bindir`"
+report_libdir="`eval eval echo $libdir`"
+
+# Print the bindir and libdir this `make install' will install into.
+AS_ECHO
+PPRINT_SUBTITLE([Install directories])
+PPRINT_PROP_STRING([Binaries], [$report_bindir])
+PPRINT_PROP_STRING([Libraries], [$report_libdir])
+
