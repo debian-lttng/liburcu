@@ -13,7 +13,7 @@ Package: liburcu-dev
 Section: libdevel
 Architecture: any
 Multi-Arch: same
-Depends: ${misc:Depends}, liburcu4 (= ${binary:Version})
+Depends: ${misc:Depends}, liburcu6 (= ${binary:Version})
 Description: userspace RCU (read-copy-update) library - development files
  This data synchronization library provides read-side access which scales
  linearly with the number of cores. It does so by allowing multiples copies of
@@ -24,7 +24,7 @@ Description: userspace RCU (read-copy-update) library - development files
  Install this package if you wish to develop your own programs using the
  userspace RCU library.
 
-Package: liburcu4
+Package: liburcu6
 Architecture: any
 Multi-Arch: same
 Pre-Depends: ${misc:Pre-Depends}
