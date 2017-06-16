@@ -14,7 +14,7 @@ Signed-off-by: Michael Jeanson <mjeanson@efficios.com>
 
 --- a/configure.ac
 +++ b/configure.ac
-@@ -138,6 +138,7 @@
+@@ -137,6 +137,7 @@
  	[mips*], [ARCHTYPE="mips"],
  	[tile*], [ARCHTYPE="tile"],
  	[hppa*], [ARCHTYPE="hppa"],
