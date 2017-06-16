@@ -347,6 +347,7 @@ am__distuninstallcheck_listfiles = $(distuninstallcheck_listfiles) \
 distcleancheck_listfiles = find . -type f -print
 ACLOCAL = @ACLOCAL@
 AMTAR = @AMTAR@
+AM_CFLAGS = @AM_CFLAGS@ -Wall
 AM_DEFAULT_VERBOSITY = @AM_DEFAULT_VERBOSITY@
 AR = @AR@
 ARCHTYPE = @ARCHTYPE@
@@ -481,7 +482,6 @@ AM_CPPFLAGS = -I$(top_builddir)/urcu
 # library that use the version-info
 AM_LDFLAGS = -version-info $(URCU_LIBRARY_VERSION) $(am__append_1) \
 	$(am__append_2)
-AM_CFLAGS = -Wall
 SUBDIRS = . doc tests
 include_HEADERS = urcu.h urcu-bp.h urcu-call-rcu.h urcu-defer.h \
 		urcu-pointer.h urcu-qsbr.h urcu-flavor.h
@@ -527,10 +527,10 @@ liburcu_la_LIBADD = liburcu-common.la
 liburcu_qsbr_la_SOURCES = urcu-qsbr.c urcu-pointer.c $(COMPAT)
 liburcu_qsbr_la_LIBADD = liburcu-common.la
 liburcu_mb_la_SOURCES = urcu.c urcu-pointer.c $(COMPAT)
-liburcu_mb_la_CFLAGS = -DRCU_MB
+liburcu_mb_la_CFLAGS = -DRCU_MB $(AM_CFLAGS)
 liburcu_mb_la_LIBADD = liburcu-common.la
 liburcu_signal_la_SOURCES = urcu.c urcu-pointer.c $(COMPAT)
-liburcu_signal_la_CFLAGS = -DRCU_SIGNAL
+liburcu_signal_la_CFLAGS = -DRCU_SIGNAL $(AM_CFLAGS)
 liburcu_signal_la_LIBADD = liburcu-common.la
 liburcu_bp_la_SOURCES = urcu-bp.c urcu-pointer.c $(COMPAT)
 liburcu_bp_la_LIBADD = liburcu-common.la
