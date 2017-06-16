@@ -10,7 +10,7 @@ Signed-off-by: Michael Jeanson <mjeanson@efficios.com>
 
 --- a/configure.ac
 +++ b/configure.ac
-@@ -226,11 +226,26 @@
+@@ -225,11 +225,26 @@
  	]])
  ],[
  	AC_MSG_RESULT([yes])
@@ -40,7 +40,7 @@ Signed-off-by: Michael Jeanson <mjeanson@efficios.com>
  ])
  
  # Search for clock_gettime
-@@ -247,7 +262,6 @@
+@@ -246,7 +261,6 @@
  	)]
  )
  
