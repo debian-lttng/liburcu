@@ -1,3 +1,11 @@
+liburcu (0.9.4-1~trusty1) trusty; urgency=medium
+
+  * [722d4fa] Move to DEP-14 branch naming
+  * [d08ce79] New upstream version 0.9.4
+  * [aad27b6] Refreshed patches for 0.9.4
+
+ -- Michael Jeanson <mjeanson@ubuntu.com>  Fri, 16 Jun 2017 17:32:28 -0400
+
 liburcu (0.9.3-5) experimental; urgency=medium
 
   * [6056906] Update symbols for m68k arch
