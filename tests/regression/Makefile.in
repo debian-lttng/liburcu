@@ -220,6 +220,8 @@ CTAGS = ctags
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
 ACLOCAL = @ACLOCAL@
 AMTAR = @AMTAR@
+AM_CFLAGS = @AM_CFLAGS@ -I$(top_srcdir) -I$(top_builddir) \
+	-I$(top_srcdir)/tests/utils -I$(top_srcdir)/tests/common -g
 AM_DEFAULT_VERBOSITY = @AM_DEFAULT_VERBOSITY@
 AR = @AR@
 ARCHTYPE = @ARCHTYPE@
@@ -348,7 +350,6 @@ top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 @LIBC_INCLUDES_PTHREAD_FALSE@AM_LDFLAGS = -lpthread
-AM_CFLAGS = -I$(top_srcdir) -I$(top_builddir) -I$(top_srcdir)/tests/utils -I$(top_srcdir)/tests/common -g
 SCRIPT_LIST = run.sh
 dist_noinst_SCRIPTS = $(SCRIPT_LIST)
 dist_noinst_DATA = regression_tests.in

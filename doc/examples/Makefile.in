@@ -168,6 +168,7 @@ am__tagged_files = $(HEADERS) $(SOURCES) $(TAGS_FILES) $(LISP)
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
 ACLOCAL = @ACLOCAL@
 AMTAR = @AMTAR@
+AM_CFLAGS = @AM_CFLAGS@
 AM_DEFAULT_VERBOSITY = @AM_DEFAULT_VERBOSITY@
 AR = @AR@
 ARCHTYPE = @ARCHTYPE@
@@ -849,7 +850,7 @@ uninstall-am: uninstall-dist_doc_examplesDATA \
 @NO_SHARED_FALSE@		echo "Examples: relative top_builddir path $(top_builddir)"; \
 @NO_SHARED_FALSE@		rel_build_subdir="../"; \
 @NO_SHARED_FALSE@	fi; \
-@NO_SHARED_FALSE@	$(MAKE) -f dist-files/Makefile AM_CC="$(CC)" AM_CPPFLAGS="$(CPPFLAGS) -I$$rel_src_subdir/$(top_srcdir)/ -I$$rel_build_subdir$(top_builddir)/" AM_CFLAGS='$(CFLAGS)' AM_LDFLAGS='$(LDFLAGS) -L../../../.libs/ -Wl,-rpath "$(PWD)/../../.libs/"' $(AM_MAKEFLAGS) all;
+@NO_SHARED_FALSE@	$(MAKE) -f dist-files/Makefile CC="$(CC)" CPPFLAGS="$(CPPLAGS)" AM_CPPFLAGS="$(AM_CPPFLAGS) -I$$rel_src_subdir/$(top_srcdir)/ -I$$rel_build_subdir$(top_builddir)/" CFLAGS="$(CFLAGS)" AM_CFLAGS="$(AM_CFLAGS)" LDFLAGS="$(LDFLAGS)" AM_LDFLAGS='$(AM_LDFLAGS) -L../../../.libs/ -Wl,-rpath "$(PWD)/../../.libs/"' $(AM_MAKEFLAGS) all;
 
 @NO_SHARED_FALSE@clean-local:
 @NO_SHARED_FALSE@	@$(MAKE) -f dist-files/Makefile $(AM_MAKEFLAGS) clean; \
