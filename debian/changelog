@@ -1,3 +1,19 @@
+liburcu (0.10.0-1) unstable; urgency=medium
+
+  [ Michael Jeanson ]
+  * [722d4fa] Move to DEP-14 branch naming
+  * [8808bbc] New upstream version 0.10.0
+  * [a12f998] Drop and refresh patches for 0.10.0
+  * [0ac4d0d] soname bump from 4 to 6
+  * [b05b828] Update copyright file
+  * [336c83d] Update symbols for 0.10.0
+  * [b958e1c] Enable hardening flags
+
+  [ Jon Bernard ]
+  * [c7144d0] Bump standards version to 4.0.0, no changes necessary
+
+ -- Jon Bernard <jbernard@debian.org>  Fri, 30 Jun 2017 20:13:12 +0000
+
 liburcu (0.9.3-5) experimental; urgency=medium
 
   * [6056906] Update symbols for m68k arch
