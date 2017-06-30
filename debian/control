@@ -3,7 +3,7 @@ Priority: extra
 Maintainer: Jon Bernard <jbernard@debian.org>
 Uploaders: Michael Jeanson <mjeanson@ubuntu.com>
 Build-Depends: debhelper (>= 9), dpkg-dev (>= 1.13.2), dh-autoreconf
-Standards-Version: 3.9.8
+Standards-Version: 4.0.0
 Section: libs
 Vcs-Git: https://anonscm.debian.org/git/collab-maint/liburcu.git
 Vcs-Browser: https://anonscm.debian.org/gitweb/?p=collab-maint/liburcu.git;a=summary
