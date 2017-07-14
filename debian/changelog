@@ -1,3 +1,9 @@
+liburcu (0.10.0-2) unstable; urgency=medium
+
+  * [7ef3bce] Add missing m68k headers
+
+ -- Michael Jeanson <mjeanson@ubuntu.com>  Fri, 14 Jul 2017 10:47:55 -0400
+
 liburcu (0.10.0-1) unstable; urgency=medium
 
   [ Michael Jeanson ]
