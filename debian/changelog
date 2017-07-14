@@ -1,3 +1,9 @@
+liburcu (0.10.0-2~xenial1) xenial; urgency=medium
+
+  * Source backport to xenial.
+
+ -- Michael Jeanson <mjeanson@ubuntu.com>  Fri, 14 Jul 2017 15:28:56 -0400
+
 liburcu (0.10.0-2) unstable; urgency=medium
 
   * [7ef3bce] Add missing m68k headers
