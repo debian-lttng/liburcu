@@ -1,3 +1,9 @@
+liburcu (0.10.0-2~trusty1) trusty; urgency=medium
+
+  * [9f7d408] Set debian branch to ubuntu/trusty/0.10.x
+
+ -- Michael Jeanson <mjeanson@ubuntu.com>  Mon, 17 Jul 2017 11:32:39 -0400
+
 liburcu (0.10.0-2) unstable; urgency=medium
 
   * [7ef3bce] Add missing m68k headers
