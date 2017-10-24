@@ -1,3 +1,10 @@
+liburcu (0.10.0-2~trusty2) trusty; urgency=medium
+
+  * Source backport to trusty
+  * [3166803] Set gbp tag policy
+
+ -- Michael Jeanson <mjeanson@ubuntu.com>  Tue, 24 Oct 2017 16:16:04 -0400
+
 liburcu (0.10.0-2~trusty1) trusty; urgency=medium
 
   * [9f7d408] Set debian branch to ubuntu/trusty/0.10.x
