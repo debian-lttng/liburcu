@@ -35,3 +35,11 @@ Description: userspace RCU (read-copy-update) library
  a given data structure to live at the same time, and by monitoring the data
  structure accesses to detect grace periods after which memory reclamation is
  possible.
+
+Package: liburcu6-udeb
+Package-Type: udeb
+Section: debian-installer
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Description: userspace RCU (read-copy-update) library -- udeb
+ This is a udeb version of liburcu6.
