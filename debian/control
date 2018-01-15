@@ -5,8 +5,8 @@ Uploaders: Michael Jeanson <mjeanson@debian.org>
 Build-Depends: debhelper (>= 9), dpkg-dev (>= 1.13.2), dh-autoreconf
 Standards-Version: 4.0.0
 Section: libs
-Vcs-Git: https://anonscm.debian.org/git/collab-maint/liburcu.git
-Vcs-Browser: https://anonscm.debian.org/gitweb/?p=collab-maint/liburcu.git;a=summary
+Vcs-Git: https://salsa.debian.org/debian/liburcu.git
+Vcs-Browser: https://salsa.debian.org/debian/liburcu.git
 Homepage: http://liburcu.org/
 
 Package: liburcu-dev
