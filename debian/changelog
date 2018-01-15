@@ -1,3 +1,18 @@
+liburcu (0.10.0-3) unstable; urgency=medium
+
+  [ Michael Jeanson ]
+  * [8fc0179] Changed deprecated extra priority to optional
+  * [40ebb74] Switched my uploader email to @debian.org
+  * [0c0475e] Move git to salsa.debian.org
+  * [1e5893e] Fix debian-rules-sets-dpkg-architecture-variable
+  * [029ddf9] Use https in watch file
+  * [160d14e] Bump standards version to 4.1.3, no changes necessary
+
+  [ Cyril Brulebois ]
+  * [c8a261b] Add a liburcu6 udeb, needed by multipath-udeb (See: #885556).
+
+ -- Michael Jeanson <mjeanson@debian.org>  Mon, 15 Jan 2018 11:12:44 -0500
+
 liburcu (0.10.0-2) unstable; urgency=medium
 
   * [7ef3bce] Add missing m68k headers
