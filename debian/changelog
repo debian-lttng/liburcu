@@ -1,3 +1,10 @@
+liburcu (0.10.1-1) unstable; urgency=medium
+
+  * [0adcc02] New upstream version 0.10.1
+  * [9cd7793] Drop m68k patch merged upstream
+
+ -- Michael Jeanson <mjeanson@debian.org>  Tue, 23 Jan 2018 15:46:41 -0500
+
 liburcu (0.10.0-3) unstable; urgency=medium
 
   [ Michael Jeanson ]
