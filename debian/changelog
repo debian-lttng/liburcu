@@ -1,3 +1,9 @@
+liburcu (0.10.1-2) unstable; urgency=medium
+
+  * [23e7f63] Enable riscv64 architecture using gcc atomic
+
+ -- Michael Jeanson <mjeanson@debian.org>  Mon, 26 Mar 2018 18:14:58 -0400
+
 liburcu (0.10.1-1) unstable; urgency=medium
 
   * [0adcc02] New upstream version 0.10.1
