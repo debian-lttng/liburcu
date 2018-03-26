@@ -14,6 +14,11 @@ ifeq ($(DEB_HOST_ARCH_CPU), m68k)
 	ADD_CONFIG_FLAGS = --disable-compiler-tls
 endif
 
+ifeq ($(DEB_HOST_ARCH_CPU), riscv64)
+	# GCC on riscv64 generates invalid asm when TLS is enabled
+	ADD_CONFIG_FLAGS = --disable-compiler-tls
+endif
+
 %:
 	dh $@ --with autoreconf
 

@@ -1,5 +1,5 @@
 liburcu-bp.so.6 liburcu6 #MINVER#
- (arch=m68k)__tls_access_rcu_reader_bp@Base 0.10.0
+ (arch=m68k,riscv64)__tls_access_rcu_reader_bp@Base 0.10.0
  __urcu_compat_futex_cond@Base 0.10.0
  __urcu_compat_futex_lock@Base 0.10.0
  call_rcu_after_fork_child_bp@Base 0.10.0
@@ -37,7 +37,7 @@ liburcu-bp.so.6 liburcu6 #MINVER#
  rcu_read_lock_bp@Base 0.10.0
  rcu_read_ongoing_bp@Base 0.10.0
  rcu_read_unlock_bp@Base 0.10.0
- (arch=!m68k)rcu_reader_bp@Base 0.10.0
+ (arch=!m68k,!riscv64)rcu_reader_bp@Base 0.10.0
  rcu_set_pointer_sym@Base 0.10.0
  rcu_set_pointer_sym_bp@Base 0.10.0
  rcu_xchg_pointer_sym@Base 0.10.0
@@ -157,7 +157,7 @@ liburcu-common.so.6 liburcu6 #MINVER#
  compat_futex_async@Base 0.10.0
  compat_futex_noasync@Base 0.10.0
 liburcu-mb.so.6 liburcu6 #MINVER#
- (arch=m68k)__tls_access_rcu_reader_mb@Base 0.10.0
+ (arch=m68k,riscv64)__tls_access_rcu_reader_mb@Base 0.10.0
  __urcu_compat_futex_cond@Base 0.10.0
  __urcu_compat_futex_lock@Base 0.10.0
  call_rcu_after_fork_child_mb@Base 0.10.0
@@ -190,7 +190,7 @@ liburcu-mb.so.6 liburcu6 #MINVER#
  rcu_read_lock_mb@Base 0.10.0
  rcu_read_ongoing_mb@Base 0.10.0
  rcu_read_unlock_mb@Base 0.10.0
- (arch=!m68k)rcu_reader_mb@Base 0.10.0
+ (arch=!m68k,!riscv64)rcu_reader_mb@Base 0.10.0
  rcu_register_thread_mb@Base 0.10.0
  rcu_set_pointer_sym@Base 0.10.0
  rcu_unregister_thread_mb@Base 0.10.0
@@ -201,7 +201,7 @@ liburcu-mb.so.6 liburcu6 #MINVER#
  urcu_register_rculfhash_atfork_mb@Base 0.10.0
  urcu_unregister_rculfhash_atfork_mb@Base 0.10.0
 liburcu-qsbr.so.6 liburcu6 #MINVER#
- (arch=m68k)__tls_access_rcu_reader_qsbr@Base 0.10.0
+ (arch=m68k,riscv64)__tls_access_rcu_reader_qsbr@Base 0.10.0
  __urcu_compat_futex_cond@Base 0.10.0
  __urcu_compat_futex_lock@Base 0.10.0
  call_rcu_after_fork_child_qsbr@Base 0.10.0
@@ -235,7 +235,7 @@ liburcu-qsbr.so.6 liburcu6 #MINVER#
  rcu_read_lock_qsbr@Base 0.10.0
  rcu_read_ongoing_qsbr@Base 0.10.0
  rcu_read_unlock_qsbr@Base 0.10.0
- (arch=!m68k)rcu_reader_qsbr@Base 0.10.0
+ (arch=!m68k,!riscv64)rcu_reader_qsbr@Base 0.10.0
  rcu_register_thread_qsbr@Base 0.10.0
  rcu_set_pointer_sym@Base 0.10.0
  rcu_thread_offline_qsbr@Base 0.10.0
@@ -248,7 +248,7 @@ liburcu-qsbr.so.6 liburcu6 #MINVER#
  urcu_register_rculfhash_atfork_qsbr@Base 0.10.0
  urcu_unregister_rculfhash_atfork_qsbr@Base 0.10.0
 liburcu-signal.so.6 liburcu6 #MINVER#
- (arch=m68k)__tls_access_rcu_reader_sig@Base 0.10.0
+ (arch=m68k,riscv64)__tls_access_rcu_reader_sig@Base 0.10.0
  __urcu_compat_futex_cond@Base 0.10.0
  __urcu_compat_futex_lock@Base 0.10.0
  call_rcu_after_fork_child_sig@Base 0.10.0
@@ -282,7 +282,7 @@ liburcu-signal.so.6 liburcu6 #MINVER#
  rcu_read_lock_sig@Base 0.10.0
  rcu_read_ongoing_sig@Base 0.10.0
  rcu_read_unlock_sig@Base 0.10.0
- (arch=!m68k)rcu_reader_sig@Base 0.10.0
+ (arch=!m68k,!riscv64)rcu_reader_sig@Base 0.10.0
  rcu_register_thread_sig@Base 0.10.0
  rcu_set_pointer_sym@Base 0.10.0
  rcu_unregister_thread_sig@Base 0.10.0
@@ -293,7 +293,7 @@ liburcu-signal.so.6 liburcu6 #MINVER#
  urcu_register_rculfhash_atfork_sig@Base 0.10.0
  urcu_unregister_rculfhash_atfork_sig@Base 0.10.0
 liburcu.so.6 liburcu6 #MINVER#
- (arch=m68k)__tls_access_rcu_reader_memb@Base 0.10.0
+ (arch=m68k,riscv64)__tls_access_rcu_reader_memb@Base 0.10.0
  __urcu_compat_futex_cond@Base 0.10.0
  __urcu_compat_futex_lock@Base 0.10.0
  call_rcu_after_fork_child_memb@Base 0.10.0
@@ -327,7 +327,7 @@ liburcu.so.6 liburcu6 #MINVER#
  rcu_read_lock_memb@Base 0.10.0
  rcu_read_ongoing_memb@Base 0.10.0
  rcu_read_unlock_memb@Base 0.10.0
- (arch=!m68k)rcu_reader_memb@Base 0.10.0
+ (arch=!m68k,!riscv64)rcu_reader_memb@Base 0.10.0
  rcu_register_thread_memb@Base 0.10.0
  rcu_set_pointer_sym@Base 0.10.0
  rcu_unregister_thread_memb@Base 0.10.0
